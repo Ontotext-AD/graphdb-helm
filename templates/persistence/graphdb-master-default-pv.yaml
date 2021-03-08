@@ -1,0 +1,23 @@
+{{ if eq .Values.graphdb.persistence.volumeName "graphdb-default-pv" }}
+#
+# Default persistence volume for GraphDB. Data is stored on the node file system. Suitable for
+# Minikube deployments.
+#
+# Note: Not to be used in production or multi node cluster.
+#
+---
+apiVersion: {{ .Values.versions.pv }}
+kind: PersistentVolume
+metadata:
+  name: graphdb-default-pv
+  labels:
+    name: graphdb-default-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: {{ .Values.graphdb.persistence.storage }}
+  hostPath:
+    path: {{ .Values.deployment.storage }}/graphdb-data
+{{ end }}

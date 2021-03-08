@@ -1,0 +1,178 @@
+{{ if ne .Values.graphdb.topology "standalone" }}
+
+# Loop over the replica count
+{{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int ) 1 }}
+
+{{ $worker_endpoint := printf "http://graphdb-worker-%d:7200" $worker_index }}
+{{ $worker_repo := $.Values.graphdb.workers.repository }}
+{{ $master_repo := $.Values.graphdb.repository }}
+
+---
+apiVersion: {{ $.Values.versions.deployment }}
+kind: Deployment
+metadata:
+  name: graphdb-worker-{{ $worker_index }}
+  labels:
+    app: graphdb-worker-{{ $worker_index }}
+spec:
+  replicas: 1
+  # Important to define this strategy instead of the default rolling update, otherwise when
+  # performing helm update, GraphDB won't release its lock from the repositories and the new
+  # pod won't be able to start.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphdb-worker-{{ $worker_index }}
+  template:
+    metadata:
+      labels:
+        app: graphdb-worker-{{ $worker_index }}
+    spec:
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: graphdb-license
+          secret:
+            secretName: {{ include "resolveWorkerValue" (dict "default" $.Values.graphdb.workers.license "nodes" $.Values.graphdb.workers.nodes "value_name" "license" "worker_index" $worker_index ) }}
+        - name: graphdb-worker-storage
+          persistentVolumeClaim:
+            claimName: graphdb-worker-{{ $worker_index }}-data-pvc
+        - name: graphdb-worker-repo-config
+          configMap:
+            name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.workers.repositoryConfigmap }}
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+      {{ if hasKey $.Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ $.Values.deployment.imagePullSecret }}
+      {{ end }}
+      {{ if hasKey $.Values.graphdb.workers "nodeSelector" }}
+      nodeSelector: {{ $.Values.graphdb.workers.nodeSelector | toYaml | nindent 8 }}
+      {{ end }}
+      containers:
+        - name: graphdb-worker-{{ $worker_index }}
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          ports:
+            - name: graphdb-w-{{ $worker_index }}
+              containerPort: 7200
+          envFrom:
+            - configMapRef:
+                name: graphdb-worker-{{ $worker_index }}-configmap
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          lifecycle:
+            postStart:
+              exec:
+                # Always link the worker after starting the container.
+                # This ensures proper state in most of the cases
+                #TODO: For different topologies execute different script, for example linking the worker to more than 1 master if the topology is 2M3W_RW_RO or 2M3W_MUTED. Note that for 2M3W_MUTED you'll need some indicator to which master the current worker should be linked.
+                command: [
+                'sh',
+                '-c',
+                'apk add jq; cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh linkWorker "http://graphdb:7200" "{{ $worker_endpoint }}" "{{ $worker_repo }}" "{{ $master_repo }}"',
+                '&>  /proc/1/fd/1'
+                ]
+          resources: {{ $.Values.graphdb.workers.resources | toYaml | nindent 12 }}
+          # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
+          startupProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-{{ $worker_index }}
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-{{ $worker_index }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-{{ $worker_index }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      initContainers:
+        # LICENSE PROVISION
+        - name: provision-license
+          image: {{ $.Values.images.busybox }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-license
+              mountPath: /tmp/license/
+          command: ['sh', '-c']
+          args:
+            - |
+                mkdir -p /opt/graphdb/home/conf/
+                cd /opt/graphdb/home/conf/
+                [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
+
+                echo 'Provisioning GraphDB worker {{ $worker_index }} license'
+                cp /tmp/license/graphdb.license ./graphdb.license
+                echo 'Done'
+        # REPO PROVISION
+        - name: provision-worker-repository
+          image: {{ $.Values.images.busybox }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-worker-repo-config
+              mountPath: /tmp/graphdb
+          command: ['sh', '-c']
+          args:
+            - |
+              set -eu
+              mkdir -p /opt/graphdb/home/data/repositories/{{ $worker_repo }} ;
+              cd /opt/graphdb/home/data/repositories/{{ $worker_repo }} ;
+
+              # If the repo configuration exists -> skip provisioning
+              [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
+
+              echo 'Provisioning GraphDB {{ $worker_repo }} repository config.ttl' ;
+              cp /tmp/graphdb/config.ttl ./config.ttl ;
+              echo 'Done'
+        # We wait for master before starting the worker node. Easier for troubleshooting.
+          #TODO: If more than 1 master, wait for all of them!
+        - name: wait-master-node
+          image: {{ $.Values.images.alpine }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['sh', '-c']
+          args:
+            - |
+              set -eu
+              apk add curl
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh;
+              chmod +x /usr/local/bin/graphdb.sh
+              graphdb.sh waitMaster "http://graphdb:7200" "{{ $worker_repo }}"
+              echo "Done"
+              exit 0
+
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-worker-{{ $worker_index }}
+  labels:
+    app: graphdb-worker-{{ $worker_index }}
+spec:
+  selector:
+    app: graphdb-worker-{{ $worker_index }}
+  ports:
+    - name: graphdb-worker-{{ $worker_index }}
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+
+{{ end }}
+{{ end }}

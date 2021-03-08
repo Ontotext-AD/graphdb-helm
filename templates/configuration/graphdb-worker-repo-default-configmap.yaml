@@ -1,0 +1,13 @@
+{{ if ne .Values.graphdb.topology "standalone" }}
+# Default configuration map for provisioning GraphDB worker node repository.
+# To change it, prepare another configuration map and update "graphdb.cluster.worker.repositoryConfigmap"
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-worker-repo-default-configmap
+  labels:
+    name: graphdb-worker-repo-default-configmap
+data:
+  config.ttl: |-
+{{ tpl (.Files.Get "files/config/worker.default.ttl" | indent 4) . }}
+{{ end }}

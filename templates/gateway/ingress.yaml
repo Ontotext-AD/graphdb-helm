@@ -1,0 +1,29 @@
+apiVersion: {{ .Values.versions.ingress }}
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    {{ if .Values.deployment.tls.enabled }}
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    {{ end }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.deployment.ingress.maxRequestSize }}
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
+    nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
+
+spec:
+  {{ if .Values.deployment.tls.enabled }}
+  tls:
+    - secretName: {{ required "TLS secret is required!" .Values.deployment.tls.configmap }}
+      hosts:
+      - {{ .Values.deployment.host | quote }}
+  {{ end }}
+  rules:
+    - host: {{ .Values.deployment.host | quote }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kong-proxy
+              servicePort: 8000

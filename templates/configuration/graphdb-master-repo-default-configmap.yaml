@@ -1,0 +1,15 @@
+# Default configuration map for provisioning GraphDB repository.
+# To change it, prepare another configuration map and update "graphdb.repositoryConfigmap"
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-repo-default-configmap
+  labels:
+    name: graphdb-repo-default-configmap
+data:
+  config.ttl: |-
+{{ if ne .Values.graphdb.topology "standalone" }}
+{{ tpl (.Files.Get "files/config/master.default.ttl" | indent 4) . }}
+{{ else }}
+{{ .Files.Get "files/config/graphdb.default.ttl" | indent 4 }}
+{{ end }}

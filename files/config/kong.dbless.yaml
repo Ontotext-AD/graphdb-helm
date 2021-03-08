@@ -1,0 +1,52 @@
+# Some notes before digging into this configuration
+# This is Kong's DB less configuration, i.e. this work without a database.
+# The configuration is static and Kong cannot be customized without providing a new declarative configuration.
+# See more at https://docs.konghq.com/2.0.x/db-less-and-declarative-config/
+#
+# This file is prepared for Helm chart templates.
+# See https://helm.sh/docs/chart_template_guide/control_structures/
+#
+# Note: to validate this configuration without running the chart, use
+# docker run -it --rm -v $(pwd):/tmp/files -e KONG_DATABASE=off kong:2.1-alpine kong config parse /tmp/files/kong.dbless.yaml
+
+_format_version: "1.1"
+
+plugins:
+  # Refer to https://docs.konghq.com/hub/kong-inc/correlation-id/
+  # This is configured to trigger for all services/routes and to return it to the client.
+  - name: correlation-id
+    config:
+      # Match the one used by semantic objects
+      header_name: X-Request-ID
+      generator: uuid
+      # Make Kong return the header to the clients
+      echo_downstream: true
+
+services:
+  - name: graphdb
+    url: http://graphdb:7200
+    connect_timeout: {{ .Values.kong.timeout.connect }}
+    read_timeout: {{ .Values.kong.timeout.read }}
+    write_timeout: {{ .Values.kong.timeout.write }}
+    routes:
+      - name: graphdb
+        paths: ["/graphdb"]
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        strip_path: true
+        preserve_host: false
+
+  # {{ if ne .Values.graphdb.topology "standalone" }}
+  # {{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int) 1 }}
+  - name: graphdb-worker-{{ $worker_index }}
+    url: http://graphdb-worker-{{ $worker_index }}:7200
+    connect_timeout: {{ $.Values.kong.timeout.connect }}
+    read_timeout: {{ $.Values.kong.timeout.read }}
+    write_timeout: {{ $.Values.kong.timeout.write }}
+    routes:
+      - name: graphdb-worker-{{ $worker_index }}
+        paths: ["/graphdb-worker-{{ $worker_index }}"]
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        strip_path: true
+        preserve_host: false
+  # {{ end }} range
+  # {{ end }} cluster & expose check

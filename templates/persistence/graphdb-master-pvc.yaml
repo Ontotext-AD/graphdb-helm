@@ -1,0 +1,15 @@
+---
+apiVersion: {{ .Values.versions.pvc }}
+kind: PersistentVolumeClaim
+metadata:
+  name: graphdb-data-pvc
+  labels:
+    name: graphdb-data-pvc
+spec:
+  volumeName: {{ .Values.graphdb.persistence.volumeName }}
+  storageClassName: {{ .Values.graphdb.persistence.storageClassName }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.graphdb.persistence.storage }}

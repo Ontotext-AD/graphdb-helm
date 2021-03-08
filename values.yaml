@@ -1,0 +1,205 @@
+#
+# Main configuration file
+#
+# To override single property use --set
+# To override multiple, provide another values-override.yaml with the -f flag
+# See https://helm.sh/docs/chart_template_guide/values_files/
+#
+
+# K8S API versions differ on Kubernetes and local Minikube installation.
+# Please, refer to: https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/
+versions:
+  api: apps/v1
+  service: v1
+  ingress: extensions/v1beta1
+  deployment: apps/v1
+  secret: v1
+  configmap: v1
+  volume: v1
+  job: batch/v1
+  daemon: apps/v1
+  pvc: v1
+  pv: v1
+
+# Top lvl flat for easier maintenance
+images:
+  kong: kong:2.1-alpine
+  graphdb: ontotext/graphdb:9.5.0-ee
+  busybox: busybox:1.31
+  #TODO: Why this does not work with apline container??
+  alpine: adoptopenjdk/openjdk11:alpine
+
+####### DEPLOYMENT CONFIGURATIONS #######
+deployment:
+  # Defines the policy with which components will request their image.
+  imagePullPolicy: IfNotPresent
+  # Secret used to pull Docker images. Uncomment to use it.
+  # Important: Must be created beforehand
+  # imagePullSecret: maven-ontotext
+
+  # The storage place where components will read/write their persistent data in case the default
+  # persistent volumes are used. They use the node's file system.
+  storage: /data
+  # The hostname and protocol at which the graphdb will be accessible.
+  # Needed to configure ingress as well as some components require it to properly render their UIs
+  protocol: http
+  # Important: This should be a resolvable hostname, not an IP address!
+  host: localhost
+
+  # Configures SSL termination on ingress level.
+  # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
+  tls:
+    # Feature toggle for SSL termination. Disabled by default.
+    enabled: false
+    # Name of a Kubernetes secret object with the key and certificate.
+    # If TLS is enabled, it's required to be provided, depending on the deployment.
+    secretName:
+
+  # Ingress related configurations
+  ingress:
+    # Sets the maximum size for all requests to the underlying Nginx
+    maxRequestSize: 512M
+    # Default timeouts in seconds for the underlying Nginx.
+    timeout:
+      connect: 5
+      read: 60
+      send: 60
+
+# KONG API gateway configurations.
+# This gateway sits behind the ingress and exposes the rest of the components.
+# By default Kong is deployed without database, e.g. stateless mode.
+kong:
+  # Reference to a configuration map with Kong configurations as environment variables.
+  # Override if you need to further configure Kong's system.
+  # See https://docs.konghq.com/2.0.x/configuration/
+  configmap: kong-configmap
+  # Reference to a configuration map containing declarative Kong configuration for
+  # services and routes. This is the DB-less config.
+  # See https://docs.konghq.com/1.5.x/db-less-admin-api/#declarative-configuration
+  servicesConfigmap: kong-services-configmap
+  # Overwrite if you want to deploy Kong on a non-standard port, such as instances
+  # where you want to have two different installations on the same hardware.
+  port:
+    nodePort: 31122
+  # Global timeout configurations for all services. Values are in milliseconds.
+  timeout:
+    connect: 60000
+    read: 60000
+    write: 60000
+  # Memory cache size configuration for Kong in DB-less mode.
+  # Tune according to the given resource limits.
+  # See https://docs.konghq.com/2.0.x/configuration/#mem_cache_size
+  memCacheSize: "64m"
+  # Amount of Nginx worker processes. This affects how much memory will be consumed.
+  # The auto value will determine the workers based on the available CPUs
+  workers: auto
+  # Default resource limitations.
+  resources:
+    limits:
+      memory: 2048Mi
+  # Schedule and assign on specific node. By default, no restrictions are applied.
+  # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+  nodeSelector: {}
+
+# GraphDB database configurations
+graphdb:
+  # TODO: When other topology is selected, the provisioning pod must have this in mind and link the pods in the appropriate way
+  # Configurations for deploying GraphDB cluster.
+  #
+  # For master node: the same GraphDB manifest is used as without cluster but it is provisioned
+  # with a master repo ttl (see files/config/graphdb-cluster/master.default.ttl)
+  #
+  # For workers: configured via worker count, it will deploy as many as are defined.
+  # Naming follows graphdb-worker-1, graphdb-worker-2 and etc.
+  #
+  # For more information, see the official documentation
+  # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
+  # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
+  topology: cluster
+  workersCount: 2
+  mastersCount: 1
+  # A secret used for secure communication amongst the nodes in the cluster.
+  clusterSecret: s3cr37
+  # Reference to a secret containing 'graphdb.license' file.
+  # This is a required secret without which GraphDB won't operate if you use anything than the free edition.
+  # Important: Must be created beforehand
+
+  masters:
+    license: graphdb-masters-license
+    java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    nodes:
+
+  workers:
+    repositoryConfigmap: graphdb-worker-repo-default-configmap
+    repository: soaas
+    license: graphdb-workers-license
+    java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    nodes:
+        - name: worker-1
+          license: graphdb-worker1-license
+        - name: worker-2
+          java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    persistence:
+      # Name reference prefix of a persistent volume to which the claim will try to attach.
+      # Example result: graphdb-worker-default-worker-1-pv
+      volumeNamePrefix: graphdb-worker-default
+      storageClassName: standard
+      # Storage size request. The persistent volume has to be able to satisfy the size.
+      storage: 10G
+      # Reference to a configuration map containing a worker node repository 'config.ttl' file
+      # used for initialization in the post install hook.
+      repositoryConfigmap: graphdb-worker-repo-default-configmap
+      # Extra arguments passed to GDB_JAVA_OPTS environment variable
+      # See http://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html
+      # Note: Same as for the master node
+
+    # Below are minimum requirements for data sets of up to 50 million RDF triples
+    # For resizing, refer according to your GraphDB version documentation
+    # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
+    # Note: Same as for the master node
+    resources:
+      limits:
+        memory: 4Gi
+      requests:
+        memory: 2Gi
+    # Schedule and assign on specific node. By default, no restrictions are applied.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    nodeSelector: {}
+  # Reference to a configuration map with GraphDB specific configurations.
+  # Injected as environment variables.
+  configmap: graphdb-configmap
+  # Persistence configurations.
+  # By default, Helm will use a PV that reads and writes to the host file system.
+  persistence:
+    # Name reference of a persistent volume to which the claim will try to attach.
+    volumeName: graphdb-default-pv
+    storageClassName: standard
+    # Storage size request. The persistent volume has to be able to satisfy the size.
+    storage: 10G
+  # The repository used by the semantic objects service.
+  # This repo will be initialized during of Helm's post install hooks.
+  # See hooks/post-install/10-graphdb-provision-repo.yaml
+  repository: soaas
+  # Reference to a configuration map containing a repository 'config.ttl' file used for
+  # initialization in the post install hook.
+  # Not required if hooks are skipped in favor of clean installation.
+  repositoryConfigmap: graphdb-repo-default-configmap
+  # GraphDB workbench configurations
+  workbench:
+    # This is the sub path at which GraphDB workbench can be opened.
+    # Should be configured in the API gateway (or any other proxy in front)
+    subpath: /graphdb
+  # Extra arguments passed to GDB_JAVA_OPTS environment variable
+  # See http://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html
+  arguments: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+  # Below are minimum requirements for data sets of up to 50 million RDF triples
+  # For resizing, refer according to your GraphDB version documentation
+  # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
+  resources:
+    limits:
+      memory: 4Gi
+    requests:
+      memory: 2Gi
+  # Schedule and assign on specific node. By default, no restrictions are applied.
+  # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+  nodeSelector: {}

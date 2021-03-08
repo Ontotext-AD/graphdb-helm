@@ -1,0 +1,9 @@
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-utils-configmap
+  labels:
+    name: graphdb-utils-configmap
+data:
+  graphdb.sh: |-
+{{ tpl (.Files.Get "files/scripts/graphdb.sh" | indent 4) . }}

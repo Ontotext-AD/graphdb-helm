@@ -1,0 +1,19 @@
+{{/*
+    A welcome screen showing useful information after installing/upgrading the chart.
+*/}}
+--------------------------------------------------------------------------------------------
+   ____                 _     ____  ____      _____ _____
+  / ___|_ __ __ _ _ __ | |__ |  _ \| __ )    | ____| ____|
+ | |  _| '__/ _` | '_ \| '_ \| | | |  _ \    |  _| |  _|
+ | |_| | | | (_| | |_) | | | | |_| | |_) |   | |___| |___
+  \____|_|  \__,_| .__/|_| |_|____/|____/    |_____|_____|
+                 |_|
+--------------------------------------------------------------------------------------------
+version: {{ .Chart.AppVersion }}
+GDB cluster: {{ ne .Values.graphdb.topology "standalone" }}
+
+** Please be patient while the chart is being deployed and services are available **
+You can check their status with kubectl get pods
+
+Endpoints:
+* GraphDB workbench: {{ .Values.deployment.protocol }}://{{ .Values.deployment.host }}{{ .Values.graphdb.workbench.subpath }}

@@ -1,0 +1,28 @@
+{{ if ne .Values.graphdb.topology "standalone" }}
+{{ if eq .Values.graphdb.workers.persistence.volumeNamePrefix "graphdb-worker-default" }}
+{{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int ) 1 }}
+#
+# Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
+# for Minikube deployments.
+#
+# Note: Not to be used in production or multi node cluster.
+#
+---
+apiVersion: {{ $.Values.versions.pv }}
+kind: PersistentVolume
+metadata:
+  name: graphdb-worker-default-worker-{{ $worker_index }}-pv
+  labels:
+    name: graphdb-worker-default-worker-{{ $worker_index }}-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: {{ $.Values.graphdb.workers.persistence.storage }}
+  hostPath:
+    path: {{ $.Values.deployment.storage }}/graphdb-worker-{{ $worker_index }}-data
+
+{{ end }}
+{{ end }}
+{{ end }}

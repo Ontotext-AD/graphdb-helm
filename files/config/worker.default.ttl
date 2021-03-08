@@ -1,0 +1,57 @@
+#
+# RDF4J configuration template for a GraphDB EE worker repository
+#
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rep: <http://www.openrdf.org/config/repository#>.
+@prefix sr: <http://www.openrdf.org/config/repository/sail#>.
+@prefix sail: <http://www.openrdf.org/config/sail#>.
+@prefix owlim: <http://www.ontotext.com/trree/owlim#>.
+@prefix shacl: <http://rdf4j.org/config/sail/shacl#>.
+
+[] a rep:Repository ;
+    rep:repositoryID "{{ .Values.graphdb.repository }}" ;
+    rdfs:label "GraphDB worker for {{ .Values.graphdb.repository }}" ;
+    rep:repositoryImpl [
+        rep:repositoryType "owlim:ReplicationClusterWorker" ;
+        rep:delegate [
+            rep:repositoryType "owlim:MonitorRepository" ;
+            sr:sailImpl [
+                sail:sailType "rdf4j:ShaclSail";
+                shacl:validationEnabled "true" ;
+                shacl:logValidationPlans "false" ;
+                shacl:logValidationViolations "false" ;
+                shacl:parallelValidation "true" ;
+                shacl:globalLogValidationExecution "false" ;
+                shacl:cacheSelectNodes "true" ;
+                shacl:undefinedTargetValidatesAllSubjects "false" ;
+                shacl:ignoreNoShapesLoadedException "false" ;
+                shacl:performanceLogging "false" ;
+                shacl:rdfsSubClassReasoning "true" ;
+                shacl:shaclAdvancedFeatures "true" ;
+                shacl:dashDataShapes "true" ;
+                sail:delegate [
+                  sail:sailType "owlimClusterWorker:Sail";
+                  owlim:owlim-license "" ;
+                  owlim:base-URL "http://example.org/owlim#" ;
+                  owlim:defaultNS "" ;
+                  owlim:entity-index-size "10000000" ;
+                  owlim:entity-id-size  "32" ;
+                  owlim:imports "" ;
+                  owlim:repository-type "file-repository" ;
+                  owlim:ruleset "rdfsplus-optimized" ;
+                  owlim:storage-folder "storage" ;
+                  owlim:enable-context-index "false" ;
+                  owlim:enablePredicateList "true" ;
+                  owlim:in-memory-literal-properties "true" ;
+                  owlim:enable-literal-index "true" ;
+                  owlim:check-for-inconsistencies "false" ;
+                  owlim:disable-sameAs  "true" ;
+                  owlim:query-timeout  "0" ;
+                  owlim:query-limit-results  "0" ;
+                  owlim:throw-QueryEvaluationException-on-timeout "false" ;
+                  owlim:read-only "false" ;
+                  owlim:nonInterpretablePredicates "http://www.w3.org/2000/01/rdf-schema#label;http://www.w3.org/1999/02/22-rdf-syntax-ns#type;http://www.ontotext.com/owlim/ces#gazetteerConfig;http://www.ontotext.com/owlim/ces#metadataConfig" ;
+                ]
+            ]
+        ]
+    ].

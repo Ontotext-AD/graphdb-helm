@@ -1,0 +1,133 @@
+---
+apiVersion: {{ .Values.versions.deployment }}
+kind: Deployment
+metadata:
+  name: graphdb
+  labels:
+    app: graphdb
+spec:
+  replicas: 1
+  # Important to define this strategy instead of the default rolling update, otherwise when
+  # performing helm update, GraphDB won't release its lock from the repositories and the new
+  # pod won't be able to start.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphdb
+  template:
+    metadata:
+      labels:
+        app: graphdb
+    spec:
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: graphdb-license
+          secret:
+            #TODO: Add masters index
+            secretName: {{ default .Values.graphdb.masters.license .Values.graphdb.masters.license }}
+        - name: graphdb-storage
+          persistentVolumeClaim:
+            claimName: graphdb-data-pvc
+        - name: graphdb-repo-config
+          configMap:
+            name: {{ required "Config map for config.ttl is required!" .Values.graphdb.repositoryConfigmap }}
+      {{ if hasKey .Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ .Values.deployment.imagePullSecret }}
+      {{ end }}
+      {{ if hasKey .Values.graphdb "nodeSelector" }}
+      nodeSelector: {{ .Values.graphdb.nodeSelector | toYaml | nindent 8 }}
+      {{ end }}
+      containers:
+        - name: graphdb
+          image: {{ .Values.images.graphdb }}
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+          ports:
+            - name: graphdb
+              containerPort: 7200
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.graphdb.configmap }}
+          volumeMounts:
+            - name: graphdb-storage
+              mountPath: /opt/graphdb/home
+          resources: {{ .Values.graphdb.resources | toYaml | nindent 12 }}
+          # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
+          startupProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb
+            initialDelaySeconds: 60
+            periodSeconds: 10
+      initContainers:
+        # LICENSE PROVISION
+        - name: provision-license
+          image: {{ .Values.images.busybox }}
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-license
+              mountPath: /tmp/license/
+          command: ['sh', '-c']
+          args:
+            - |
+                mkdir -p /opt/graphdb/home/conf/
+                cd /opt/graphdb/home/conf/
+                [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
+
+                echo 'Provisioning GraphDB license'
+                cp /tmp/license/graphdb.license ./graphdb.license
+                echo 'Done'
+        # REPO PROVISION
+        - name: provision-repository
+          image: {{ .Values.images.busybox }}
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-repo-config
+              mountPath: /tmp/graphdb
+          command: ['sh', '-c']
+          args:
+            - |
+              {{ $repo := .Values.graphdb.repository -}}
+              set -eu
+              mkdir -p /opt/graphdb/home/data/repositories/{{ $repo }} ;
+              cd /opt/graphdb/home/data/repositories/{{ $repo }} ;
+
+              # If the repo configuration exists -> skip provisioning
+              [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
+
+              echo 'Provisioning GraphDB {{ $repo }} repository config.ttl' ;
+              cp /tmp/graphdb/config.ttl ./config.ttl ;
+              echo 'Done'
+
+---
+apiVersion: {{ .Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb
+  labels:
+    app: graphdb
+spec:
+  selector:
+    app: graphdb
+  ports:
+    - name: graphdb
+      port: 7200
+      targetPort: 7200
+      protocol: TCP

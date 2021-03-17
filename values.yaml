@@ -27,7 +27,7 @@ images:
   graphdb: ontotext/graphdb:9.5.0-ee
   busybox: busybox:1.31
   #TODO: Why this does not work with apline container??
-  alpine: adoptopenjdk/openjdk11:alpine
+  alpine: ontotext/graphdb:9.5.0-ee
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
@@ -115,10 +115,11 @@ graphdb:
   # For more information, see the official documentation
   # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
   # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
-  topology: cluster
-  workersCount: 2
+  topology: "1M_3W"
+  workersCount: 4
   mastersCount: 1
   # A secret used for secure communication amongst the nodes in the cluster.
+  #TODO: generate random if not present
   clusterSecret: s3cr37
   # Reference to a secret containing 'graphdb.license' file.
   # This is a required secret without which GraphDB won't operate if you use anything than the free edition.
@@ -127,16 +128,48 @@ graphdb:
   masters:
     license: graphdb-masters-license
     java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    # The repository used by the semantic objects service.
+    # This repo will be initialized during of Helm's post install hooks.
+    # See hooks/post-install/10-graphdb-provision-repo.yaml
+    repository: test
+    # Reference to a configuration map containing a repository 'config.ttl' file used for
+    # initialization in the post install hook.
+    # Not required if hooks are skipped in favor of clean installation.
+    repositoryConfigmap: graphdb-repo-default-configmap
     nodes:
+      - name: master-1
+        readOnly: true
+        muted: true
+    # Schedule and assign on specific node. By default, no restrictions are applied.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    nodeSelector: {}
+    # Below are minimum requirements for data sets of up to 50 million RDF triples
+    # For resizing, refer according to your GraphDB version documentation
+    # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
+    resources:
+      limits:
+        memory: 4Gi
+      requests:
+        memory: 2Gi
+      # Persistence configurations.
+      # By default, Helm will use a PV that reads and writes to the host file system.
+    persistence:
+      # Name reference of a persistent volume to which the claim will try to attach.
+      volumeNamePrefix: graphdb-master-default
+      storageClassName: standard
+      # Storage size request. The persistent volume has to be able to satisfy the size.
+      storage: 10G
+
 
   workers:
     repositoryConfigmap: graphdb-worker-repo-default-configmap
-    repository: soaas
+    repository: test
     license: graphdb-workers-license
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     nodes:
         - name: worker-1
           license: graphdb-worker1-license
+          master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     persistence:
@@ -167,23 +200,7 @@ graphdb:
     nodeSelector: {}
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
-  configmap: graphdb-configmap
-  # Persistence configurations.
-  # By default, Helm will use a PV that reads and writes to the host file system.
-  persistence:
-    # Name reference of a persistent volume to which the claim will try to attach.
-    volumeName: graphdb-default-pv
-    storageClassName: standard
-    # Storage size request. The persistent volume has to be able to satisfy the size.
-    storage: 10G
-  # The repository used by the semantic objects service.
-  # This repo will be initialized during of Helm's post install hooks.
-  # See hooks/post-install/10-graphdb-provision-repo.yaml
-  repository: soaas
-  # Reference to a configuration map containing a repository 'config.ttl' file used for
-  # initialization in the post install hook.
-  # Not required if hooks are skipped in favor of clean installation.
-  repositoryConfigmap: graphdb-repo-default-configmap
+  #configmap: graphdb-configmap
   # GraphDB workbench configurations
   workbench:
     # This is the sub path at which GraphDB workbench can be opened.
@@ -192,14 +209,6 @@ graphdb:
   # Extra arguments passed to GDB_JAVA_OPTS environment variable
   # See http://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html
   arguments: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
-  # Below are minimum requirements for data sets of up to 50 million RDF triples
-  # For resizing, refer according to your GraphDB version documentation
-  # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
-  resources:
-    limits:
-      memory: 4Gi
-    requests:
-      memory: 2Gi
   # Schedule and assign on specific node. By default, no restrictions are applied.
   # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   nodeSelector: {}

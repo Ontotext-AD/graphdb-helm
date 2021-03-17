@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: link-graphdb-cluster
+spec:
+  template:
+    spec:
+      containers:
+        - name: pi
+          image: {{ .Values.images.graphdb }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['sh',
+                    '-c',
+                    'cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh link_1m3w {{ .Values.graphdb.mastersCount }} "{{ .Values.graphdb.masters.repository }}" {{ .Values.graphdb.workersCount }} "{{ .Values.graphdb.workers.repository }}" >> /proc/1/fd/1 ']
+      restartPolicy: Never
+      volumes:
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+  backoffLimit: 4

@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -eu
 #TODO: Add a function which sets a master as read only
@@ -21,52 +21,71 @@ function waitService() {
   done
 }
 
-waitMaster() {
-  master_address=$1
+waitMasters() {
+  masters_count=$1
   master_repo=$2
 
-  waitService "${master_address}/rest/repositories"
-  waitService "${master_address}/rest/repositories/${master_repo}/size"
-  waitService "${master_address}/rest/cluster/masters/${master_repo}"
+  for (( c=1; c<=$masters_count; c++ ))
+  do
+    master_address=http://graphdb-master-$c:7200
+    waitService "${master_address}/rest/repositories"
+    waitService "${master_address}/rest/repositories/${master_repo}/size"
+    waitService "${master_address}/rest/cluster/masters/${master_repo}"
+  done
 }
 
-linkWorker() {
-  master_address=$1
-  worker_address=$2
-  repository=$3
-  master_repo=$4
+waitWorkers() {
+  workers_count=$1
+  workers_repo=$2
 
-  waitService "http://localhost:7200/repositories/${repository}/size"
+  for (( c=1; c<=$workers_count; c++ ))
+  do
+    workers_address=http://graphdb-worker-$c:7200
+    waitService "${workers_address}/rest/repositories"
+    waitService "${workers_address}/rest/repositories/${workers_repo}/size"
+  done
+}
 
-  worker_repo_endpoint="${worker_address}/repositories/${repository}"
+linkWorkerToMaster() {
+  master_address=http://$1:7200
+  worker_repository=$4
+  master_repo=$2
+  workers_count=$3
+  for (( c=1; c<=$workers_count; c++ ))
+  do
+    worker_address=http://graphdb-worker-$c:7200
+    worker_repo_endpoint="${worker_address}/repositories/${worker_repository}"
 
-  echo "Adding worker as remote location"
+    echo "Adding worker ${worker_address} as remote location"
 
-  curl ${master_address}/rest/locations -H 'Content-Type:application/json' \
-  -H 'Accept: application/json, text/plain, */*' \
-  --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
+    curl ${master_address}/rest/locations -H 'Content-Type:application/json' \
+      -H 'Accept: application/json, text/plain, */*' \
+      --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
 
-  echo "Linking worker"
-  curl -o response.json -sf -X POST ${master_address}/jolokia/ \
+    echo "Linking worker with repo endpoint ${worker_repo_endpoint}"
+    curl -o response.json -sf -X POST ${master_address}/jolokia/ \
       --header 'Content-Type: multipart/form-data' \
       --data-raw "{
         \"type\": \"exec\",
-        \"mbean\": \"ReplicationCluster:name=ClusterInfo/${repository}\",
+        \"mbean\": \"ReplicationCluster:name=ClusterInfo/${master_repo}\",
         \"operation\": \"addClusterNode\",
         \"arguments\": [
           \"${worker_repo_endpoint}\", 0, true
         ]
       }"
+     if grep -q '"status":200' "response.json"; then
+        echo "Linking successfull for worker $worker_address"
+    else
+        echo "Linking failed for worker ${worker_address}"
+        exit 1
+    fi
+  done
 
-  # Jolokia returns HTTP 200 even if the response is a failure...
-  # Parse the response to check the real status
-  status=$(jq '.status' response.json)
-  if [[ "${status}" -ne "200" ]]; then
-    echo "Linking failed for worker"
-    exit 1
-  fi
-
-  echo "Linked"
+  echo "Cluster linked successfully!"
 }
-
-"$@"
+#workersCount, workerRepo
+waitWorkers $4 $5
+#mastersCount, mastersRepo
+waitMasters $2 $3
+#1 master, multiple workers. Args: master to link to, master repo, workers count, workers repo
+linkWorkerToMaster graphdb-master-1 $3 $4 $5

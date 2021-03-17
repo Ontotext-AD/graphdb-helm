@@ -16,6 +16,6 @@ data:
     -Dgraphdb.workbench.external-url={{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-worker-{{ $worker_index }}
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterSecret | quote }}
-    {{ include "resolveWorkerValue" (dict "default" $.Values.graphdb.workers.java_args "nodes" $.Values.graphdb.workers.nodes "value_name" "java_args" "worker_index" $worker_index ) }}
+    {{ default $.Values.graphdb.workers.java_args (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "java_args" "worker_index" $worker_index )) }}
 {{ end }}
 {{ end }}

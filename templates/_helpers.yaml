@@ -1,6 +1,6 @@
 {{/*
-Resolves global workers values or specific worker node value
-Example usage for license: {{ include "resolveWorkerValue" (dict "default" $.Values.graphdb.workers.license "nodes" $.Values.graphdb.workers.nodes "value_name" "license" "worker_index" $worker_index ) }}
+Resolves specific worker node value
+Example usage for license: {{ default $.Values.graphdb.workers.license (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "license" "worker_index" $worker_index )) }}
 The example will return the global workers license or a specific worker license IF PRESENT, resolves the following values.yaml syntax:
   workers:
     license: graphdb-workers-license
@@ -10,17 +10,11 @@ The example will return the global workers license or a specific worker license 
 */}}
 {{- define "resolveWorkerValue" -}}
 {{- $worker_index:=.worker_index }}
-{{- $default_value:=.default }}
 {{- $value_name:=.value_name }}
-{{- if eq (len .nodes) 0 }}
-  {{- $default_value }}
-{{- end }}
   {{- range .nodes }}
     {{- if (eq (trimPrefix "worker-" .name | int64) ( $worker_index | int64)) }}
       {{- if (hasKey . $value_name) }}
         {{- get . $value_name }}
-      {{- else }}
-        {{- $default_value }}
       {{- end }}
     {{- end }}
   {{- end }}
@@ -28,28 +22,15 @@ The example will return the global workers license or a specific worker license 
 
 
 {{/*
-Resolves global workers values or specific worker node value
-Example usage for license: {{ include "resolveMasterValue" (dict "default" $.Values.graphdb.workers.license "nodes" $.Values.graphdb.workers.nodes "value_name" "license" "worker_index" $worker_index ) }}
-The example will return the global workers license or a specific worker license IF PRESENT, resolves the following values.yaml syntax:
-  workers:
-    license: graphdb-workers-license
-    nodes:
-        - name: worker-1
-          license: graphdb-worker1-license
+Same as above, but for masters nodes
 */}}
 {{- define "resolveMasterValue" -}}
 {{- $master_index:=.master_index }}
-{{- $default_value:=.default }}
 {{- $value_name:=.value_name }}
-{{- if eq .nodes nil }}
-  {{- $default_value }}
-{{- end }}
 {{- range .nodes }}
   {{- if (eq (trimPrefix "master-" .name | int64) ( $master_index | int64)) }}
     {{- if (hasKey . $value_name) }}
       {{- get . $value_name }}
-    {{- else }}
-      {{- $default_value }}
     {{- end }}
   {{- end }}
 {{- end }}

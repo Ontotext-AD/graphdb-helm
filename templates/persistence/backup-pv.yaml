@@ -1,0 +1,13 @@
+apiVersion: {{ $.Values.versions.pv }}
+kind: PersistentVolume
+metadata:
+  name: backup-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  hostPath:
+    path: /opt/graphdb/backups
+

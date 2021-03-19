@@ -9,5 +9,5 @@ spec:
   capacity:
     storage: 10Gi
   hostPath:
-    path: {{ $.Values.deployment.storage }}/graphdb-backups
+    path: /opt/graphdb/backups
 

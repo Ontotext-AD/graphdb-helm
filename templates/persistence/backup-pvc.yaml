@@ -1,0 +1,14 @@
+apiVersion: {{ .Values.versions.pvc }}
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  labels:
+    name: backup-pvc
+spec:
+  volumeName: backup-pv
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi

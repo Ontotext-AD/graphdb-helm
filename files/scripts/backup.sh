@@ -1,7 +1,7 @@
 repo_name=$1
 function waitService() {
   address=$1
-
+  #TODO: Add backup name as arg
   attempt_counter=0
   max_attempts=100
 
@@ -20,4 +20,4 @@ function waitService() {
 
 waitService http://graphdb-master-1:7200/rest/repositories/${repo_name}/size
 
-curl -H 'content-type: application/json' -d '{"type":"exec", "mbean":"ReplicationCluster:name=ClusterInfo\/${repo_name}", "operation":"backup", "arguments":[null]}' http://graphdb-master-1:7200/jolokia/
+curl -H 'content-type: application/json' -d "{\"type\":\"exec\", \"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repo_name\", \"operation\":\"backup\", \"arguments\":[\"test\"]}" http://graphdb-master-1:7200/jolokia/

@@ -7,3 +7,5 @@ metadata:
 data:
   graphdb.sh: |-
 {{ tpl (.Files.Get "files/scripts/graphdb.sh" | indent 4) . }}
+  backup.sh: |-
+{{ tpl (.Files.Get "files/scripts/backup.sh" | indent 4) . }}

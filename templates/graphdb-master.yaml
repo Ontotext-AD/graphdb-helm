@@ -33,6 +33,11 @@ spec:
         - name: graphdb-master-storage
           persistentVolumeClaim:
             claimName: graphdb-master-{{ $master_index }}-data-pvc
+        {{- if eq ($master_index | int64) 1 }}
+        - name: garphdb-backup
+          persistentVolumeClaim:
+            claimName: backup-pvc
+        {{- end }}
         - name: graphdb-master-repo-config
           configMap:
             name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.masters.repositoryConfigmap }}

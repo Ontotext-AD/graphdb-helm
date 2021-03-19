@@ -143,7 +143,7 @@ graphdb:
   # Important: Must be created beforehand
 
   masters:
-    license: graphdb-masters-license
+    license: graphdb-license
     java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     # The repository used by the semantic objects service.
     # This repo will be initialized during of Helm's post install hooks.
@@ -179,7 +179,7 @@ graphdb:
   workers:
     repositoryConfigmap: graphdb-worker-repo-default-configmap
     repository: test
-    license: graphdb-workers-license
+    license: graphdb-license
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     nodes:
         - name: worker-1

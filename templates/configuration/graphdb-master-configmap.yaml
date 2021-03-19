@@ -12,9 +12,10 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.workbench.external-url={{ if eq ($master_index | int64) 1 }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}{{ end }}
+    -Dgraphdb.external-url={{ if eq ($master_index | int64) 1 }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}{{ end }}
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
+    -Dgraphdb.backup.base.folder={{ if eq ($master_index | int64) 1 }}/opt/graphdb/backups{{ end }}
 {{- if ne $.Values.graphdb.topology "standalone" }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterSecret | quote }}
 {{- end }}

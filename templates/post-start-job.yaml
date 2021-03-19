@@ -1,3 +1,4 @@
+{{- if ne (lower .Values.graphdb.topology) "standalone" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -14,12 +15,33 @@ spec:
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
-          command: ['sh',
-                    '-c',
-                    'cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh link_1m3w {{ .Values.graphdb.mastersCount }} "{{ .Values.graphdb.masters.repository }}" {{ .Values.graphdb.workersCount }} "{{ .Values.graphdb.workers.repository }}" >> /proc/1/fd/1 ']
+          command: ['sh','-c']
+          {{- if eq (lower .Values.graphdb.topology) "1m_3w" }}
+          args:
+            - |
+                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh link_1m_3w {{ .Values.graphdb.mastersCount }} "{{ .Values.graphdb.masters.repository }}" {{ .Values.graphdb.workersCount }} "{{ .Values.graphdb.workers.repository }}" >> /proc/1/fd/1
+          {{- else if eq (lower .Values.graphdb.topology) "2m3w_rw_ro" }}
+          args:
+            - |
+                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ;
+                /usr/local/bin/graphdb.sh waitAllInstances {{ .Values.graphdb.mastersCount }} "{{ .Values.graphdb.masters.repository }}" {{ .Values.graphdb.workersCount }} "{{ .Values.graphdb.workers.repository }}";
+                {{- range .Values.graphdb.clusterConfig.readOnlyMasters }}
+                  /usr/local/bin/graphdb.sh setInstanceReadOnly graphdb-{{ . }} "{{ $.Values.graphdb.masters.repository }}";
+                {{- end }}
+                {{- range .Values.graphdb.clusterConfig.masterWorkerMapping }}
+                  {{- $split := split "->" . }}
+                  /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.workers.repository }}";
+                {{- end }}
+                {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}
+                  {{- $split := split "->" . }}
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.workers.repository }}";
+                {{- end }}
+                >> /proc/1/fd/1
+        {{- end }}
       restartPolicy: Never
       volumes:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
   backoffLimit: 4
+{{- end }}

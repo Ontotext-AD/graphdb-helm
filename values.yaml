@@ -115,9 +115,19 @@ graphdb:
   # For more information, see the official documentation
   # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
   # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
-  topology: "1M_3W"
+  topology: "2m3w_rw_ro"
+  clusterConfig:
+      masterWorkerMapping:
+        - master-1 -> worker-1
+        - master-1 -> worker-2
+        - master-2 -> worker-3
+        - master-2 -> worker-4
+      readOnlyMasters:
+        - master-2
+      syncPeersMapping:
+        - master-1 -> master-2
   workersCount: 4
-  mastersCount: 1
+  mastersCount: 2
   # A secret used for secure communication amongst the nodes in the cluster.
   #TODO: generate random if not present
   clusterSecret: s3cr37

@@ -34,7 +34,7 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-master-{{ $master_index }}-data-pvc
         {{- if eq ($master_index | int64) 1 }}
-        - name: graphdb-backup
+        - name: garphdb-backup
           persistentVolumeClaim:
             claimName: backup-pvc
         {{- end }}
@@ -61,10 +61,6 @@ spec:
           volumeMounts:
             - name: graphdb-master-storage
               mountPath: /opt/graphdb/home
-            {{- if eq ($master_index | int64) 1 }}
-            - name: graphdb-backup
-              mountPath: /opt/graphdb/backups
-            {{- end }}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
           startupProbe:

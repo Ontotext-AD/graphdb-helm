@@ -22,7 +22,7 @@ function waitService() {
 
 waitService http://graphdb-master-1:7200/rest/repositories/${repo_name}/size
 
-backupDir=$(date +'%m-%d-%Y')
+backupDir=$(date +'%m-%d-%Y-%H-%M')
 
 i=0
 while [ $i -lt 3 ]

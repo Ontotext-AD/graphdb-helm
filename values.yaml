@@ -115,17 +115,22 @@ graphdb:
   # For more information, see the official documentation
   # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
   # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
+  #standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted
   topology: "2m3w_rw_ro"
   clusterConfig:
+      #used only for 2m3w_muted
       masterWorkerMapping:
         - master-1 -> worker-1
         - master-1 -> worker-2
         - master-2 -> worker-3
         - master-2 -> worker-4
+      #used only for 2m3w_rw_ro
       readOnlyMasters:
         - master-2
+      #used only for 2m3w_muted
       mutedMasters:
         - master-2
+      #used only for 2m3w_rw_ro, 2m3w_muted
       syncPeersMapping:
         - master-1 <-> master-2
   workersCount: 4
@@ -150,8 +155,6 @@ graphdb:
     repositoryConfigmap: graphdb-repo-default-configmap
     nodes:
       - name: master-1
-        readOnly: true
-        muted: true
     # Schedule and assign on specific node. By default, no restrictions are applied.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
     nodeSelector: {}
@@ -181,7 +184,6 @@ graphdb:
     nodes:
         - name: worker-1
           license: graphdb-worker1-license
-          master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     persistence:

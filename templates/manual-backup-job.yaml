@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backup-manual
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+        - name: backup-manual
+          image: {{ .Values.images.graphdb }}
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['bash',
+                    '-c',
+                    'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
+      restartPolicy: Never
+      volumes:
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap

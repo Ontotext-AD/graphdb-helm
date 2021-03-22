@@ -1,22 +1,25 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: batch/v1beta1
+kind: CronJob
 metadata:
   name: backup-cluster
 spec:
-  template:
+  schedule: "0 0 * * *"
+  jobTemplate:
     spec:
-      containers:
-        - name: backup
-          image: {{ .Values.images.graphdb }}
-          volumeMounts:
-            - name: graphdb-utils
-              mountPath: /tmp/utils
-          command: ['sh',
-                    '-c',
-                    'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
-      restartPolicy: Never
-      volumes:
-      - name: graphdb-utils
-        configMap:
-          name: graphdb-utils-configmap
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: {{ .Values.images.graphdb }}
+              volumeMounts:
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+              command: ['bash',
+                        '-c',
+                        'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
+          restartPolicy: Never
+          volumes:
+          - name: graphdb-utils
+            configMap:
+              name: graphdb-utils-configmap
 

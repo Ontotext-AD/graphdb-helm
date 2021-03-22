@@ -25,18 +25,51 @@ spec:
             - |
                 cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ;
                 /usr/local/bin/graphdb.sh waitAllInstances {{ .Values.graphdb.mastersCount }} "{{ .Values.graphdb.masters.repository }}" {{ .Values.graphdb.workersCount }} "{{ .Values.graphdb.workers.repository }}";
+
                 {{- range .Values.graphdb.clusterConfig.readOnlyMasters }}
                   /usr/local/bin/graphdb.sh setInstanceReadOnly graphdb-{{ . }} "{{ $.Values.graphdb.masters.repository }}";
                 {{- end }}
+
+                {{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.mastersCount | int ) 1 }}
+                  {{ range $j, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int ) 1 }}
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-{{ $master_index }} "{{ $.Values.graphdb.masters.repository }}" graphdb-worker-{{ $worker_index }} "{{ $.Values.graphdb.workers.repository }}";
+                  {{- end }}
+                {{- end }}
+
+                {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}
+                  {{- $split := split "<->" . }}
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.masters.repository }}";
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}";
+                {{- end }}
+                >> /proc/1/fd/1
+
+            {{- else if eq (lower .Values.graphdb.topology) "2m3w_muted" }}
+          args:
+            - |
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ;
+              /usr/local/bin/graphdb.sh waitAllInstances {{ .Values.graphdb.mastersCount }} "{{ .Values.graphdb.masters.repository }}" {{ .Values.graphdb.workersCount }} "{{ .Values.graphdb.workers.repository }}";
+
                 {{- range .Values.graphdb.clusterConfig.masterWorkerMapping }}
                   {{- $split := split "->" . }}
                   /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.workers.repository }}";
                 {{- end }}
-                {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}
-                  {{- $split := split "->" . }}
-                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.workers.repository }}";
+
+                {{ range $j, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int ) 1 }}
+                {{/* Set all workers as a remote location for  master 1 */}}
+                  /usr/local/bin/graphdb.sh addInstanceAsRemoteLocation graphdb-master-1 graphdb-worker-{{ $worker_index }};
                 {{- end }}
-                >> /proc/1/fd/1
+
+                {{- range .Values.graphdb.clusterConfig.mutedMasters }}
+                  /usr/local/bin/graphdb.sh setInstanceMuted graphdb-{{ . }} "{{ $.Values.graphdb.masters.repository }}";
+                  /usr/local/bin/graphdb.sh setInstanceReadOnly graphdb-{{ . }} "{{ $.Values.graphdb.masters.repository }}";
+                {{- end }}
+
+                {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}
+                  {{- $split := split "<->" . }}
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.masters.repository }}";
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._1 }} "{{ $.Values.graphdb.masters.repository }}" graphdb-{{ trim $split._0 }} "{{ $.Values.graphdb.masters.repository }}";
+                {{- end }}
+              >> /proc/1/fd/1
         {{- end }}
       restartPolicy: Never
       volumes:

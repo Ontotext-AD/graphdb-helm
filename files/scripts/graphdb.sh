@@ -60,11 +60,7 @@ linkWorkerToMaster() {
   waitService "${master_address}/rest/repositories"
   waitService "${master_address}/rest/repositories/${worker_repository}/size"
 
-  echo "Adding worker ${worker_address} as remote location"
-
-  curl ${master_address}/rest/locations -H 'Content-Type:application/json' \
-    -H 'Accept: application/json, text/plain, */*' \
-    --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
+  addInstanceAsRemoteLocation $1 $3
 
   echo "Linking worker with repo endpoint ${worker_repo_endpoint}"
   curl -o response.json -sf -X POST ${master_address}/jolokia/ \
@@ -84,7 +80,7 @@ linkWorkerToMaster() {
       exit 1
   fi
 
-  echo "Cluster linked successfully!"
+  echo "Worker linked successfully!"
 }
 
 setInstanceReadOnly() {
@@ -103,17 +99,45 @@ setInstanceReadOnly() {
   fi
 }
 
+setInstanceMuted() {
+  instance_address=http://$1:7200
+  repository=$2
+
+  echo "Setting instance $instance_address as muted"
+
+  curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"Mode\",\"value\":\"MUTE\"}" $instance_address/jolokia/
+
+  if grep -q '"status":200' "response.json"; then
+      echo "Successfully set instance $instance_address as muted"
+  else
+      echo "Failed setting instance muted $instance_address"
+      exit 1
+  fi
+}
+
+addInstanceAsRemoteLocation() {
+  master_address=http://$1:7200
+  worker_address=http://$2:7200
+
+  echo "Adding worker $worker_address as remote location of $master_address"
+
+  curl ${master_address}/rest/locations -o response.json -H 'Content-Type:application/json' -H 'Accept: application/json, text/plain, */*' --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
+
+  if grep -q 'Success\|connected' "response.json"; then
+      echo "Successfully added $worker_address as remote location of $master_address"
+  else
+      echo "Failed adding instance $worker_address as remote location of $master_address"
+      exit 1
+  fi
+}
+
 setSyncPeer() {
   instance1_address=http://$1:7200
   instance2_address=http://$3:7200
   instance1_repository=$2
   instance2_repository=$4
 
-  echo "Adding sync peer $instance2_address as remote location in $instance1_address"
-
-  curl ${instance1_address}/rest/locations -H 'Content-Type:application/json' \
-    -H 'Accept: application/json, text/plain, */*' \
-    --data-raw "{\"uri\":\"${instance2_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
+  addInstanceAsRemoteLocation $1 $3
 
   echo "Setting $instance2_address as sync pear for $instance1_address"
 
@@ -132,8 +156,8 @@ linkAllWorkersToMaster() {
   workers_count=$3
   for (( c=1; c<=$workers_count; c++ ))
   do
-    worker_address=http://graphdb-worker-$c:7200
-    linkWorkerToMaster $1 master_repo worker_address worker_repository
+    worker_address=graphdb-worker-$c
+    linkWorkerToMaster $1 $master_repo $worker_address $worker_repository
   done
 
   echo "Cluster linked successfully!"
@@ -149,13 +173,9 @@ waitAllInstances() {
 link_1m_3w() {
   #masters count, master repo, workers count, worker repo
   waitAllInstances $1 $2 $3 $4
+
   #1 master, multiple workers. Args: master to link to, master repo, workers count, workers repo
   linkAllWorkersToMaster graphdb-master-1 $2 $3 $4
-}
-
-link_2m3w_rw_ro() {
-  #1 master, multiple workers. Args: master to link to, master repo, workers count, workers repo
-  linkWorkerToMaster graphdb-master-1 $2 $3 $4
 }
 
 "$@"

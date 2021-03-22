@@ -1,22 +1,30 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: batch/v1beta1
+kind: CronJob
 metadata:
   name: backup-cleanup
 spec:
-  template:
+  schedule: "0 1 * * *"
+  jobTemplate:
     spec:
-      containers:
-        - name: backup-del
-          image: {{ .Values.images.graphdb }}
-          volumeMounts:
+      template:
+        spec:
+          containers:
+            - name: backup-del
+              image: {{ .Values.images.graphdb }}
+              volumeMounts:
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+                - name: graphdb-backup
+                  mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
+              command: ['bash',
+                        '-c',
+                        'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh; /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups/backup/ 1 >> /proc/1/fd/1' ]
+          restartPolicy: Never
+          volumes:
             - name: graphdb-utils
-              mountPath: /tmp/utils
-          command: ['sh',
-                    '-c',
-                    'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh; /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups 5']
-      restartPolicy: Never
-      volumes:
-        - name: graphdb-utils
-          configMap:
-            name: graphdb-utils-configmap
+              configMap:
+                name: graphdb-utils-configmap
+            - name: graphdb-backup
+              persistentVolumeClaim:
+                claimName: backup-pvc
 

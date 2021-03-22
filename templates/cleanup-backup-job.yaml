@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backup-cleanup
+spec:
+  template:
+    spec:
+      containers:
+        - name: backup-del
+          image: {{ .Values.images.graphdb }}
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['sh',
+                    '-c',
+                    'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh; /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups 5']
+      restartPolicy: Never
+      volumes:
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+

@@ -3,7 +3,6 @@ kind: Job
 metadata:
   name: backup-cluster
 spec:
-  #schedule: "0 0 * * *"
   template:
     spec:
       containers:
@@ -14,7 +13,7 @@ spec:
               mountPath: /tmp/utils
           command: ['sh',
                     '-c',
-                    'tail -f /dev/null; cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
+                    'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
       restartPolicy: Never
       volumes:
       - name: graphdb-utils

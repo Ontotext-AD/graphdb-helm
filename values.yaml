@@ -144,9 +144,9 @@ graphdb:
 
   backupRestore:
     auto_backup: "0 * * * *"
-    cleanup_backup_schedule: "1 * * * *"
+    cleanup_cron: "1 * * * *"
     backups_count: 5
-    backup_max_age: 5d
+    #backup_max_age: 5d
     trigger_backup: "23-03-2021-10-49" #must be given in format DD-MM-YY-hh-mm
 
   masters:

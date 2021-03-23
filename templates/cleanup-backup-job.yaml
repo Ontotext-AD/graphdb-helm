@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: backup-cleanup
 spec:
-  schedule: {{ .Values.graphdb.backupRestore.cleanup_backup_schedule }}
+  schedule: {{ .Values.graphdb.backupRestore.cleanup_cron }}
   jobTemplate:
     spec:
       template:

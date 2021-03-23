@@ -135,8 +135,15 @@ graphdb:
   # This is a required secret without which GraphDB won't operate if you use anything than the free edition.
   # Important: Must be created beforehand
 
+  backupRestore:
+    auto_backup: "0 * * * *"
+    cleanup_backup_schedule: "1 * * * *"
+    backups_count: 5
+    backup_max_age: 5d
+    trigger_backup: "23-03-2021-10-49" #must be given in format DD-MM-YY-hh-mm
+
   masters:
-    license: graphdb-license
+    license: graphdb-masters-license
     java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     # The repository used by the semantic objects service.
     # This repo will be initialized during of Helm's post install hooks.
@@ -174,11 +181,11 @@ graphdb:
   workers:
     repositoryConfigmap: graphdb-worker-repo-default-configmap
     repository: test
-    license: graphdb-license
+    license: graphdb-workers-license
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     nodes:
         - name: worker-1
-          license: graphdb-license
+          license: graphdb-worker1-license
           master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
@@ -222,3 +229,4 @@ graphdb:
   # Schedule and assign on specific node. By default, no restrictions are applied.
   # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   nodeSelector: {}
+

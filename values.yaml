@@ -139,8 +139,8 @@ graphdb:
     auto_backup: "* 0 * * *"
     cleanup_cron: "* 1 * * *"
     backups_count: "5"
-    backup_max_age: "5"
-    trigger_backup: "23-03-2021-14-20" #must be given in format DD-MM-YY-hh-mm
+    backup_max_age: "5" # must be days
+    trigger_backup: "23-03-2021-14-20" # must be given in format DD-MM-YY-hh-mm
 
   masters:
     license: graphdb-masters-license

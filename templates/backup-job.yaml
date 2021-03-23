@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: backup-cluster
 spec:
-  schedule: "0 0 * * *"
+  schedule: {{.Values.graphdb.backupRestore.auto_backup}}
   jobTemplate:
     spec:
       template:

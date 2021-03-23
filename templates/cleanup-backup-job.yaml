@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: backup-cleanup
 spec:
-  schedule: {{ .Values.graphdb.backupRestore.cleanup_cron }}
+  schedule: {{ .Values.graphdb.backupRestore.cleanup_cron | quote }}
   jobTemplate:
     spec:
       template:
@@ -18,7 +18,7 @@ spec:
                   mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
               command: ['bash',
                         '-c',
-                        'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh; /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups/backup/ {{.Values.graphdb.backupRestore.backups_count}} >> /proc/1/fd/1' ]
+                        'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh; /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups/backup/ {{.Values.graphdb.backupRestore.backups_count}} {{.Values.graphdb.backupRestore.backup_max_age}} >> /proc/1/fd/1' ]
           restartPolicy: Never
           volumes:
             - name: graphdb-utils

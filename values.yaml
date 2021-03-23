@@ -143,11 +143,11 @@ graphdb:
   # Important: Must be created beforehand
 
   backupRestore:
-    auto_backup: "0 * * * *"
-    cleanup_cron: "1 * * * *"
-    backups_count: 5
-    #backup_max_age: 5d
-    trigger_backup: "23-03-2021-10-49" #must be given in format DD-MM-YY-hh-mm
+    auto_backup: "* 0 * * *"
+    cleanup_cron: "* 1 * * *"
+    backups_count: "5"
+    backup_max_age: "5"
+    trigger_backup: "23-03-2021-14-20" #must be given in format DD-MM-YY-hh-mm
 
   masters:
     license: graphdb-masters-license

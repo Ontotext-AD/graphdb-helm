@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-kubectl patch cronjobs backup-manual -p '{"spec" : {"suspend" : false }}'
-sleep 10
-kubectl patch cronjobs backup-manual -p '{"spec" : {"suspend" : true }}'
+wanted_date=$1
+repo_name=$2
+echo ${wanted_date}
+echo $(date +'%d-%m-%Y-%H-%M')
+if [[ $(date +'%d-%m-%Y-%H-%M') == ${wanted_date} ]]
+then
+    /usr/local/bin/backup.sh ${repo_name}
+fi
 

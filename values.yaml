@@ -147,10 +147,10 @@ graphdb:
     cleanup_cron: "* 1 * * *"
     backups_count: "5"
     backup_max_age: "5" # must be days
-    trigger_backup: "23-03-2021-14-20" # must be given in format DD-MM-YY-hh-mm
+    trigger_backup: "24.03.2021 07:58" # must be given in format DD.MM.YY hh:mm
 
   masters:
-    license: graphdb-masters-license
+    license: graphdb-license
     java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     # The repository used by the semantic objects service.
     # This repo will be initialized during of Helm's post install hooks.
@@ -186,11 +186,11 @@ graphdb:
   workers:
     repositoryConfigmap: graphdb-worker-repo-default-configmap
     repository: test
-    license: graphdb-workers-license
+    license: graphdb-license
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     nodes:
         - name: worker-1
-          license: graphdb-worker1-license
+          license: graphdb-license
           master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"

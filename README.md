@@ -243,7 +243,7 @@ See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 
 By default, the provisioning creates a default repository in GraphDB. This repo is provided by
 `graphdb-repo-default-configmap` which reads it from
-[graphdb.default.ttl](files/config/graphdb.default.ttl).
+[worker.default.ttl](files/config/worker.default.ttl).
 
 To change the default TTL, you can prepare another configuration map containing a
 *config.ttl* file entry:

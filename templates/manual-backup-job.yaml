@@ -16,7 +16,7 @@ spec:
                   mountPath: /tmp/utils
               command: ['bash',
                         '-c',
-                        'cp /tmp/utils/runManualBackup.sh /tmp/utils/backup.sh /usr/local/bin/; chmod +x /usr/local/bin/runManualBackup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/runManualBackup.sh "{{.Values.graphdb.backupRestore.trigger_backup}}" "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
+                        'cp /tmp/utils/runManualBackup.sh /tmp/utils/backup.sh /usr/local/bin/; chmod +x /usr/local/bin/runManualBackup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/runManualBackup.sh "{{.Values.graphdb.backupRestore.trigger_backup}}" "{{.Values.graphdb.masters.repository}}" {{ .Values.graphdb.topology | quote }} >> /proc/1/fd/1']
           restartPolicy: Never
           volumes:
             - name: graphdb-utils

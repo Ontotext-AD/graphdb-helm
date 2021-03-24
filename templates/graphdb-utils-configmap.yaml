@@ -13,3 +13,5 @@ data:
 {{ tpl (.Files.Get "files/scripts/deleteBackup.sh" | indent 4) . }}
   runManualBackup.sh: |-
 {{ tpl (.Files.Get "files/scripts/runManualBackup.sh" | indent 4) . }}
+  runRestoreBackup.sh: |-
+{{ tpl (.Files.Get "files/scripts/runRestoreBackup.sh" | indent 4) . }}

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 repo_name=$1
+topology=$2
 
 function waitService() {
   address=$1
@@ -25,15 +26,29 @@ waitService http://graphdb-master-1:7200/rest/repositories/${repo_name}/size
 backupDir=$(date +'%m-%d-%Y-%H-%M')
 
 i=0
-while [ $i -lt 3 ]
-do
-  curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\", \"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repo_name\", \"operation\":\"backup\", \"arguments\":[\"${backupDir}\"]}" http://graphdb-master-1:7200/jolokia/
-  if grep -q '"status":200' "response.json"; then
-    break
-  else
-    echo "curl failed"
-  fi
-  i=$((i+1))
-done
-
+if [ ${topology} == 'standalone' ]
+then
+  echo "i am in standalone if"
+  while [ $i -lt 3 ]
+  do
+    curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\",\"mbean\":\"com.ontotext:type=OwlimRepositoryManager,name=\\\"Repository ($repo_name)\\\"\",\"operation\":\"createZipBackup\",\"arguments\":[\"${backupDir}\"]}" http://localhost:7200/jolokia/
+    if grep -q '"status":200' "response.json"; then
+      break
+    else
+      echo "curl failed"
+    fi
+    i=$((i+1))
+  done
+else
+  while [ $i -lt 3 ]
+  do
+    curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\", \"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repo_name\", \"operation\":\"backup\", \"arguments\":[\"${backupDir}\"]}" http://graphdb-master-1:7200/jolokia/
+    if grep -q '"status":200' "response.json"; then
+      break
+    else
+      echo "curl failed"
+    fi
+    i=$((i+1))
+  done
+fi
 #curl -H 'content-type: application/json' -d "{\"type\":\"exec\", \"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repo_name\", \"operation\":\"backup\", \"arguments\":[\"${backupDir}\"]}" http://graphdb-master-1:7200/jolokia/

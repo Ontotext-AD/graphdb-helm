@@ -14,11 +14,16 @@ spec:
               volumeMounts:
                 - name: graphdb-utils
                   mountPath: /tmp/utils
+                - name: graphdb-backup
+                  mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
               command: ['bash',
                         '-c',
-                        'cp /tmp/utils/runRestoreBackup.sh /usr/local/bin/; chmod +x /usr/local/bin/runRestoreBackup.sh; /usr/local/bin/runRestoreBackup.sh "{{.Values.graphdb.backupRestore.trigger_restore}}" "{{.Values.graphdb.masters.repository}}" "{{ .Values.graphdb.backupRestore.restore_from_backup}}" >> /proc/1/fd/1']
+                        'cp /tmp/utils/runRestoreBackup.sh /usr/local/bin/; chmod +x /usr/local/bin/runRestoreBackup.sh; /usr/local/bin/runRestoreBackup.sh "{{.Values.graphdb.backupRestore.trigger_restore}}" "{{.Values.graphdb.masters.repository}}" "{{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ .Values.graphdb.backupRestore.restore_from_backup}}" {{ .Values.graphdb.topology | quote }}>> /proc/1/fd/1']
           restartPolicy: Never
           volumes:
             - name: graphdb-utils
               configMap:
                 name: graphdb-utils-configmap
+            - name: graphdb-backup
+              persistentVolumeClaim:
+                claimName: backup-pvc

@@ -48,6 +48,7 @@ spec:
       {{ if hasKey $.Values.graphdb.masters "nodeSelector" }}
       nodeSelector: {{ $.Values.graphdb.masters.nodeSelector | toYaml | nindent 8 }}
       {{ end }}
+
       containers:
         - name: graphdb-master-{{ $master_index }}
           image: {{ $.Values.images.graphdb }}
@@ -128,6 +129,29 @@ spec:
               echo 'Provisioning GraphDB {{ $repo }} repository config.ttl' ;
               cp /tmp/graphdb/config.ttl ./config.ttl ;
               echo 'Done'
+        {{- if eq $.Values.graphdb.topology "standalone" }}
+        - name: restore-standalone
+          image: {{ $.Values.images.busybox }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-master-storage
+              mountPath: /opt/graphdb/
+            - name: graphdb-backup
+              mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
+          command: ['sh', '-c']
+          args:
+            - |
+              {{ $repo := $.Values.graphdb.masters.repository -}}
+              mkdir -p /opt/graphdb/home/data/repositories/{{ $repo }} ;
+              cd /opt/graphdb/home/data/repositories/ ;
+              echo {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/
+              if [ -d {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/ ]; then
+                rm -rf {{ $repo }}
+                unzip {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/*
+              else
+                echo nothing to restore
+              fi
+        {{- end }}
 
 ---
 apiVersion: {{ $.Values.versions.service }}

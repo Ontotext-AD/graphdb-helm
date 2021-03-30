@@ -129,7 +129,8 @@ spec:
               echo 'Provisioning GraphDB {{ $repo }} repository config.ttl' ;
               cp /tmp/graphdb/config.ttl ./config.ttl ;
               echo 'Done'
-        {{- if eq $.Values.graphdb.topology "standalone" }}
+
+        {{- if and (eq $.Values.graphdb.topology "standalone") ( $.Values.graphdb.backupRestore.restore_from_backup ) }}
         - name: restore-standalone
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}

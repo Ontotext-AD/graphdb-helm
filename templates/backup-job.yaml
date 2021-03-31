@@ -16,7 +16,7 @@ spec:
                   mountPath: /tmp/utils
               command: ['bash',
                         '-c',
-                        'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" >> /proc/1/fd/1']
+                        'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" {{ .Values.graphdb.topology | quote }} >> /proc/1/fd/1']
           restartPolicy: Never
           volumes:
           - name: graphdb-utils

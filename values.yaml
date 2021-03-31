@@ -115,7 +115,8 @@ graphdb:
   # For more information, see the official documentation
   # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
   # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
-  topology: "2m3w_rw_ro"
+  #standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted
+  topology: "standalone"
   clusterConfig:
       masterWorkerMapping:
         - master-1 -> worker-1
@@ -127,7 +128,7 @@ graphdb:
       syncPeersMapping:
         - master-1 -> master-2
   workersCount: 4
-  mastersCount: 2
+  mastersCount: 1
   # A secret used for secure communication amongst the nodes in the cluster.
   #TODO: generate random if not present
   clusterSecret: s3cr37
@@ -139,8 +140,14 @@ graphdb:
     auto_backup: "* 0 * * *"
     cleanup_cron: "* 1 * * *"
     backups_count: "5"
-    backup_max_age: "5" # must be days
-    trigger_backup: "24.03.2021 07:58" # must be given in format DD.MM.YY hh:mm
+    backup_max_age: "5"
+    # must be days
+    trigger_backup: "24.03.2021 07:58"
+    # must be given in format DD.MM.YY hh:mm
+    trigger_restore: "24.03.2021 14:56"
+    # must be given in format DD.MM.YY hh:mm
+    restore_from_backup: "03-24-2021-14-51"
+    # must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup folder
 
   masters:
     license: graphdb-license
@@ -185,8 +192,7 @@ graphdb:
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     nodes:
         - name: worker-1
-          license: graphdb-license
-          master: master-1
+          license: graphdb-worker1-license
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     persistence:

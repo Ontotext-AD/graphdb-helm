@@ -145,12 +145,13 @@ spec:
               {{ $repo := $.Values.graphdb.masters.repository -}}
               mkdir -p /opt/graphdb/home/data/repositories/{{ $repo }} ;
               cd /opt/graphdb/home/data/repositories/ ;
-              echo {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/
+              echo "Backup to restore: {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/"
               if [ -d {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/ ]; then
                 rm -rf {{ $repo }}
                 unzip {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/*
+                echo "Successfully restored!"
               else
-                echo nothing to restore
+                echo "Nothing to restore."
               fi
         {{- end }}
 

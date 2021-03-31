@@ -32,9 +32,10 @@ then
   do
     curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\",\"mbean\":\"com.ontotext:type=OwlimRepositoryManager,name=\\\"Repository (/opt/graphdb/home/data/repositories/${repo_name}/storage/)\\\"\",\"operation\":\"createZipBackup\",\"arguments\":[\"${backupDir}\"]}" http://graphdb-master-1:7200/jolokia/
     if grep -q '"status":200' "response.json"; then
+      echo "Successfully made a backup!"
       break
     else
-      echo "curl failed"
+      echo "Curl command failed"
     fi
     i=$((i+1))
   done
@@ -43,9 +44,10 @@ else
   do
     curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\", \"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repo_name\", \"operation\":\"backup\", \"arguments\":[\"${backupDir}\"]}" http://graphdb-master-1:7200/jolokia/
     if grep -q '"status":200' "response.json"; then
+      echo "Successfully made a backup!"
       break
     else
-      echo "curl failed"
+      echo "Curl command failed"
     fi
     i=$((i+1))
   done

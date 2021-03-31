@@ -116,7 +116,7 @@ graphdb:
   # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
   # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
   # -- standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted
-  topology: "standalone"
+  topology: "2m3w_rw_ro"
   clusterConfig:
       masterWorkerMapping:
         - master-1 -> worker-1
@@ -128,7 +128,7 @@ graphdb:
       syncPeersMapping:
         - master-1 -> master-2
   workersCount: 4
-  mastersCount: 1
+  mastersCount: 2
   # -- A secret used for secure communication amongst the nodes in the cluster.
   #TODO: generate random if not present
   clusterSecret: s3cr37
@@ -139,18 +139,19 @@ graphdb:
   backupRestore:
     # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm
     auto_backup: "* 0 * * *"
-    # -- Cleans up the backups directory. Stores maximum { $.Values.graphdb.backupRestore.backups_count } backups for a maximum of { $.Values.graphdb.backupRestore.backups_max_age }
+    # -- Cleans up the backups directory. Stores a maximum number of backups and/or each backup is stored for a maximum number of days. Each or both of backups_count and backups_max_age could be used.
     cleanup_cron: "* 1 * * *"
-    # -- Max number of backup dirs saved
+    # -- Max number of backup dirs saved.
     backups_count: "5"
-    # -- Max number of days for backups
+    # -- Max number of days for backups.
     backup_max_age: "5"
-    # must be given in format DD.MM.YY hh:mm
-    trigger_backup: "24.03.2021 07:58"
-    # must be given in format DD.MM.YY hh:mm
-    trigger_restore: "24.03.2021 14:56"
-    # must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup folder
-    restore_from_backup: "03-24-2021-14-51"
+    # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
+    # Please bear in mind that there could be a time difference with the kubernetes environment
+    trigger_backup: "31.03.2021 14:52"
+    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
+    trigger_restore: "31.03.2021 14:50"
+    # -- The name of the backup directory we want to restore. Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
+    restore_from_backup: "03-31-2021-14-47"
 
   masters:
     license: graphdb-license
@@ -194,7 +195,7 @@ graphdb:
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     nodes:
         - name: worker-1
-          license: graphdb-worker1-license
+          license: graphdb-license
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     persistence:

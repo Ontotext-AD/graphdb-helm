@@ -24,10 +24,10 @@ versions:
 # Top lvl flat for easier maintenance
 images:
   kong: kong:2.1-alpine
-  graphdb: ontotext/graphdb:9.5.0-ee
+  graphdb: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
   busybox: busybox:1.31
   #TODO: Why this does not work with apline container??
-  alpine: ontotext/graphdb:9.5.0-ee
+  alpine: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:

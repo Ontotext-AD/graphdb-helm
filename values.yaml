@@ -137,9 +137,13 @@ graphdb:
   # Important: Must be created beforehand
 
   backupRestore:
-    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm
+    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv
+    # (default folder - /data/graphdb-backups).
+    # The backups are saved in format MM-DD-YYYY-hh-mm
     auto_backup: "* 0 * * *"
-    # -- Cleans up the backups directory. Stores a maximum number of backups and/or each backup is stored for a maximum number of days. Each or both of backups_count and backups_max_age could be used.
+    # -- Cleans up the backups directory.
+    # Makes sure that there is a limit of the stored backups.
+    # Each or both of backups_count and backups_max_age could be used.
     cleanup_cron: "* 1 * * *"
     # -- Max number of backup dirs saved.
     backups_count: "5"
@@ -148,9 +152,11 @@ graphdb:
     # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
     # Please bear in mind that there could be a time difference with the kubernetes environment
     trigger_backup: "31.03.2021 14:52"
-    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
+    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
+    # For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
     trigger_restore: "31.03.2021 14:50"
-    # -- The name of the backup directory we want to restore. Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
+    # -- The name of the backup directory we want to restore.
+    # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
     restore_from_backup: "03-31-2021-14-47"
 
   masters:

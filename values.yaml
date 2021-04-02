@@ -43,7 +43,7 @@ deployment:
   # -- The hostname and protocol at which the graphdb will be accessible.
   # Needed to configure ingress as well as some components require it to properly render their UIs
   protocol: http
-  # -- Important: This should be a resolvable hostname, not an IP address!
+  # Important: This should be a resolvable hostname, not an IP address!
   host: localhost
 
   # Configures SSL termination on ingress level.
@@ -93,7 +93,7 @@ kong:
   # -- Amount of Nginx worker processes. This affects how much memory will be consumed.
   # The auto value will determine the workers based on the available CPUs
   workers: auto
-  # -- Default resource limitations.
+  # Default resource limitations.
   resources:
     limits:
       memory: 2048Mi
@@ -103,38 +103,35 @@ kong:
 
 # GraphDB database configurations
 graphdb:
-  # TODO: When other topology is selected, the provisioning pod must have this in mind and link the pods in the appropriate way
-  # Configurations for deploying GraphDB cluster.
-  #
-  # For master node: the same GraphDB manifest is used as without cluster but it is provisioned
-  # with a master repo ttl (see files/config/graphdb-cluster/master.default.ttl)
-  #
-  # For workers: configured via worker count, it will deploy as many as are defined.
-  # Naming follows graphdb-worker-1, graphdb-worker-2 and etc.
-  #
-  # For more information, see the official documentation
-  # http://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
-  # http://graphdb.ontotext.com/documentation/enterprise/ee/managing-a-cluster.html
-  # -- standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted
+  # -- Cluster topology to be used. Possible values: standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted.
+  # standalone - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties
+  # 1m_3w - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
+  # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
+  # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
+  # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
+  # @default standalone
   topology: "standalone"
   clusterConfig:
-      masterWorkerMapping:
-        - master-1 -> worker-1
-        - master-1 -> worker-2
-        - master-2 -> worker-3
-        - master-2 -> worker-4
-      readOnlyMasters:
-        - master-2
-      syncPeersMapping:
-        - master-1 -> master-2
-  workersCount: 4
-  mastersCount: 1
-  # -- A secret used for secure communication amongst the nodes in the cluster.
-  #TODO: generate random if not present
-  clusterSecret: s3cr37
-  # Reference to a secret containing 'graphdb.license' file.
-  # This is a required secret without which GraphDB won't operate if you use anything than the free edition.
-  # Important: Must be created beforehand
+    # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
+    masterWorkerMapping:
+      - master-1 -> worker-1
+      - master-1 -> worker-2
+      - master-2 -> worker-3
+      - master-2 -> worker-4
+    # -- Describes which masters will be set as read only. Required only for 2m3w_rw_ro topology.
+    readOnlyMasters:
+      - master-2
+    # -- Describes which masters will be set as muted. Required only for 2m3w_muted topology.
+    mutedMasters:
+      - master-2
+    # -- Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_rw_ro topology.
+    syncPeersMapping:
+      - master-1 -> master-2
+    workersCount: 4
+    mastersCount: 1
+    #TODO: generate random if not present
+    # -- A secret used for secure communication amongst the nodes in the cluster.
+    clusterSecret: s3cr37
 
   backupRestore:
     # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm
@@ -153,20 +150,21 @@ graphdb:
     restore_from_backup: "03-24-2021-14-51"
 
   masters:
-    license: graphdb-license
-    java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
-    # -- The repository used by the semantic objects service.
-    # This repo will be initialized during of Helm's post install hooks.
-    # See hooks/post-install/10-graphdb-provision-repo.yaml
+    # -- The repository name to be created for all masters.
+    # This repository will be initialized during of Helm's post install hooks.
     repository: test
-    # -- Reference to a configuration map containing a repository 'config.ttl' file used for
-    # initialization in the post install hook.
-    # Not required if hooks are skipped in favor of clean installation.
+    # -- Reference to a configuration map containing a repository 'config.ttl' file used for repository
+    # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
     repositoryConfigmap: graphdb-repo-default-configmap
+    # -- Reference to a secret containing 'graphdb.license' file to be used by master nodes.
+    # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
+    # Important: Must be created beforehand
+    license: graphdb-license
+    # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
       - name: master-1
-        readOnly: true
-        muted: true
     # -- Schedule and assign on specific node. By default, no restrictions are applied.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
     nodeSelector: {}
@@ -178,20 +176,30 @@ graphdb:
         memory: 4Gi
       requests:
         memory: 2Gi
-      # Persistence configurations.
-      # -- By default, Helm will use a PV that reads and writes to the host file system.
+    # Persistence configurations.
+    # -- By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
       # -- Name reference of a persistent volume to which the claim will try to attach.
+      # Example result: graphdb-worker-default-worker-1-pv
       volumeNamePrefix: graphdb-master-default
       storageClassName: standard
-      # -- Storage size request. The persistent volume has to be able to satisfy the size.
+      # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
       storage: 10G
 
   workers:
-    repositoryConfigmap: graphdb-worker-repo-default-configmap
+    # -- The repository name to be created for all workers.
+    # This repository will be initialized during of Helm's post install hooks.
     repository: test
+    # -- Reference to a configuration map containing a repository 'config.ttl' file used for repository
+    # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
+    repositoryConfigmap: graphdb-worker-repo-default-configmap
+    # -- Reference to a secret containing 'graphdb.license' file to be used by worker nodes.
+    # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
+    # Important: Must be created beforehand
     license: graphdb-license
+    # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
         - name: worker-1
           license: graphdb-worker1-license
@@ -202,7 +210,7 @@ graphdb:
       # Example result: graphdb-worker-default-worker-1-pv
       volumeNamePrefix: graphdb-worker-default
       storageClassName: standard
-      # -- Storage size request. The persistent volume has to be able to satisfy the size.
+      # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
       storage: 10G
       # -- Reference to a configuration map containing a worker node repository 'config.ttl' file
       # used for initialization in the post install hook.
@@ -231,10 +239,4 @@ graphdb:
     # -- This is the sub path at which GraphDB workbench can be opened.
     # Should be configured in the API gateway (or any other proxy in front)
     subpath: /graphdb
-  # -- Extra arguments passed to GDB_JAVA_OPTS environment variable
-  # See http://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html
-  arguments: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
-  # -- Schedule and assign on specific node. By default, no restrictions are applied.
-  # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-  nodeSelector: {}
 

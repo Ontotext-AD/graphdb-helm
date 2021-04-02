@@ -266,7 +266,7 @@ To deploy in cluster, set `graphdb.topology` in [values.yaml](values.yaml) to on
 2M3W_MUTED - Multiple masters with dedicated workers
 See more about the cluster topologies here: https://graphdb.ontotext.com/documentation/enterprise/ee/cluster-topologies.html
 
-Configure `graphdb.workersCount` to the desired replica amount. The 
+Configure `graphdb.clusterConfig.workersCount` to the desired replica amount. The 
 `graphdb.workers` configurations are similar as to the master node. 
 
 ## Values
@@ -295,7 +295,7 @@ Configure `graphdb.workersCount` to the desired replica amount. The
 | graphdb.clusterConfig.mutedMasters | list | `["master-2"]` | used only for 2m3w_muted |
 | graphdb.clusterConfig.readOnlyMasters | list | `["master-2"]` | used only for 2m3w_rw_ro |
 | graphdb.clusterConfig.syncPeersMapping | list | `["master-1 <-> master-2"]` | used only for 2m3w_rw_ro, 2m3w_muted |
-| graphdb.clusterSecret | string | `"s3cr37"` | A secret used for secure communication amongst the nodes in the cluster. Reference to a secret containing 'graphdb.license' file. This is a required secret without which GraphDB won't operate if you use anything than the free edition. Important: Must be created beforehand |
+| graphdb.clusterConfig.clustersecret | string | `"s3cr37"` | A secret used for secure communication amongst the nodes in the cluster. Reference to a secret containing 'graphdb.license' file. This is a required secret without which GraphDB won't operate if you use anything than the free edition. Important: Must be created beforehand |
 | graphdb.masters.java_args | string | `" -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"` |  |
 | graphdb.masters.license | string | `"graphdb-masters-license"` |  |
 | graphdb.masters.nodeSelector | object | `{}` |  |
@@ -306,7 +306,7 @@ Configure `graphdb.workersCount` to the desired replica amount. The
 | graphdb.masters.repository | string | `"test"` | The repository used by the semantic objects service. This repo will be initialized during of Helm's post install hooks. See hooks/post-install/10-graphdb-provision-repo.yaml |
 | graphdb.masters.repositoryConfigmap | string | `"graphdb-repo-default-configmap"` | Reference to a configuration map containing a repository 'config.ttl' file used for initialization in the post install hook. Not required if hooks are skipped in favor of clean installation. |
 | graphdb.masters.resources | object | `{"limits":{"memory":"4Gi"},"requests":{"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html |
-| graphdb.mastersCount | int | `2` |  |
+| graphdb.clusterConfig.masterscount | int | `2` |  |
 | graphdb.nodeSelector | object | `{}` | Schedule and assign on specific node. By default, no restrictions are applied. See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
 | graphdb.topology | string | `"2m3w_rw_ro"` |  |
 | graphdb.workbench.subpath | string | `"/graphdb"` | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front) |
@@ -325,7 +325,7 @@ Configure `graphdb.workersCount` to the desired replica amount. The
 | graphdb.workers.repository | string | `"test"` |  |
 | graphdb.workers.repositoryConfigmap | string | `"graphdb-worker-repo-default-configmap"` |  |
 | graphdb.workers.resources | object | `{"limits":{"memory":"4Gi"},"requests":{"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html Note: Same as for the master node |
-| graphdb.workersCount | int | `4` |  |
+| graphdb.clusterConfig | int | `4` |  |
 | images | object | `{"alpine":"ontotext/graphdb:9.5.0-ee","busybox":"busybox:1.31","graphdb":"ontotext/graphdb:9.5.0-ee","kong":"kong:2.1-alpine"}` | Top lvl flat for easier maintenance |
 | kong.configmap | string | `"kong-configmap"` | Reference to a configuration map with Kong configurations as environment variables. Override if you need to further configure Kong's system. See https://docs.konghq.com/2.0.x/configuration/ |
 | kong.memCacheSize | string | `"64m"` | Memory cache size configuration for Kong in DB-less mode. Tune according to the given resource limits. See https://docs.konghq.com/2.0.x/configuration/#mem_cache_size |

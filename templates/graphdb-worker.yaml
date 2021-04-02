@@ -1,7 +1,7 @@
 {{ if ne .Values.graphdb.topology "standalone" }}
 
 # Loop over the replica count
-{{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int ) 1 }}
+{{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
 
 {{ $worker_endpoint := printf "http://graphdb-worker-%d:7200" $worker_index }}
 {{ $worker_repo := $.Values.graphdb.workers.repository }}
@@ -54,6 +54,7 @@ spec:
           image: {{ $.Values.images.graphdb }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
+            #TODO: Fix this!
             - name: graphdb-w-{{ $worker_index }}
               containerPort: 7200
           envFrom:
@@ -100,6 +101,7 @@ spec:
                 [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
 
                 echo 'Provisioning GraphDB worker {{ $worker_index }} license'
+              #TODO: Make it work with different license names
                 cp /tmp/license/graphdb.license ./graphdb.license
                 echo 'Done'
         # REPO PROVISION

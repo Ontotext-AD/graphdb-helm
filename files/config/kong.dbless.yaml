@@ -35,7 +35,7 @@ services:
         strip_path: true
         preserve_host: false
 
-  # {{ range $i, $master_index := untilStep 2 (add1 $.Values.graphdb.mastersCount | int) 1 }}
+  # {{ range $i, $master_index := untilStep 2 (add1 $.Values.graphdb.clusterConfig.masterscount | int) 1 }}
   - name: graphdb-master-{{ $master_index }}
     url: http://graphdb-master-{{ $master_index }}:7200
     connect_timeout: {{ $.Values.kong.timeout.connect }}
@@ -50,7 +50,7 @@ services:
   # {{ end }}
 
   # {{ if ne .Values.graphdb.topology "standalone" }}
-  # {{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int) 1 }}
+  # {{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int) 1 }}
   - name: graphdb-worker-{{ $worker_index }}
     url: http://graphdb-worker-{{ $worker_index }}:7200
     connect_timeout: {{ $.Values.kong.timeout.connect }}

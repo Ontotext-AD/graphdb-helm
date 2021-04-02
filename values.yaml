@@ -134,20 +134,27 @@ graphdb:
     clusterSecret: s3cr37
 
   backupRestore:
-    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm
+    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv
+    # (default folder - /data/graphdb-backups).
+    # The backups are saved in format MM-DD-YYYY-hh-mm
     auto_backup: "* 0 * * *"
-    # -- Cleans up the backups directory. Stores maximum { $.Values.graphdb.backupRestore.backups_count } backups for a maximum of { $.Values.graphdb.backupRestore.backups_max_age }
+    # -- Cleans up the backups directory.
+    # Makes sure that there is a limit of the stored backups.
+    # Each or both of backups_count and backups_max_age could be used.
     cleanup_cron: "* 1 * * *"
-    # -- Max number of backup dirs saved
+    # -- Max number of backup dirs saved.
     backups_count: "5"
-    # -- Max number of days for backups
+    # -- Max number of days for backups.
     backup_max_age: "5"
-    # must be given in format DD.MM.YY hh:mm
-    trigger_backup: "24.03.2021 07:58"
-    # must be given in format DD.MM.YY hh:mm
-    trigger_restore: "24.03.2021 14:56"
-    # must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup folder
-    restore_from_backup: "03-24-2021-14-51"
+    # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
+    # Please bear in mind that there could be a time difference with the kubernetes environment
+    trigger_backup: "31.03.2021 14:52"
+    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
+    # For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
+    trigger_restore: "31.03.2021 14:50"
+    # -- The name of the backup directory we want to restore.
+    # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
+    restore_from_backup: "03-31-2021-14-47"
 
   masters:
     # -- The repository name to be created for all masters.
@@ -202,7 +209,7 @@ graphdb:
     # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
         - name: worker-1
-          license: graphdb-worker1-license
+          license: graphdb-license
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
     persistence:

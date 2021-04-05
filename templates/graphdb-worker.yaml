@@ -175,7 +175,7 @@ spec:
           args:
             - |
               cdate=$(date +'%Y-%m-%d')
-              /opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repo}}/storage >> /opt/graphdb/home/data/storage-tool-${cdate}.log
+              /opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage {{$.Values.graphdb.tools.storage_tool.options}}>> /opt/graphdb/home/data/storage-tool-${cdate}.log
         {{- end }}
 
 

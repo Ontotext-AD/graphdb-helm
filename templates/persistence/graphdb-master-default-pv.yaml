@@ -1,6 +1,6 @@
 
 {{ if eq .Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-master-default" }}
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.masterscount | int ) 1 }}
+{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 #
 # Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
 # for Minikube deployments.

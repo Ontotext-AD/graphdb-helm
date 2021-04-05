@@ -2,7 +2,6 @@
 
 set -eu
 
-#TODO: Add a function which sets a master as read only
 function waitService() {
   address=$1
 

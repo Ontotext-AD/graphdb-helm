@@ -67,6 +67,12 @@ To collect metrics, enable Minikube's metrics server with:
 minikube addons enable metrics-server
 ```
 
+To enable Minikube's monitoring dashboard with:
+
+```bash
+minikube dashboard
+```
+
 **DNS Resolving**
 
 The chart is deployed with a Kubernetes ingress service that is configured to listen for requests
@@ -106,8 +112,8 @@ data entry:
 kubectl create secret generic graphdb-license --from-file graphdb.license
 ```
 
-**Note**: Secret names can differ from the given samples, but their configurations should be updated
-to refer to the correct ones.
+**Note**: Secret names can differ from the given examples in the [values.yaml](values.yaml), but their configurations should be updated
+to refer to the correct ones. Note that the licenses can be set for all masters/workers instances and also per instance. Please setup correctly according to the licensing agreements.
 
 ### Quick Start
 
@@ -132,7 +138,7 @@ You should see the following output:
   \____|_|  \__,_| .__/|_| |_|____/|____/    |_____|_____|
                  |_|
 --------------------------------------------------------------------------------------------
-version: 9.5.0
+version: 9.7.0
 GDB cluster: true
 
 ** Please be patient while the chart is being deployed and services are available **
@@ -189,6 +195,87 @@ See `<component>.configmap` and `<component>.secret`.
 **Note**: If you are familiar with Kubernetes, you could modify the components configuration 
 templates directly.
 
+
+### GraphDB repository
+
+By default, the provisioning creates a default repository in GraphDB. This repo is provided by
+`graphdb-repo-default-configmap` which reads it from
+[worker.default.ttl](files/config/worker.default.ttl).
+
+To change the default TTL, you can prepare another configuration map containing a
+*config.ttl* file entry:
+
+```bash
+kubectl create configmap graphdb-repo-configmap --from-file=config.ttl
+```
+
+After that, update the property `graphdb.repositoryConfigmap` from
+[values.yaml](values.yaml) to refer to the new configuration map.
+
+### Customizing GraphDB cluster and GraphDB specific properties
+
+GraphDB's Helm chart is made to be highly customizable regarding GraphDB's specific options and properties. 
+There are 3 important configuration sections:
+- GraphDB cluster configuration
+- Cluster instances (masters/workers) configuration
+- Backup, restore and cleanup options
+
+#### GraphDB cluster configuration
+
+By default the Helm chart supports the 3 topologies that we recommend in our documentation. This is configured by settings `graphdb.topology`
+Possible values: `standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted`.
+
+**standalone** - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties
+
+**1m_3w** - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
+
+**2m3w_rw_ro** - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
+
+**2m3w_muted** - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
+
+Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
+
+- The section `graphdb.clusterConfig` can be used to configure a GraphDB cluster. It's responsible for the connections between the cluster instances and their settings (muted, readonly).
+- The subsection `graphdb.clusterConfig.masterWorkerMapping` describes which GraphDB instances will be linked. The format must be `master-X -> worker-Y`. Required only for `2m3w_muted` topology.
+- The subsection `graphdb.clusterConfig.readOnlyMasters` describes which GraphDB master instances will be set as read only. The format must be `master-X`. Required only for `2m3w_rw_ro` topology.
+- The subsection `graphdb.clusterConfig.mutedMasters` describes  which GraphDB master instances will be linked as sync peer. The format must be `master-X <-> master-Y`. Required for `2m3w_rw_ro` and `2m3w_muted` topology.
+
+`graphdb.clusterConfig.workersCount` and `graphdb.clusterConfig.mastersCount` tell the chart how many worker instances and how many masters instances to be launched.
+
+See more about the cluster topologies here: https://graphdb.ontotext.com/documentation/enterprise/ee/cluster-topologies.html
+
+#### Cluster instances (masters/workers) configuration
+
+GraphDB's Helm chart allows some configurations to be set for all masters or all workers instances. It also allows overrides of some configurations for each worker instance or each master instance.
+The global configurations for all masters/workers instances are placed in the section `graphdb.masters.*` and `graphdb.workers.*`. 
+
+Each configuration can be overridden for each master/worker node. The overrides are described in `graphdb.masters.nodes.*` and `graphdb.workers.nodes.*`. In those subsections specific configurations for each cluster node can be specified in the format:
+
+```bash
+nodes:
+    - name: master-1
+        java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+        nodeSelector: {}
+        license: graphdb-license
+```
+
+For now the supported configurations are `java_args`, `node_selector` and `license`
+
+For more information about node selectors see https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+
+#### Backup, restore and cleanup options
+
+GraphDB's Helm chart supports automatic backup, restore and cleanup procedures. There are a few options that are used to describe the required jobs that handle those tasks.
+
+Those options are described in the subsection `graphdb.backupRestore.*` and they are:
+- auto_backup - cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm
+- cleanup_cron - cleans up the backups directory. Makes sure that there is a limit of the stored backups. Each or both of `backups_count` and `backups_max_age` could be used.
+- backups_count - max number of backup dirs saved.
+- backup_max_age - max number of days for backups.
+- trigger_backup - a future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm. Please bear in mind that there could be a time difference with the kubernetes environment
+- trigger_restore - a future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
+- restore_from_backup - the name of the backup directory we want to restore. Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
+
 ### values.yaml
 
 Helm allows you to override values from [values.yaml](values.yaml) in several ways.
@@ -231,44 +318,6 @@ See the Kubernetes documentation
 https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
 about defining resource limits.
 
-### Node selectors
-
-Each component in the Helm chart supports specifying a `nodeSelector` field in 
-[values.yaml](values.yaml). This allows to schedule pods across a multi node cluster with different 
-roles and resources. By default, no node restrictions are applied.
-
-See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-
-### GraphDB repository
-
-By default, the provisioning creates a default repository in GraphDB. This repo is provided by
-`graphdb-repo-default-configmap` which reads it from
-[worker.default.ttl](files/config/worker.default.ttl).
-
-To change the default TTL, you can prepare another configuration map containing a
-*config.ttl* file entry:
-
-```bash
-kubectl create configmap graphdb-repo-configmap --from-file=config.ttl
-```
-
-After that, update the property `graphdb.repositoryConfigmap` from
-[values.yaml](values.yaml) to refer to the new configuration map.
-
-### GraphDB cluster mode
-
-The Helm chart allows to deploy GraphDB in cluster mode. By default this is disabled and only a single
-master node is deployed. 
-
-To deploy in cluster, set `graphdb.topology` in [values.yaml](values.yaml) to one of the following: 
-1M_3W - 1 master with 3 or more workers cluster
-2M3W_RW_RO - Two masters sharing 3 or more workers, one of the masters is read-only
-2M3W_MUTED - Multiple masters with dedicated workers
-See more about the cluster topologies here: https://graphdb.ontotext.com/documentation/enterprise/ee/cluster-topologies.html
-
-Configure `graphdb.clusterConfig.workersCount` to the desired replica amount. The 
-`graphdb.workers` configurations are similar as to the master node. 
-
 ## Values
 
 | Key | Type | Default | Description |
@@ -306,7 +355,7 @@ Configure `graphdb.clusterConfig.workersCount` to the desired replica amount. Th
 | graphdb.masters.repository | string | `"test"` | The repository used by the semantic objects service. This repo will be initialized during of Helm's post install hooks. See hooks/post-install/10-graphdb-provision-repo.yaml |
 | graphdb.masters.repositoryConfigmap | string | `"graphdb-repo-default-configmap"` | Reference to a configuration map containing a repository 'config.ttl' file used for initialization in the post install hook. Not required if hooks are skipped in favor of clean installation. |
 | graphdb.masters.resources | object | `{"limits":{"memory":"4Gi"},"requests":{"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html |
-| graphdb.clusterConfig.masterscount | int | `2` |  |
+| graphdb.clusterConfig.mastersCount | int | `2` |  |
 | graphdb.nodeSelector | object | `{}` | Schedule and assign on specific node. By default, no restrictions are applied. See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
 | graphdb.topology | string | `"2m3w_rw_ro"` |  |
 | graphdb.workbench.subpath | string | `"/graphdb"` | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front) |

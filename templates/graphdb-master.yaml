@@ -1,5 +1,5 @@
 # Loop over the replica count
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.masterscount | int ) 1 }}
+{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 
 {{ $worker_endpoint := printf "http://graphdb-master-%d:7200" $master_index }}
 
@@ -45,10 +45,7 @@ spec:
       imagePullSecrets:
         - name: {{ $.Values.deployment.imagePullSecret }}
       {{ end }}
-      {{ if hasKey $.Values.graphdb.masters "nodeSelector" }}
-      nodeSelector: {{ $.Values.graphdb.masters.nodeSelector | toYaml | nindent 8 }}
-      {{ end }}
-
+      nodeSelector: {{ default $.Values.graphdb.masters.nodeSelector (include "resolveMasterValue" (dict "nodeSelector" $.Values.graphdb.masters.nodes "value_name" "nodeSelector" "master_index" $master_index)) | toYaml | nindent 8  }}
       containers:
         - name: graphdb-master-{{ $master_index }}
           image: {{ $.Values.images.graphdb }}
@@ -68,6 +65,7 @@ spec:
             {{- end }}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
+          # TODO: Check what will happen if some pod dies
           startupProbe:
             httpGet:
               path: /repositories
@@ -104,7 +102,7 @@ spec:
                 [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
 
                 echo 'Provisioning GraphDB master {{ $master_index }} license'
-                cp /tmp/license/graphdb.license ./graphdb.license
+                cp /tmp/license/*.license ./graphdb.license
                 echo 'Done'
         # REPO PROVISION
         - name: provision-repository

@@ -35,7 +35,7 @@ services:
         strip_path: true
         preserve_host: false
 
-  # {{ range $i, $master_index := untilStep 2 (add1 $.Values.graphdb.clusterConfig.masterscount | int) 1 }}
+  # {{ range $i, $master_index := untilStep 2 (add1 $.Values.graphdb.clusterConfig.mastersCount | int) 1 }}
   - name: graphdb-master-{{ $master_index }}
     url: http://graphdb-master-{{ $master_index }}:7200
     connect_timeout: {{ $.Values.kong.timeout.connect }}

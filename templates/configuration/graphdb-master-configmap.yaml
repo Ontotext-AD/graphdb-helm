@@ -1,4 +1,4 @@
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.masterscount | int) 1 }}
+{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int) 1 }}
 ---
 apiVersion: {{ $.Values.versions.configmap }}
 kind: ConfigMap
@@ -12,7 +12,7 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.external-url={{ if eq ($master_index | int64) 1 }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}{{ end }}
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($master_index | int64) 1 }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}{{ end }}
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     {{ if eq ($master_index | int64) 1 }}-Dgraphdb.backup.base.folder=/opt/graphdb/backups{{ end }}

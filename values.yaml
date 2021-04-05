@@ -24,10 +24,10 @@ versions:
 # Top lvl flat for easier maintenance
 images:
   kong: kong:2.1-alpine
-  graphdb: ontotext/graphdb:9.5.0-ee
+  graphdb: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR3-adoptopenjdk11
   busybox: busybox:1.31
   #TODO: Why this does not work with apline container??
-  alpine: ontotext/graphdb:9.5.0-ee
+  alpine: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR3-adoptopenjdk11
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
@@ -109,8 +109,7 @@ graphdb:
   # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
   # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
   # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
-  # @default standalone
-  topology: "standalone"
+  topology: "2m3w_rw_ro"
   clusterConfig:
     # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
     masterWorkerMapping:
@@ -124,37 +123,14 @@ graphdb:
     # -- Describes which masters will be set as muted. Required only for 2m3w_muted topology.
     mutedMasters:
       - master-2
-    # -- Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_rw_ro topology.
+    # -- Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology.
     syncPeersMapping:
-      - master-1 -> master-2
+      - master-1 <-> master-2
     workersCount: 4
-    mastersCount: 1
+    mastersCount: 2
     #TODO: generate random if not present
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
-
-  backupRestore:
-    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv
-    # (default folder - /data/graphdb-backups).
-    # The backups are saved in format MM-DD-YYYY-hh-mm
-    auto_backup: "* 0 * * *"
-    # -- Cleans up the backups directory.
-    # Makes sure that there is a limit of the stored backups.
-    # Each or both of backups_count and backups_max_age could be used.
-    cleanup_cron: "* 1 * * *"
-    # -- Max number of backup dirs saved.
-    backups_count: "5"
-    # -- Max number of days for backups.
-    backup_max_age: "5"
-    # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
-    # Please bear in mind that there could be a time difference with the kubernetes environment
-    trigger_backup: "31.03.2021 14:52"
-    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
-    # For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
-    trigger_restore: "31.03.2021 14:50"
-    # -- The name of the backup directory we want to restore.
-    # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
-    restore_from_backup: "03-31-2021-14-47"
 
   masters:
     # -- The repository name to be created for all masters.
@@ -169,12 +145,15 @@ graphdb:
     license: graphdb-license
     # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    # -- Schedule and assign on specific node for ALL masters. By default, no restrictions are applied. This can be specified per instance in the nodes section.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    nodeSelector: {}
     # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
       - name: master-1
-    # -- Schedule and assign on specific node. By default, no restrictions are applied.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-    nodeSelector: {}
+        java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+        nodeSelector: {}
+        license: graphdb-license
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
@@ -183,11 +162,11 @@ graphdb:
         memory: 4Gi
       requests:
         memory: 2Gi
-    # Persistence configurations.
-    # -- By default, Helm will use a PV that reads and writes to the host file system.
+    # -- Persistence configurations.
+    # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
       # -- Name reference of a persistent volume to which the claim will try to attach.
-      # Example result: graphdb-worker-default-worker-1-pv
+      # Example result: graphdb-master-default-worker-1-pv
       volumeNamePrefix: graphdb-master-default
       storageClassName: standard
       # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
@@ -206,12 +185,18 @@ graphdb:
     license: graphdb-license
     # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    # -- Schedule and assign on specific node for ALL workers. By default, no restrictions are applied. This can be specified per instance in the nodes section.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+    nodeSelector: {}
     # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
         - name: worker-1
           license: graphdb-license
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+          nodeSelector: {}
+    # -- Persistence configurations.
+    # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
       # -- Name reference prefix of a persistent volume to which the claim will try to attach.
       # Example result: graphdb-worker-default-worker-1-pv
@@ -235,9 +220,6 @@ graphdb:
         memory: 4Gi
       requests:
         memory: 2Gi
-    # -- Schedule and assign on specific node. By default, no restrictions are applied.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-    nodeSelector: {}
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
   #configmap: graphdb-configmap
@@ -247,3 +229,26 @@ graphdb:
     # Should be configured in the API gateway (or any other proxy in front)
     subpath: /graphdb
 
+  backupRestore:
+    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv
+    # (default folder - /data/graphdb-backups).
+    # The backups are saved in format MM-DD-YYYY-hh-mm
+    # TODO: Add PV options for backups
+    auto_backup: "* 0 * * *"
+    # -- Cleans up the backups directory.
+    # Makes sure that there is a limit of the stored backups.
+    # Each or both of backups_count and backups_max_age could be used.
+    cleanup_cron: "* 1 * * *"
+    # -- Max number of backup dirs saved.
+    backups_count: "5"
+    # -- Max number of days for backups.
+    backup_max_age: "5"
+    # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
+    # Please bear in mind that there could be a time difference with the kubernetes environment
+#    trigger_backup: "31.03.2021 14:52"
+    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
+    # For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
+    trigger_restore: "31.03.2021 14:50"
+    # -- The name of the backup directory we want to restore.
+    # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
+    restore_from_backup: "03-31-2021-14-47"

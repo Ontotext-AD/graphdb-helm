@@ -46,16 +46,13 @@ spec:
       imagePullSecrets:
         - name: {{ $.Values.deployment.imagePullSecret }}
       {{ end }}
-      {{ if hasKey $.Values.graphdb.workers "nodeSelector" }}
-      nodeSelector: {{ $.Values.graphdb.workers.nodeSelector | toYaml | nindent 8 }}
-      {{ end }}
+      nodeSelector: {{ default $.Values.graphdb.workers.nodeSelector (include "resolveWorkerValue" (dict "nodeSelector" $.Values.graphdb.workers.nodes "value_name" "nodeSelector" "worker_index" $worker_index)) | toYaml | nindent 8  }}
       containers:
         - name: graphdb-worker-{{ $worker_index }}
           image: {{ $.Values.images.graphdb }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
-            #TODO: Fix this!
-            - name: graphdb-w-{{ $worker_index }}
+            - name: graphdb-m-{{ $worker_index }}
               containerPort: 7200
           envFrom:
             - configMapRef:
@@ -68,19 +65,19 @@ spec:
           startupProbe:
             httpGet:
               path: /repositories
-              port: graphdb-w-{{ $worker_index }}
+              port: graphdb-m-{{ $worker_index }}
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /repositories
-              port: graphdb-w-{{ $worker_index }}
+              port: graphdb-m-{{ $worker_index }}
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /repositories
-              port: graphdb-w-{{ $worker_index }}
+              port: graphdb-m-{{ $worker_index }}
             initialDelaySeconds: 10
             periodSeconds: 10
       initContainers:
@@ -101,8 +98,7 @@ spec:
                 [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
 
                 echo 'Provisioning GraphDB worker {{ $worker_index }} license'
-              #TODO: Make it work with different license names
-                cp /tmp/license/graphdb.license ./graphdb.license
+                cp /tmp/license/*.license ./graphdb.license
                 echo 'Done'
         # REPO PROVISION
         - name: provision-worker-repository

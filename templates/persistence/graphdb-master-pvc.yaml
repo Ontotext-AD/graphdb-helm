@@ -1,4 +1,4 @@
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.masterscount | int ) 1 }}
+{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 ---
 apiVersion: {{ $.Values.versions.pvc }}
 kind: PersistentVolumeClaim

@@ -191,7 +191,8 @@ graphdb:
     # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
         - name: worker-1
-          license: graphdb-license
+          license: graphdb-worker1-license
+          master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
           nodeSelector: {}
@@ -252,3 +253,39 @@ graphdb:
     # -- The name of the backup directory we want to restore.
     # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
     restore_from_backup: "03-31-2021-14-47"
+
+  # -- Tools for loading, scanning and repairing data in repos
+  tools:
+    # -- Tool to preload data in a chosen repo
+    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html
+    preload:
+      # -- If trigger is set to true, then the preload tool will be run while initializing the deployment
+      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
+      # (default pv is: /data/graphdb-worker-preload-data)
+      trigger: true
+      # -- Options to add to the command
+      # possible flags: -f, -p, -r
+      flags: "-f"
+      rdfDataFile: "geonames_europe.ttl "
+    # -- Tool to preload data in a chosen repo
+    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
+    loadrdf:
+      # -- If trigger is set to true, then the loadrdf tool will be run while initializing the deployment
+      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
+      # (default pv is: /data/graphdb-worker-preload-data)
+      trigger: false
+      # -- Options to add to the command
+      # possible flags: -f, -p
+      flags: "-f"
+      rdfDataFile: "geonames_europe.ttl "
+    # -- Tool for scanning and repairing data
+    # See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
+    storage_tool:
+      # -- If trigger is set to true, then the storage tool will be run while initializing the deployment
+      trigger: false
+      # -- commands to run the storage-tool with
+      command: "scan"
+      # -- repo to run command on
+      repository: "repo-test-1"
+      # -- additional options to run the storage-tool with
+      options: ""

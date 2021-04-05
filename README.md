@@ -331,6 +331,18 @@ about defining resource limits.
 | deployment.storage | string | `"/data"` | The storage place where components will read/write their persistent data in case the default persistent volumes are used. They use the node's file system. |
 | deployment.tls.enabled | bool | `false` | Feature toggle for SSL termination. Disabled by default. |
 | deployment.tls.secretName | string | `nil` | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment. |
+| graphdb.tools | object | `{"loadrdf":{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":false},"preload":{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":true},"storage_tool":{"command":"scan","options":"","repository":"repo-test-1","trigger":false}}` | Tools for loading, scanning and repairing data in repos |
+| graphdb.tools.loadrdf | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":false}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html |
+| graphdb.tools.loadrdf.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p |
+| graphdb.tools.loadrdf.trigger | bool | `false` | If trigger is set to true, then the loadrdf tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
+| graphdb.tools.preload | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":true}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html |
+| graphdb.tools.preload.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p, -r |
+| graphdb.tools.preload.trigger | bool | `true` | If trigger is set to true, then the preload tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
+| graphdb.tools.storage_tool | object | `{"command":"scan","options":"","repository":"repo-test-1","trigger":false}` | Tool for scanning and repairing data See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html |
+| graphdb.tools.storage_tool.command | string | `"scan"` | commands to run the storage-tool with |
+| graphdb.tools.storage_tool.options | string | `""` | additional options to run the storage-tool with if you want to use the option rebuild with -srcIndex=pso -destIndex=pso or -srcIndex=pso -destIndex=pos, don't forget to make the workers' memory limits 10Gi |
+| graphdb.tools.storage_tool.repository | string | `"repo-test-1"` | repo to run command on |
+| graphdb.tools.storage_tool.trigger | bool | `false` | If trigger is set to true, then the storage tool will be run while initializing the deployment |
 | graphdb.backupRestore.auto_backup | string | `"* 0 * * *"` | Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm TODO: Add PV options for backups |
 | graphdb.backupRestore.backup_max_age | string | `"5"` | Max number of days for backups. |
 | graphdb.backupRestore.backups_count | string | `"5"` | Max number of backup dirs saved. |

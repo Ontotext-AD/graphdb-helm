@@ -42,6 +42,10 @@ spec:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
+        - name: graphdb-worker-preload-data
+          persistentVolumeClaim:
+            claimName: graphdb-worker-preload-data-pvc
+
       {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
         - name: {{ $.Values.deployment.imagePullSecret }}
@@ -122,6 +126,59 @@ spec:
               echo 'Provisioning GraphDB {{ $worker_repo }} repository config.ttl' ;
               cp /tmp/graphdb/config.ttl ./config.ttl ;
               echo 'Done'
+        # LOADRDF TOOL
+        {{- if and (eq $worker_index 1) $.Values.graphdb.tools.loadrdf.trigger }}
+        - name: loadrdf-tool
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-worker-preload-data
+              mountPath: /tmp/graphdb/
+          command: ['sh', '-c']
+          args:
+            - |
+              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
+              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
+              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
+              echo "preload with loadrdf tool is done"
+          {{- end }}
+        {{- if and (eq $worker_index 1) $.Values.graphdb.tools.preload.trigger }}
+        # PRELOAD TOOL
+        - name: preload-tool
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-worker-preload-data
+              mountPath: /tmp/graphdb/
+          command: ['sh', '-c']
+          args:
+            - |
+              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
+              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
+              /opt/graphdb/dist/bin/preload -f -c /tmp/graphdb/config.ttl /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
+              mv /opt/graphdb/dist/data/repositories/* /opt/graphdb/home/data
+              echo "preload with preload tool is done"
+        {{- end }}
+        # STORAGE TOOL
+        {{- if and (eq $worker_index 1) $.Values.graphdb.tools.storage_tool.trigger }}
+        - name: storage-tool
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+          command: ['sh', '-c']
+          args:
+            - |
+              cdate=$(date +'%Y-%m-%d')
+              /opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repo}}/storage >> /opt/graphdb/home/data/storage-tool-${cdate}.log
+        {{- end }}
+
+
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service

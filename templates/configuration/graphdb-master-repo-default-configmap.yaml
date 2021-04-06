@@ -11,5 +11,5 @@ data:
 {{ if ne .Values.graphdb.topology "standalone" }}
 {{ tpl (.Files.Get "files/config/master.default.ttl" | indent 4) . }}
 {{ else }}
-{{ .Files.Get "files/config/graphdb.default.ttl" | indent 4 }}
+{{ tpl (.Files.Get "files/config/worker.default.ttl" | indent 4) . }}
 {{ end }}

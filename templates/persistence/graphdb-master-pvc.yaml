@@ -1,15 +1,17 @@
+{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 ---
-apiVersion: {{ .Values.versions.pvc }}
+apiVersion: {{ $.Values.versions.pvc }}
 kind: PersistentVolumeClaim
 metadata:
-  name: graphdb-data-pvc
+  name: graphdb-master-{{ $master_index }}-data-pvc
   labels:
-    name: graphdb-data-pvc
+    name: graphdb-master-{{ $master_index }}-data-pvc
 spec:
-  volumeName: {{ .Values.graphdb.persistence.volumeName }}
-  storageClassName: {{ .Values.graphdb.persistence.storageClassName }}
+  volumeName:  {{ $.Values.graphdb.masters.persistence.volumeNamePrefix }}-master-{{$master_index}}-pv
+  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.graphdb.persistence.storage }}
+      storage: {{ $.Values.graphdb.masters.persistence.storage }}
+{{ end }}

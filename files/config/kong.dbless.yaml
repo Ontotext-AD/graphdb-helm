@@ -23,20 +23,34 @@ plugins:
       echo_downstream: true
 
 services:
-  - name: graphdb
-    url: http://graphdb:7200
+  - name: graphdb-master-1
+    url: http://graphdb-master-1:7200
     connect_timeout: {{ .Values.kong.timeout.connect }}
     read_timeout: {{ .Values.kong.timeout.read }}
     write_timeout: {{ .Values.kong.timeout.write }}
     routes:
-      - name: graphdb
+      - name: graphdb-master-1
         paths: ["/graphdb"]
         methods: ["GET", "POST", "PUT", "DELETE"]
         strip_path: true
         preserve_host: false
 
+  # {{ range $i, $master_index := untilStep 2 (add1 $.Values.graphdb.clusterConfig.mastersCount | int) 1 }}
+  - name: graphdb-master-{{ $master_index }}
+    url: http://graphdb-master-{{ $master_index }}:7200
+    connect_timeout: {{ $.Values.kong.timeout.connect }}
+    read_timeout: {{ $.Values.kong.timeout.read }}
+    write_timeout: {{ $.Values.kong.timeout.write }}
+    routes:
+      - name: graphdb-master-{{ $master_index }}
+        paths: ["/graphdb-master-{{ $master_index }}"]
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        strip_path: true
+        preserve_host: false
+  # {{ end }}
+
   # {{ if ne .Values.graphdb.topology "standalone" }}
-  # {{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.workersCount | int) 1 }}
+  # {{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int) 1 }}
   - name: graphdb-worker-{{ $worker_index }}
     url: http://graphdb-worker-{{ $worker_index }}:7200
     connect_timeout: {{ $.Values.kong.timeout.connect }}

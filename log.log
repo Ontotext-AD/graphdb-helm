@@ -1,5 +1,5 @@
 NAME: graphdb-ee
-LAST DEPLOYED: Sun Feb 21 15:59:08 2021
+LAST DEPLOYED: Tue Mar 30 11:48:46 2021
 NAMESPACE: default
 STATUS: pending-install
 REVISION: 1
@@ -11,16 +11,35 @@ MANIFEST:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: graphdb-configmap
+  name: graphdb-master-1-configmap
   labels:
-    name: graphdb-configmap
+    name: graphdb-master-1-configmap
 data:
   # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.workbench.external-url=graphdb.local/graphdb
+    -Dgraphdb.vhosts=http://graphdb.local/graphdb,
+    -Dgraphdb.append.request.id.headers=true
+    -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
+    -Dgraphdb.auth.token.secret="s3cr37"
+     -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport
+---
+# Source: gdb-ee/templates/configuration/graphdb-master-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-master-2-configmap
+  labels:
+    name: graphdb-master-2-configmap
+data:
+  # >- means replace new line with space and no new lines at the end
+  GDB_JAVA_OPTS: >-
+    -Denable-context-index=true
+    -Dentity-pool-implementation=transactional
+    -Dhealth.max.query.time.seconds=60
+    -Dgraphdb.vhosts=http://graphdb.local/graphdb-master-2,
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     -Dgraphdb.auth.token.secret="s3cr37"
@@ -48,8 +67,8 @@ data:
     @prefix owlim: <http://www.ontotext.com/trree/owlim#>.
     
     [] a rep:Repository ;
-        rep:repositoryID "soaas" ;
-        rdfs:label "GraphDB master for soaas" ;
+        rep:repositoryID "test" ;
+        rdfs:label "GraphDB master for test" ;
         rep:repositoryImpl [
             rep:repositoryType "owlim:ReplicationCluster" ;
         ].
@@ -67,7 +86,7 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.workbench.external-url=graphdb.local/graphdb-worker-1
+    -Dgraphdb.vhosts=http://graphdb.local/graphdb-worker-1
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.auth.token.secret="s3cr37"
      -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport
@@ -85,10 +104,46 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.workbench.external-url=graphdb.local/graphdb-worker-2
+    -Dgraphdb.vhosts=http://graphdb.local/graphdb-worker-2
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.auth.token.secret="s3cr37"
      -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport
+---
+# Source: gdb-ee/templates/configuration/graphdb-worker-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-worker-3-configmap
+  labels:
+    name: graphdb-worker-3-configmap
+data:
+  # >- means replace new line with space and no new lines at the end
+  GDB_JAVA_OPTS: >-
+    -Denable-context-index=true
+    -Dentity-pool-implementation=transactional
+    -Dhealth.max.query.time.seconds=60
+    -Dgraphdb.vhosts=http://graphdb.local/graphdb-worker-3
+    -Dgraphdb.append.request.id.headers=true
+    -Dgraphdb.auth.token.secret="s3cr37"
+     -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport
+---
+# Source: gdb-ee/templates/configuration/graphdb-worker-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-worker-4-configmap
+  labels:
+    name: graphdb-worker-4-configmap
+data:
+  # >- means replace new line with space and no new lines at the end
+  GDB_JAVA_OPTS: >-
+    -Denable-context-index=true
+    -Dentity-pool-implementation=transactional
+    -Dhealth.max.query.time.seconds=60
+    -Dgraphdb.vhosts=http://graphdb.local/graphdb-worker-4
+    -Dgraphdb.append.request.id.headers=true
+    -Dgraphdb.auth.token.secret="s3cr37"
+     -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport
 ---
 # Source: gdb-ee/templates/configuration/graphdb-worker-repo-default-configmap.yaml
 # Default configuration map for provisioning GraphDB worker node repository.
@@ -112,8 +167,8 @@ data:
     @prefix shacl: <http://rdf4j.org/config/sail/shacl#>.
     
     [] a rep:Repository ;
-        rep:repositoryID "soaas" ;
-        rdfs:label "GraphDB worker for soaas" ;
+        rep:repositoryID "test" ;
+        rdfs:label "GraphDB worker for test" ;
         rep:repositoryImpl [
             rep:repositoryType "owlim:ReplicationClusterWorker" ;
             rep:delegate [
@@ -211,18 +266,82 @@ data:
           echo_downstream: true
     
     services:
-      - name: graphdb
-        url: http://graphdb:7200
+      - name: graphdb-master-1
+        url: http://graphdb-master-1:7200
         connect_timeout: 60000
         read_timeout: 60000
         write_timeout: 60000
         routes:
-          - name: graphdb
+          - name: graphdb-master-1
             paths: ["/graphdb"]
             methods: ["GET", "POST", "PUT", "DELETE"]
             strip_path: true
             preserve_host: false
     
+      # 
+      - name: graphdb-master-2
+        url: http://graphdb-master-2:7200
+        connect_timeout: 60000
+        read_timeout: 60000
+        write_timeout: 60000
+        routes:
+          - name: graphdb-master-2
+            paths: ["/graphdb-master-2"]
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            strip_path: true
+            preserve_host: false
+      # 
+    
+      # 
+      # 
+      - name: graphdb-worker-1
+        url: http://graphdb-worker-1:7200
+        connect_timeout: 60000
+        read_timeout: 60000
+        write_timeout: 60000
+        routes:
+          - name: graphdb-worker-1
+            paths: ["/graphdb-worker-1"]
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            strip_path: true
+            preserve_host: false
+      # 
+      - name: graphdb-worker-2
+        url: http://graphdb-worker-2:7200
+        connect_timeout: 60000
+        read_timeout: 60000
+        write_timeout: 60000
+        routes:
+          - name: graphdb-worker-2
+            paths: ["/graphdb-worker-2"]
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            strip_path: true
+            preserve_host: false
+      # 
+      - name: graphdb-worker-3
+        url: http://graphdb-worker-3:7200
+        connect_timeout: 60000
+        read_timeout: 60000
+        write_timeout: 60000
+        routes:
+          - name: graphdb-worker-3
+            paths: ["/graphdb-worker-3"]
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            strip_path: true
+            preserve_host: false
+      # 
+      - name: graphdb-worker-4
+        url: http://graphdb-worker-4:7200
+        connect_timeout: 60000
+        read_timeout: 60000
+        write_timeout: 60000
+        routes:
+          - name: graphdb-worker-4
+            paths: ["/graphdb-worker-4"]
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            strip_path: true
+            preserve_host: false
+      #  range
       #  cluster & expose check
 ---
 # Source: gdb-ee/templates/graphdb-utils-configmap.yaml
@@ -234,9 +353,10 @@ metadata:
     name: graphdb-utils-configmap
 data:
   graphdb.sh: |-
-    #!/usr/bin/env sh
+    #!/usr/bin/env bash
     
     set -eu
+    
     #TODO: Add a function which sets a master as read only
     function waitService() {
       address=$1
@@ -257,52 +377,160 @@ data:
       done
     }
     
-    waitMaster() {
-      master_address=$1
+    waitMasters() {
+      masters_count=$1
       master_repo=$2
     
-      waitService "${master_address}/rest/repositories"
-      waitService "${master_address}/rest/repositories/${master_repo}/size"
-      waitService "${master_address}/rest/cluster/masters/${master_repo}"
+      for (( c=1; c<=$masters_count; c++ ))
+      do
+        master_address=http://graphdb-master-$c:7200
+        waitService "${master_address}/rest/repositories"
+        waitService "${master_address}/rest/repositories/${master_repo}/size"
+        waitService "${master_address}/rest/cluster/masters/${master_repo}"
+      done
     }
     
-    linkWorker() {
-      master_address=$1
-      worker_address=$2
-      repository=$3
-      master_repo=$4
+    waitWorkers() {
+      workers_count=$1
+      workers_repo=$2
     
-      waitService "http://localhost:7200/repositories/${repository}/size"
+      for (( c=1; c<=$workers_count; c++ ))
+      do
+        workers_address=http://graphdb-worker-$c:7200
+        waitService "${workers_address}/rest/repositories"
+        waitService "${workers_address}/rest/repositories/${workers_repo}/size"
+      done
+    }
     
-      worker_repo_endpoint="${worker_address}/repositories/${repository}"
+    linkWorkerToMaster() {
+      master_address=http://$1:7200
+      master_repo=$2
+      worker_address=http://$3:7200
+      worker_repository=$4
     
-      echo "Adding worker as remote location"
+      worker_repo_endpoint="${worker_address}/repositories/${worker_repository}"
+      waitService "${worker_address}/rest/repositories"
+      waitService "${worker_address}/rest/repositories/${worker_repository}/size"
     
-      curl ${master_address}/rest/locations -H 'Content-Type:application/json' \
-      -H 'Accept: application/json, text/plain, */*' \
-      --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
+      waitService "${master_address}/rest/repositories"
+      waitService "${master_address}/rest/repositories/${worker_repository}/size"
     
-      echo "Linking worker"
+      addInstanceAsRemoteLocation $1 $3
+    
+      echo "Linking worker with repo endpoint ${worker_repo_endpoint}"
       curl -o response.json -sf -X POST ${master_address}/jolokia/ \
-          --header 'Content-Type: multipart/form-data' \
-          --data-raw "{
-            \"type\": \"exec\",
-            \"mbean\": \"ReplicationCluster:name=ClusterInfo/${repository}\",
-            \"operation\": \"addClusterNode\",
-            \"arguments\": [
-              \"${worker_repo_endpoint}\", 0, true
-            ]
-          }"
-    
-      # Jolokia returns HTTP 200 even if the response is a failure...
-      # Parse the response to check the real status
-      status=$(jq '.status' response.json)
-      if [[ "${status}" -ne "200" ]]; then
-        echo "Linking failed for worker"
-        exit 1
+        --header 'Content-Type: multipart/form-data' \
+        --data-raw "{
+          \"type\": \"exec\",
+          \"mbean\": \"ReplicationCluster:name=ClusterInfo/${master_repo}\",
+          \"operation\": \"addClusterNode\",
+          \"arguments\": [
+            \"${worker_repo_endpoint}\", 0, true
+          ]
+        }"
+       if grep -q '"status":200' "response.json"; then
+          echo "Linking successfull for worker $worker_address"
+      else
+          echo "Linking failed for worker ${worker_address}"
+          exit 1
       fi
     
-      echo "Linked"
+      echo "Worker linked successfully!"
+    }
+    
+    setInstanceReadOnly() {
+      instance_address=http://$1:7200
+      repository=$2
+    
+      echo "Setting instance $instance_address as readonly"
+    
+      curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"ReadOnly\",\"value\":true}" $instance_address/jolokia
+    
+      if grep -q '"status":200' "response.json"; then
+          echo "Successfully set instance $instance_address as read only"
+      else
+          echo "Failed setting instance read only $instance_address"
+          exit 1
+      fi
+    }
+    
+    setInstanceMuted() {
+      instance_address=http://$1:7200
+      repository=$2
+    
+      echo "Setting instance $instance_address as muted"
+    
+      curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"Mode\",\"value\":\"MUTE\"}" $instance_address/jolokia/
+    
+      if grep -q '"status":200' "response.json"; then
+          echo "Successfully set instance $instance_address as muted"
+      else
+          echo "Failed setting instance muted $instance_address"
+          exit 1
+      fi
+    }
+    
+    addInstanceAsRemoteLocation() {
+      master_address=http://$1:7200
+      worker_address=http://$2:7200
+    
+      echo "Adding worker $worker_address as remote location of $master_address"
+    
+      curl ${master_address}/rest/locations -o response.json -H 'Content-Type:application/json' -H 'Accept: application/json, text/plain, */*' --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"\", \"password\":\"\", \"active\":\"false\"}"
+    
+      if grep -q 'Success\|connected' "response.json"; then
+          echo "Successfully added $worker_address as remote location of $master_address"
+      else
+          echo "Failed adding instance $worker_address as remote location of $master_address"
+          exit 1
+      fi
+    }
+    
+    setSyncPeer() {
+      instance1_address=http://$1:7200
+      instance2_address=http://$3:7200
+      instance1_repository=$2
+      instance2_repository=$4
+    
+      addInstanceAsRemoteLocation $1 $3
+    
+      echo "Setting $instance2_address as sync pear for $instance1_address"
+    
+      curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
+      if grep -q '"status":200' "response.json"; then
+          echo "Successfully set sync peer between $instance1_address and $instance2_address"
+      else
+          echo "Failed setting sync peer between $instance1_address and $instance2_address"
+          exit 1
+      fi
+    }
+    
+    linkAllWorkersToMaster() {
+      worker_repository=$4
+      master_repo=$2
+      workers_count=$3
+      for (( c=1; c<=$workers_count; c++ ))
+      do
+        worker_address=graphdb-worker-$c
+        linkWorkerToMaster $1 $master_repo $worker_address $worker_repository
+      done
+    
+      echo "Cluster linked successfully!"
+    }
+    
+    waitAllInstances() {
+      #workersCount, workerRepo
+      waitWorkers $3 $4
+      #mastersCount, mastersRepo
+      waitMasters $1 $2
+    }
+    
+    link_1m_3w() {
+      #masters count, master repo, workers count, worker repo
+      waitAllInstances $1 $2 $3 $4
+    
+      #1 master, multiple workers. Args: master to link to, master repo, workers count, workers repo
+      linkAllWorkersToMaster graphdb-master-1 $2 $3 $4
     }
     
     "$@"
@@ -311,9 +539,9 @@ data:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: graphdb-default-pv
+  name: graphdb-master-default-master-1-pv
   labels:
-    name: graphdb-default-pv
+    name: graphdb-master-default-master-1-pv
 spec:
   storageClassName: "standard"
   accessModes:
@@ -321,7 +549,31 @@ spec:
   capacity:
     storage: 10G
   hostPath:
-    path: /data/graphdb-data
+    path: /data/graphdb-master-1-data
+
+
+#
+# Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
+# for Minikube deployments.
+#
+# Note: Not to be used in production or multi node cluster.
+#
+---
+# Source: gdb-ee/templates/persistence/graphdb-master-default-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: graphdb-master-default-master-2-pv
+  labels:
+    name: graphdb-master-default-master-2-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10G
+  hostPath:
+    path: /data/graphdb-master-2-data
 ---
 # Source: gdb-ee/templates/persistence/graphdb-worker-default-pv.yaml
 apiVersion: v1
@@ -362,16 +614,80 @@ spec:
     storage: 10G
   hostPath:
     path: /data/graphdb-worker-2-data
+
+
+#
+# Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
+# for Minikube deployments.
+#
+# Note: Not to be used in production or multi node cluster.
+#
+---
+# Source: gdb-ee/templates/persistence/graphdb-worker-default-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: graphdb-worker-default-worker-3-pv
+  labels:
+    name: graphdb-worker-default-worker-3-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10G
+  hostPath:
+    path: /data/graphdb-worker-3-data
+
+
+#
+# Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
+# for Minikube deployments.
+#
+# Note: Not to be used in production or multi node cluster.
+#
+---
+# Source: gdb-ee/templates/persistence/graphdb-worker-default-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: graphdb-worker-default-worker-4-pv
+  labels:
+    name: graphdb-worker-default-worker-4-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10G
+  hostPath:
+    path: /data/graphdb-worker-4-data
 ---
 # Source: gdb-ee/templates/persistence/graphdb-master-pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: graphdb-data-pvc
+  name: graphdb-master-1-data-pvc
   labels:
-    name: graphdb-data-pvc
+    name: graphdb-master-1-data-pvc
 spec:
-  volumeName: graphdb-default-pv
+  volumeName:  graphdb-master-default-master-1-pv
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+---
+# Source: gdb-ee/templates/persistence/graphdb-master-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graphdb-master-2-data-pvc
+  labels:
+    name: graphdb-master-2-data-pvc
+spec:
+  volumeName:  graphdb-master-default-master-2-pv
   storageClassName: standard
   accessModes:
     - ReadWriteOnce
@@ -404,6 +720,38 @@ metadata:
     name: graphdb-worker-2-data-pvc
 spec:
   volumeName: graphdb-worker-default-worker-2-pv
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+---
+# Source: gdb-ee/templates/persistence/graphdb-worker-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graphdb-worker-3-data-pvc
+  labels:
+    name: graphdb-worker-3-data-pvc
+spec:
+  volumeName: graphdb-worker-default-worker-3-pv
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+---
+# Source: gdb-ee/templates/persistence/graphdb-worker-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graphdb-worker-4-data-pvc
+  labels:
+    name: graphdb-worker-4-data-pvc
+spec:
+  volumeName: graphdb-worker-default-worker-4-pv
   storageClassName: standard
   accessModes:
     - ReadWriteOnce
@@ -490,14 +838,30 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
-  name: graphdb
+  name: graphdb-master-1
   labels:
-    app: graphdb
+    app: graphdb-master-1
 spec:
   selector:
-    app: graphdb
+    app: graphdb-master-1
   ports:
-    - name: graphdb
+    - name: graphdb-master-1
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+---
+# Source: gdb-ee/templates/graphdb-master.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-master-2
+  labels:
+    app: graphdb-master-2
+spec:
+  selector:
+    app: graphdb-master-2
+  ports:
+    - name: graphdb-master-2
       port: 7200
       targetPort: 7200
       protocol: TCP
@@ -534,6 +898,38 @@ spec:
       targetPort: 7200
       protocol: TCP
 ---
+# Source: gdb-ee/templates/graphdb-worker.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-worker-3
+  labels:
+    app: graphdb-worker-3
+spec:
+  selector:
+    app: graphdb-worker-3
+  ports:
+    - name: graphdb-worker-3
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+---
+# Source: gdb-ee/templates/graphdb-worker.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-worker-4
+  labels:
+    app: graphdb-worker-4
+spec:
+  selector:
+    app: graphdb-worker-4
+  ports:
+    - name: graphdb-worker-4
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+---
 # Source: gdb-ee/templates/gateway/kong.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -554,7 +950,7 @@ spec:
       annotations:
         # Enables redeployment if the configuration map or the declarative configuration is updated
         checksum/configmap: 327ac5b93a30f3a005b17c6642d22d4df61d725f8a5f3904ab7910e308db337b
-        checksum/services-configmap: bb9ab343eedb2c544022b5d503a0bc7b1f480c26b3f3ab8e2b3d7f92b8959b87
+        checksum/services-configmap: bd561ffd85732adcd497354c45ef61716af21c1e62cdda088f77b2a9cb41b5ee
     spec:
       volumes:
         - name: kong-services-config
@@ -605,9 +1001,9 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: graphdb
+  name: graphdb-master-1
   labels:
-    app: graphdb
+    app: graphdb-master-1
 spec:
   replicas: 1
   # Important to define this strategy instead of the default rolling update, otherwise when
@@ -617,22 +1013,21 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: graphdb
+      app: graphdb-master-1
   template:
     metadata:
       labels:
-        app: graphdb
+        app: graphdb-master-1
     spec:
       terminationGracePeriodSeconds: 60
       volumes:
-        - name: graphdb-license
+        - name: graphdb-master-license
           secret:
-            #TODO: Add masters index
             secretName: graphdb-masters-license
-        - name: graphdb-storage
+        - name: graphdb-master-storage
           persistentVolumeClaim:
-            claimName: graphdb-data-pvc
-        - name: graphdb-repo-config
+            claimName: graphdb-master-1-data-pvc
+        - name: graphdb-master-repo-config
           configMap:
             name: graphdb-repo-default-configmap
       
@@ -641,17 +1036,17 @@ spec:
         {}
       
       containers:
-        - name: graphdb
-          image: ontotext/graphdb:9.5.0-ee
+        - name: graphdb-master-1
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
           imagePullPolicy: IfNotPresent
           ports:
-            - name: graphdb
+            - name: graphdb-m-1
               containerPort: 7200
           envFrom:
             - configMapRef:
-                name: graphdb-configmap
+                name: graphdb-master-1-configmap
           volumeMounts:
-            - name: graphdb-storage
+            - name: graphdb-master-storage
               mountPath: /opt/graphdb/home
           resources: 
             limits:
@@ -662,19 +1057,19 @@ spec:
           startupProbe:
             httpGet:
               path: /repositories
-              port: graphdb
+              port: graphdb-m-1
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /repositories
-              port: graphdb
+              port: graphdb-m-1
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /repositories
-              port: graphdb
+              port: graphdb-m-1
             initialDelaySeconds: 60
             periodSeconds: 10
       initContainers:
@@ -683,9 +1078,9 @@ spec:
           image: busybox:1.31
           imagePullPolicy: IfNotPresent
           volumeMounts:
-            - name: graphdb-storage
+            - name: graphdb-master-storage
               mountPath: /opt/graphdb/home
-            - name: graphdb-license
+            - name: graphdb-master-license
               mountPath: /tmp/license/
           command: ['sh', '-c']
           args:
@@ -694,7 +1089,7 @@ spec:
                 cd /opt/graphdb/home/conf/
                 [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
 
-                echo 'Provisioning GraphDB license'
+                echo 'Provisioning GraphDB master 1 license'
                 cp /tmp/license/graphdb.license ./graphdb.license
                 echo 'Done'
         # REPO PROVISION
@@ -702,21 +1097,139 @@ spec:
           image: busybox:1.31
           imagePullPolicy: IfNotPresent
           volumeMounts:
-            - name: graphdb-storage
+            - name: graphdb-master-storage
               mountPath: /opt/graphdb/home
-            - name: graphdb-repo-config
+            - name: graphdb-master-repo-config
               mountPath: /tmp/graphdb
           command: ['sh', '-c']
           args:
             - |
               set -eu
-              mkdir -p /opt/graphdb/home/data/repositories/soaas ;
-              cd /opt/graphdb/home/data/repositories/soaas ;
+              mkdir -p /opt/graphdb/home/data/repositories/test ;
+              cd /opt/graphdb/home/data/repositories/test ;
 
               # If the repo configuration exists -> skip provisioning
               [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
 
-              echo 'Provisioning GraphDB soaas repository config.ttl' ;
+              echo 'Provisioning GraphDB test repository config.ttl' ;
+              cp /tmp/graphdb/config.ttl ./config.ttl ;
+              echo 'Done'
+---
+# Source: gdb-ee/templates/graphdb-master.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphdb-master-2
+  labels:
+    app: graphdb-master-2
+spec:
+  replicas: 1
+  # Important to define this strategy instead of the default rolling update, otherwise when
+  # performing helm update, GraphDB won't release its lock from the repositories and the new
+  # pod won't be able to start.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphdb-master-2
+  template:
+    metadata:
+      labels:
+        app: graphdb-master-2
+    spec:
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: graphdb-master-license
+          secret:
+            secretName: graphdb-masters-license
+        - name: graphdb-master-storage
+          persistentVolumeClaim:
+            claimName: graphdb-master-2-data-pvc
+        - name: graphdb-master-repo-config
+          configMap:
+            name: graphdb-repo-default-configmap
+      
+      
+      nodeSelector: 
+        {}
+      
+      containers:
+        - name: graphdb-master-2
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: graphdb-m-2
+              containerPort: 7200
+          envFrom:
+            - configMapRef:
+                name: graphdb-master-2-configmap
+          volumeMounts:
+            - name: graphdb-master-storage
+              mountPath: /opt/graphdb/home
+          resources: 
+            limits:
+              memory: 4Gi
+            requests:
+              memory: 2Gi
+          # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
+          startupProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-m-2
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-m-2
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-m-2
+            initialDelaySeconds: 60
+            periodSeconds: 10
+      initContainers:
+        # LICENSE PROVISION
+        - name: provision-license
+          image: busybox:1.31
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: graphdb-master-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-master-license
+              mountPath: /tmp/license/
+          command: ['sh', '-c']
+          args:
+            - |
+                mkdir -p /opt/graphdb/home/conf/
+                cd /opt/graphdb/home/conf/
+                [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
+
+                echo 'Provisioning GraphDB master 2 license'
+                cp /tmp/license/graphdb.license ./graphdb.license
+                echo 'Done'
+        # REPO PROVISION
+        - name: provision-repository
+          image: busybox:1.31
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: graphdb-master-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-master-repo-config
+              mountPath: /tmp/graphdb
+          command: ['sh', '-c']
+          args:
+            - |
+              set -eu
+              mkdir -p /opt/graphdb/home/data/repositories/test ;
+              cd /opt/graphdb/home/data/repositories/test ;
+
+              # If the repo configuration exists -> skip provisioning
+              [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
+
+              echo 'Provisioning GraphDB test repository config.ttl' ;
               cp /tmp/graphdb/config.ttl ./config.ttl ;
               echo 'Done'
 ---
@@ -763,7 +1276,7 @@ spec:
       
       containers:
         - name: graphdb-worker-1
-          image: ontotext/graphdb:9.5.0-ee
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
           imagePullPolicy: IfNotPresent
           ports:
             - name: graphdb-w-1
@@ -774,20 +1287,6 @@ spec:
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
-            - name: graphdb-utils
-              mountPath: /tmp/utils
-          lifecycle:
-            postStart:
-              exec:
-                # Always link the worker after starting the container.
-                # This ensures proper state in most of the cases
-                #TODO: For different topologies execute different script, for example linking the worker to more than 1 master if the topology is 2M3W_RW_RO or 2M3W_MUTED. Note that for 2M3W_MUTED you'll need some indicator to which master the current worker should be linked.
-                command: [
-                'sh',
-                '-c',
-                'apk add jq; cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh linkWorker "http://graphdb:7200" "http://graphdb-worker-1:7200" "soaas" "soaas"',
-                '&>  /proc/1/fd/1'
-                ]
           resources: 
             limits:
               memory: 4Gi
@@ -845,33 +1344,15 @@ spec:
           args:
             - |
               set -eu
-              mkdir -p /opt/graphdb/home/data/repositories/soaas ;
-              cd /opt/graphdb/home/data/repositories/soaas ;
+              mkdir -p /opt/graphdb/home/data/repositories/test ;
+              cd /opt/graphdb/home/data/repositories/test ;
 
               # If the repo configuration exists -> skip provisioning
               [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
 
-              echo 'Provisioning GraphDB soaas repository config.ttl' ;
+              echo 'Provisioning GraphDB test repository config.ttl' ;
               cp /tmp/graphdb/config.ttl ./config.ttl ;
               echo 'Done'
-        # We wait for master before starting the worker node. Easier for troubleshooting.
-          #TODO: If more than 1 master, wait for all of them!
-        - name: wait-master-node
-          image: adoptopenjdk/openjdk11:alpine
-          imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: graphdb-utils
-              mountPath: /tmp/utils
-          command: ['sh', '-c']
-          args:
-            - |
-              set -eu
-              apk add curl
-              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh;
-              chmod +x /usr/local/bin/graphdb.sh
-              graphdb.sh waitMaster "http://graphdb:7200" "soaas"
-              echo "Done"
-              exit 0
 ---
 # Source: gdb-ee/templates/graphdb-worker.yaml
 apiVersion: apps/v1
@@ -916,7 +1397,7 @@ spec:
       
       containers:
         - name: graphdb-worker-2
-          image: ontotext/graphdb:9.5.0-ee
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
           imagePullPolicy: IfNotPresent
           ports:
             - name: graphdb-w-2
@@ -927,20 +1408,6 @@ spec:
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
-            - name: graphdb-utils
-              mountPath: /tmp/utils
-          lifecycle:
-            postStart:
-              exec:
-                # Always link the worker after starting the container.
-                # This ensures proper state in most of the cases
-                #TODO: For different topologies execute different script, for example linking the worker to more than 1 master if the topology is 2M3W_RW_RO or 2M3W_MUTED. Note that for 2M3W_MUTED you'll need some indicator to which master the current worker should be linked.
-                command: [
-                'sh',
-                '-c',
-                'apk add jq; cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh linkWorker "http://graphdb:7200" "http://graphdb-worker-2:7200" "soaas" "soaas"',
-                '&>  /proc/1/fd/1'
-                ]
           resources: 
             limits:
               memory: 4Gi
@@ -998,33 +1465,302 @@ spec:
           args:
             - |
               set -eu
-              mkdir -p /opt/graphdb/home/data/repositories/soaas ;
-              cd /opt/graphdb/home/data/repositories/soaas ;
+              mkdir -p /opt/graphdb/home/data/repositories/test ;
+              cd /opt/graphdb/home/data/repositories/test ;
 
               # If the repo configuration exists -> skip provisioning
               [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
 
-              echo 'Provisioning GraphDB soaas repository config.ttl' ;
+              echo 'Provisioning GraphDB test repository config.ttl' ;
               cp /tmp/graphdb/config.ttl ./config.ttl ;
               echo 'Done'
-        # We wait for master before starting the worker node. Easier for troubleshooting.
-          #TODO: If more than 1 master, wait for all of them!
-        - name: wait-master-node
-          image: adoptopenjdk/openjdk11:alpine
+---
+# Source: gdb-ee/templates/graphdb-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphdb-worker-3
+  labels:
+    app: graphdb-worker-3
+spec:
+  replicas: 1
+  # Important to define this strategy instead of the default rolling update, otherwise when
+  # performing helm update, GraphDB won't release its lock from the repositories and the new
+  # pod won't be able to start.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphdb-worker-3
+  template:
+    metadata:
+      labels:
+        app: graphdb-worker-3
+    spec:
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: graphdb-license
+          secret:
+            secretName: graphdb-workers-license
+        - name: graphdb-worker-storage
+          persistentVolumeClaim:
+            claimName: graphdb-worker-3-data-pvc
+        - name: graphdb-worker-repo-config
+          configMap:
+            name: graphdb-worker-repo-default-configmap
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+      
+      
+      nodeSelector: 
+        {}
+      
+      containers:
+        - name: graphdb-worker-3
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: graphdb-w-3
+              containerPort: 7200
+          envFrom:
+            - configMapRef:
+                name: graphdb-worker-3-configmap
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+          resources: 
+            limits:
+              memory: 4Gi
+            requests:
+              memory: 2Gi
+          # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
+          startupProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-3
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      initContainers:
+        # LICENSE PROVISION
+        - name: provision-license
+          image: busybox:1.31
           imagePullPolicy: IfNotPresent
           volumeMounts:
-            - name: graphdb-utils
-              mountPath: /tmp/utils
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-license
+              mountPath: /tmp/license/
+          command: ['sh', '-c']
+          args:
+            - |
+                mkdir -p /opt/graphdb/home/conf/
+                cd /opt/graphdb/home/conf/
+                [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
+
+                echo 'Provisioning GraphDB worker 3 license'
+                cp /tmp/license/graphdb.license ./graphdb.license
+                echo 'Done'
+        # REPO PROVISION
+        - name: provision-worker-repository
+          image: busybox:1.31
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-worker-repo-config
+              mountPath: /tmp/graphdb
           command: ['sh', '-c']
           args:
             - |
               set -eu
-              apk add curl
-              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh;
-              chmod +x /usr/local/bin/graphdb.sh
-              graphdb.sh waitMaster "http://graphdb:7200" "soaas"
-              echo "Done"
-              exit 0
+              mkdir -p /opt/graphdb/home/data/repositories/test ;
+              cd /opt/graphdb/home/data/repositories/test ;
+
+              # If the repo configuration exists -> skip provisioning
+              [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
+
+              echo 'Provisioning GraphDB test repository config.ttl' ;
+              cp /tmp/graphdb/config.ttl ./config.ttl ;
+              echo 'Done'
+---
+# Source: gdb-ee/templates/graphdb-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphdb-worker-4
+  labels:
+    app: graphdb-worker-4
+spec:
+  replicas: 1
+  # Important to define this strategy instead of the default rolling update, otherwise when
+  # performing helm update, GraphDB won't release its lock from the repositories and the new
+  # pod won't be able to start.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: graphdb-worker-4
+  template:
+    metadata:
+      labels:
+        app: graphdb-worker-4
+    spec:
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: graphdb-license
+          secret:
+            secretName: graphdb-workers-license
+        - name: graphdb-worker-storage
+          persistentVolumeClaim:
+            claimName: graphdb-worker-4-data-pvc
+        - name: graphdb-worker-repo-config
+          configMap:
+            name: graphdb-worker-repo-default-configmap
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+      
+      
+      nodeSelector: 
+        {}
+      
+      containers:
+        - name: graphdb-worker-4
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: graphdb-w-4
+              containerPort: 7200
+          envFrom:
+            - configMapRef:
+                name: graphdb-worker-4-configmap
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+          resources: 
+            limits:
+              memory: 4Gi
+            requests:
+              memory: 2Gi
+          # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
+          startupProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-4
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-4
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /repositories
+              port: graphdb-w-4
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      initContainers:
+        # LICENSE PROVISION
+        - name: provision-license
+          image: busybox:1.31
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-license
+              mountPath: /tmp/license/
+          command: ['sh', '-c']
+          args:
+            - |
+                mkdir -p /opt/graphdb/home/conf/
+                cd /opt/graphdb/home/conf/
+                [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
+
+                echo 'Provisioning GraphDB worker 4 license'
+                cp /tmp/license/graphdb.license ./graphdb.license
+                echo 'Done'
+        # REPO PROVISION
+        - name: provision-worker-repository
+          image: busybox:1.31
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: graphdb-worker-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-worker-repo-config
+              mountPath: /tmp/graphdb
+          command: ['sh', '-c']
+          args:
+            - |
+              set -eu
+              mkdir -p /opt/graphdb/home/data/repositories/test ;
+              cd /opt/graphdb/home/data/repositories/test ;
+
+              # If the repo configuration exists -> skip provisioning
+              [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
+
+              echo 'Provisioning GraphDB test repository config.ttl' ;
+              cp /tmp/graphdb/config.ttl ./config.ttl ;
+              echo 'Done'
+---
+# Source: gdb-ee/templates/post-start-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: link-graphdb-cluster
+spec:
+  template:
+    spec:
+      containers:
+        - name: pi
+          image: docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR2-adoptopenjdk11
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['sh','-c']
+          args:
+            - |
+                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ;
+                /usr/local/bin/graphdb.sh waitAllInstances 2 "test" 4 "test";
+                  /usr/local/bin/graphdb.sh setInstanceReadOnly graphdb-master-2 "test";
+
+                
+                  
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-1 "test" graphdb-worker-1 "test";
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-1 "test" graphdb-worker-2 "test";
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-1 "test" graphdb-worker-3 "test";
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-1 "test" graphdb-worker-4 "test";
+                  
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-2 "test" graphdb-worker-1 "test";
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-2 "test" graphdb-worker-2 "test";
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-2 "test" graphdb-worker-3 "test";
+                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-2 "test" graphdb-worker-4 "test";
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-master-1 "test" graphdb-master-2 "test";
+                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-master-2 "test" graphdb-master-1 "test";
+                >> /proc/1/fd/1
+      restartPolicy: Never
+      volumes:
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+  backoffLimit: 4
 ---
 # Source: gdb-ee/templates/gateway/ingress.yaml
 apiVersion: extensions/v1beta1
@@ -1050,13 +1786,16 @@ spec:
               serviceName: kong-proxy
               servicePort: 8000
 ---
+# Source: gdb-ee/templates/graphdb-master.yaml
+# Loop over the replica count
+---
 # Source: gdb-ee/templates/graphdb-worker.yaml
 # Loop over the replica count
 ---
 # Source: gdb-ee/templates/persistence/graphdb-master-default-pv.yaml
 #
-# Default persistence volume for GraphDB. Data is stored on the node file system. Suitable for
-# Minikube deployments.
+# Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
+# for Minikube deployments.
 #
 # Note: Not to be used in production or multi node cluster.
 #

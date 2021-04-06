@@ -1,23 +1,24 @@
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.mastersCount | int) 1 }}
+{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int) 1 }}
 ---
 apiVersion: {{ $.Values.versions.configmap }}
 kind: ConfigMap
 metadata:
-  name: graphdb-configmap
+  name: graphdb-master-{{ $master_index }}-configmap
   labels:
-    name: graphdb-configmap
+    name: graphdb-master-{{ $master_index }}-configmap
 data:
   # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.workbench.external-url={{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($master_index | int64) 1 }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}{{ end }}
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
+    {{ if eq ($master_index | int64) 1 }}-Dgraphdb.backup.base.folder=/opt/graphdb/backups{{ end }}
 {{- if ne $.Values.graphdb.topology "standalone" }}
-    -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterSecret | quote }}
+    -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clustersecret | quote }}
 {{- end }}
-    {{ include "resolveMasterValue" (dict "default" $.Values.graphdb.masters.java_args "nodes" $.Values.graphdb.masters.nodes "value_name" "java_args" "master_index" $master_index ) }}
+    {{ default $.Values.graphdb.masters.java_args (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "java_args" "master_index" $master_index )) }}
 {{ end }}
 

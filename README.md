@@ -223,9 +223,9 @@ There are 3 important configuration sections:
 #### GraphDB cluster configuration
 
 By default the Helm chart supports the 3 topologies that we recommend in our documentation. This is configured by settings `graphdb.topology`
-Possible values: `standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted`.
+Possible values: `standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted`. Masters and workers count in cluster modes are controlled by mastersCount and workersCount properties
 
-**standalone** - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties
+**standalone** - Launches single instance of GraphDB with a preconfigured worker repository. 
 
 **1m_3w** - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
 

@@ -133,11 +133,11 @@ spec:
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
-              cpu: {{ .Values.graphdb.tools.resources.limits.cpu }}
-              memory: {{ .Values.graphdb.tools.resources.limits.memory }}
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
             requests:
-              cpu:  {{ .Values.graphdb.tools.resources.requests.cpu }}
-              memory:  {{ .Values.graphdb.tools.resources.requests.memory }}
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
@@ -150,7 +150,7 @@ spec:
               echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
               /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
               echo "preload with loadrdf tool is done"
-          {{- end }}
+              {{- end }}
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.preload.trigger }}
         # PRELOAD TOOL
         - name: preload-tool
@@ -158,11 +158,11 @@ spec:
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
-              cpu: {{ .Values.graphdb.tools.resources.limits.cpu }}
-              memory: {{ .Values.graphdb.tools.resources.limits.memory }}
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
             requests:
-              cpu:  {{ .Values.graphdb.tools.resources.requests.cpu }}
-              memory:  {{ .Values.graphdb.tools.resources.requests.memory }}
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
@@ -173,8 +173,7 @@ spec:
             - |
               cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
               echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
-              /opt/graphdb/dist/bin/preload -f -c /tmp/graphdb/config.ttl /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
-              mv /opt/graphdb/dist/data/repositories/* /opt/graphdb/home/data
+              /opt/graphdb/dist/bin/preload {{ $.Values.graphdb.tools.preload.flags }} -c /tmp/graphdb/config.ttl /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
               echo "preload with preload tool is done"
         {{- end }}
         # STORAGE TOOL
@@ -184,11 +183,11 @@ spec:
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
-              cpu: {{ .Values.graphdb.tools.resources.limits.cpu }}
-              memory: {{ .Values.graphdb.tools.resources.limits.memory }}
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
             requests:
-              cpu:  {{ .Values.graphdb.tools.resources.requests.cpu }}
-              memory:  {{ .Values.graphdb.tools.resources.requests.memory }}
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
@@ -196,9 +195,18 @@ spec:
           args:
             - |
               cdate=$(date +'%Y-%m-%d')
-              /opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage {{$.Values.graphdb.tools.storage_tool.options}}>> /opt/graphdb/home/data/storage-tool-${cdate}.log
+              if [ -d /opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage ]; then
+                result=$(/opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage {{$.Values.graphdb.tools.storage_tool.options}})
+                echo -e "${result}" >> /opt/graphdb/home/data/storage-tool-${cdate}.log
+                echo -e "${result}"
+                if echo -e "${result}" | grep -qi "inconsistent"
+                then
+                  exit 1
+                fi
+              else
+                echo "The wanted repository does not exist"
+              fi
         {{- end }}
-
 
 ---
 apiVersion: {{ $.Values.versions.service }}

@@ -131,6 +131,13 @@ spec:
         - name: loadrdf-tool
           image: {{ $.Values.images.graphdb }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ .Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ .Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ .Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ .Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
@@ -149,6 +156,13 @@ spec:
         - name: preload-tool
           image: {{ $.Values.images.graphdb }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ .Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ .Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ .Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ .Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home
@@ -168,6 +182,13 @@ spec:
         - name: storage-tool
           image: {{ $.Values.images.graphdb }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ .Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ .Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ .Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ .Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
             - name: graphdb-worker-storage
               mountPath: /opt/graphdb/home

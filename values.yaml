@@ -191,7 +191,7 @@ graphdb:
     # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
         - name: worker-1
-          license: graphdb-worker1-license
+          license: graphdb-license
           master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"

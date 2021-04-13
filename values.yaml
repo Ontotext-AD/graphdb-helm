@@ -235,7 +235,7 @@ graphdb:
     # (default folder - /data/graphdb-backups).
     # The backups are saved in format MM-DD-YYYY-hh-mm
     # TODO: Add PV options for backups
-    auto_backup: "* 0 * * *"
+    auto_backup: "* * * * *"
     # -- Cleans up the backups directory.
     # Makes sure that there is a limit of the stored backups.
     # Each or both of backups_count and backups_max_age could be used.
@@ -269,11 +269,12 @@ graphdb:
       # -- If trigger is set to true, then the preload tool will be run while initializing the deployment
       # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
       # (default pv is: /data/graphdb-worker-preload-data)
-      trigger: true
+      trigger: false
       # -- Options to add to the command
       # possible flags: -f, -p, -r
+      # If you use the "-f" option, the tool will override the repository and could lose some data.
       flags: "-f"
-      rdfDataFile: "geonames_europe.ttl "
+      rdfDataFile: "geonames_europe.ttl"
     # -- Tool to preload data in a chosen repo
     # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
     loadrdf:
@@ -283,8 +284,9 @@ graphdb:
       trigger: false
       # -- Options to add to the command
       # possible flags: -f, -p
+      # If you use the "-f" option, the tool will override the repository and could lose some data.
       flags: "-f"
-      rdfDataFile: "geonames_europe.ttl "
+      rdfDataFile: "geonames_europe.ttl"
     # -- Tool for scanning and repairing data
     # See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
     storage_tool:

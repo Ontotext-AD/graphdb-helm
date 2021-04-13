@@ -276,6 +276,43 @@ Those options are described in the subsection `graphdb.backupRestore.*` and they
 - trigger_restore - a future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
 - restore_from_backup - the name of the backup directory we want to restore. Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
 
+#### Preload, LoadRDF, Storage tools
+GraphDB's Helm chart supports preload and LoadRDF tools for preloading data. It also supports Storage tool for scanning and repairing data. There are a few options that are used to run the needed commands.
+
+Those options are described in the subsection `graphdb.tools.*` and they are:
+
+- resources - to set the needed resources in order to run the tools. Bear in mind that if you don't give the init containers enough resources, the tools might fail. 
+```bash
+resources:
+  limits:
+    cpu: 4
+    memory: "10Gi"
+  requests:
+    cpu: 4
+    memory: "10Gi"
+```
+- preload - tool to preload data in a chosen repository.
+  - trigger - If trigger is set to true, then the preload tool will be run while initializing the deployment.
+  - flags - options to add to the command. The possible options are "-f", "-p", "-r". If you use the "-f" option, the tool will override the repository and could lose some data.
+  - rdfDataFile - the file that is added in the mounted directory.
+
+For more information about the Preload tool see: https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html
+
+- loadrdf - tool to preload data in a chosen repository.
+  - trigger - if trigger is set to true, then the loadrdf tool will be run while initializing the deployment.
+  - flags - options to add to the command. The possible options are "-f", "-p". If you use the "-f" option, the tool will override the repository and could lose some data. 
+  - rdfDataFile - the file that is added in the mounted directory.
+
+For more information about the LoadRDF tool see: https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
+
+- storage_tool - tool for scanning and repairing data.
+  - trigger - if trigger is set to true, then the storage tool will be run while initializing the deployment.
+  - command - the command to run the storage-tool with.
+  - repository - repo to run command on.
+  - options - additional options to run the storage-tool with. 
+
+For more information about the Storage tool see https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
+
 ### values.yaml
 
 Helm allows you to override values from [values.yaml](values.yaml) in several ways.

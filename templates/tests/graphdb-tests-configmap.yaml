@@ -1,0 +1,9 @@
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-tests-configmap
+  labels:
+    name: graphdb-tests-configmap
+data:
+  healthcheck.sh: |-
+{{ tpl (.Files.Get "files/test-scripts/healtcheck.sh" | indent 4) . }}

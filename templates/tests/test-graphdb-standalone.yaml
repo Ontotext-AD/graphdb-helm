@@ -1,0 +1,26 @@
+{{ if eq .Values.graphdb.topology "standalone" }}
+apiVersion: {{ .Values.versions.job }}
+kind: Job
+metadata:
+  name: "standalone-test"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test-gdb-standalone
+          image: {{ .Values.images.graphdb }}
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-test-utils
+              mountPath: /tmp/utils
+          command: [ 'sh', '-c' ]
+          args: ["cp /tmp/utils/healthcheck.sh /usr/local/bin/healthcheck.sh; chmod +x /usr/local/bin/healthcheck.sh; /usr/local/bin/healthcheck.sh {{ .Values.graphdb.masters.repository }}"]
+      volumes:
+        - name: graphdb-test-utils
+          configMap:
+            name: graphdb-tests-configmap
+  {{ end }}

@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
+set -eu
+
 function grepFixedPatternFile() {
   pattern=$1
 
   if grep -qF "$pattern" "response.json"; then
     :
   else
-    echo "Pattern not found in file"
+    echo "Pattern $pattern not found in file"
+    exit 1
   fi
 }
 
@@ -16,6 +19,7 @@ function grepQuietPatternFile() {
   if grep -q "$pattern" "response.json"; then
     :
   else
-    echo "Pattern not found in file"
+    echo "Pattern $pattern not found in file"
+      exit 1
   fi
 }

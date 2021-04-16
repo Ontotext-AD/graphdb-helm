@@ -6,7 +6,7 @@ metadata:
     name: graphdb-tests-configmap
 data:
   healthcheck.sh: |-
-{{ tpl (.Files.Get "files/test-scripts/healtcheck.sh" | indent 4) . }}
+{{ tpl (.Files.Get "files/test-scripts/healtCheck.sh" | indent 4) . }}
   nodeStatus.sh: |-
 {{ tpl (.Files.Get "files/test-scripts/nodeStatus.sh" | indent 4) . }}
   grepFile.sh: |-

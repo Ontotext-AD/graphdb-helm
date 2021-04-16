@@ -1,8 +1,8 @@
-{{ if eq .Values.graphdb.topology "1m_3w" }}
+{{ if eq .Values.graphdb.topology "2m3w_rw_ro" }}
 apiVersion: {{ .Values.versions.job }}
 kind: Job
 metadata:
-  name: "1m-3w-test"
+  name: "2m3w-rw-ro-test"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -11,14 +11,14 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-        - name: test-gdb-1m-3w
+        - name: test-gdb-2m3w-rw-ro
           image: {{ .Values.images.graphdb }}
           imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
           volumeMounts:
             - name: graphdb-test-utils
               mountPath: /tmp/utils
           command: [ 'sh', '-c' ]
-          args: ["cp /tmp/utils/nodeStatus.sh /usr/local/bin/nodeStatus.sh && cp /tmp/utils/grepFile.sh /usr/local/bin/grepFile.sh; chmod +x /usr/local/bin/nodeStatus.sh && chmod +x /usr/local/bin/grepFile.sh; source /usr/local/bin/nodeStatus.sh ; checkNodes_1m_3w {{ .Values.graphdb.masters.repository }} >> /proc/1/fd/1"]
+          args: ["cp /tmp/utils/nodeStatus.sh /usr/local/bin/nodeStatus.sh && cp /tmp/utils/grepFile.sh /usr/local/bin/grepFile.sh; chmod +x /usr/local/bin/nodeStatus.sh && chmod +x /usr/local/bin/grepFile.sh; source /usr/local/bin/nodeStatus.sh ; checkNodes_2m_3w_rw_ro {{ .Values.graphdb.masters.repository }} && source /usr/local/bin/nodeStatus.sh ; checkSyncPeers {{ .Values.graphdb.masters.repository }}>> /proc/1/fd/1"]
       volumes:
         - name: graphdb-test-utils
           configMap:

@@ -18,7 +18,7 @@ spec:
             - name: graphdb-test-utils
               mountPath: /tmp/utils
           command: [ 'sh', '-c' ]
-          args: ["cp /tmp/utils/healthcheck.sh /usr/local/bin/healthcheck.sh; chmod +x /usr/local/bin/healthcheck.sh; /usr/local/bin/healthcheck.sh {{ .Values.graphdb.masters.repository }}"]
+          args: ["cp /tmp/utils/healthCheck.sh /usr/local/bin/healthCheck.sh; chmod +x /usr/local/bin/healthCheck.sh; source /usr/local/bin/healthCheck.sh ; performHealthCheck {{ .Values.graphdb.masters.repository }} >> /proc/1/fd/1"]
       volumes:
         - name: graphdb-test-utils
           configMap:

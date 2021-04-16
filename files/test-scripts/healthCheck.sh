@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+set -eu
+
 function performHealthCheck() {
   path_to_repo=$1
-  curl -o response.json http://graphdb.local/graphdb/repositories/"$1"/health
+  curl -so response.json http://graphdb.local/graphdb/repositories/"$1"/health
 
   if grep -q '"status":"green"' "response.json"; then
 	  echo "OK!"

@@ -192,6 +192,7 @@ graphdb:
     nodes:
         - name: worker-1
           license: graphdb-license
+          master: master-1
         - name: worker-2
           java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
           nodeSelector: {}
@@ -234,7 +235,7 @@ graphdb:
     # (default folder - /data/graphdb-backups).
     # The backups are saved in format MM-DD-YYYY-hh-mm
     # TODO: Add PV options for backups
-    auto_backup: "* 0 * * *"
+    auto_backup: "* * * * *"
     # -- Cleans up the backups directory.
     # Makes sure that there is a limit of the stored backups.
     # Each or both of backups_count and backups_max_age could be used.
@@ -252,3 +253,48 @@ graphdb:
     # -- The name of the backup directory we want to restore.
     # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
     restore_from_backup: "03-31-2021-14-47"
+
+  # -- Tools for loading, scanning and repairing data in repos
+  tools:
+    resources:
+      limits:
+        cpu: 4
+        memory: "10Gi"
+      requests:
+        cpu: 4
+        memory: "10Gi"
+    # -- Tool to preload data in a chosen repo
+    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html
+    preload:
+      # -- If trigger is set to true, then the preload tool will be run while initializing the deployment
+      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
+      # (default pv is: /data/graphdb-worker-preload-data)
+      trigger: false
+      # -- Options to add to the command
+      # possible flags: -f, -p, -r
+      # If you use the "-f" option, the tool will override the repository and could lose some data.
+      flags: "-f"
+      rdfDataFile: "geonames_europe.ttl"
+    # -- Tool to preload data in a chosen repo
+    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
+    loadrdf:
+      # -- If trigger is set to true, then the loadrdf tool will be run while initializing the deployment
+      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
+      # (default pv is: /data/graphdb-worker-preload-data)
+      trigger: false
+      # -- Options to add to the command
+      # possible flags: -f, -p
+      # If you use the "-f" option, the tool will override the repository and could lose some data.
+      flags: "-f"
+      rdfDataFile: "geonames_europe.ttl"
+    # -- Tool for scanning and repairing data
+    # See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
+    storage_tool:
+      # -- If trigger is set to true, then the storage tool will be run while initializing the deployment
+      trigger: true
+      # -- commands to run the storage-tool with
+      command: "scan"
+      # -- repo to run command on
+      repository: "repo-test-1"
+      # -- additional options to run the storage-tool with
+      options: ""

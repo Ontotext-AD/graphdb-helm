@@ -1,0 +1,21 @@
+#
+# Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
+# for Minikube deployments.
+#
+# Note: Not to be used in production or multi node cluster.
+#
+---
+apiVersion: {{ $.Values.versions.pv }}
+kind: PersistentVolume
+metadata:
+  name: graphdb-worker-default-worker-preload-data-pv
+  labels:
+    name: graphdb-worker-default-worker-preload-data-pv
+spec:
+  storageClassName: "standard"
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: {{ $.Values.graphdb.workers.persistence.storage }}
+  hostPath:
+    path: {{ $.Values.deployment.storage }}/graphdb-worker-preload-data

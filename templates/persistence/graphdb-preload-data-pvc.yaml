@@ -1,0 +1,14 @@
+apiVersion: {{ $.Values.versions.pvc }}
+kind: PersistentVolumeClaim
+metadata:
+  name: graphdb-worker-preload-data-pvc
+  labels:
+    name: graphdb-worker-preload-data-pvc
+spec:
+  volumeName: graphdb-worker-default-worker-preload-data-pv
+  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.graphdb.masters.persistence.storage }}

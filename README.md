@@ -1,5 +1,14 @@
 # Helm charts for GraphDB EE
 
+## WARNING
+
+This is a basic experimental Helm chart for GraphDB. We're working on some features that are missing at the moment such as:
+- Deploying with security
+- Provisioning of users and roles
+- Provisioning of multiple repositories
+- Better scheduling features for high availability such as pod affinity, taints, tolerations, topology spread constraints
+- Autoscaling
+
 ## Install
 ### Prerequisites
 

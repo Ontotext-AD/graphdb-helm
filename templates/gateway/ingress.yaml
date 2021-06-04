@@ -24,6 +24,9 @@ spec:
       http:
         paths:
           - path: /
+            pathType: ImplementationSpecific
             backend:
-              serviceName: kong-proxy
-              servicePort: 8000
+              service:
+                name: kong-proxy
+                port:
+                  number: 8000

@@ -12,7 +12,7 @@ metadata:
   labels:
     name: graphdb-worker-default-worker-preload-data-pv
 spec:
-  storageClassName: "standard"
+  storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce
   capacity:

@@ -138,7 +138,7 @@ setSyncPeer() {
 
   addInstanceAsRemoteLocation $1 $3
 
-  echo "Setting $instance2_address as sync pear for $instance1_address"
+  echo "Setting $instance2_address as sync peer for $instance1_address"
 
   curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
   if grep -q '"status":200' "response.json"; then
@@ -156,6 +156,52 @@ linkAllWorkersToMaster() {
   for (( c=1; c<=$workers_count; c++ ))
   do
     worker_address=graphdb-worker-$c
+    linkWorkerToMaster $1 $master_repo $worker_address $worker_repository
+  done
+
+  echo "Cluster linked successfully!"
+}
+
+unlinkWorker() {
+  master_repo=$1
+  master_address=$2
+  worker_address=$3
+  worker_repo=$4
+
+  echo "Unlinking $worker_address from $master_address"
+  curl -X 'DELETE' "http://$master_address:7200/graphdb/rest/cluster/masters/$master_repo/workers?masterLocation=local" --data-urlencode "workerURL=http://$worker_address:7200/repositories/$worker_repo"
+  curl -o response.json -H 'content-type: application/json' -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
+  if grep -q '"status":200' "response.json"; then
+      echo "Successfully unlinked $master_address from $worker_address"
+  else
+      echo "Failed unlinking $master_address from $worker_address"
+      exit 1
+  fi
+}
+
+unlinkDownScaledInstances() {
+  master_repo=$1
+  masters_count=$2
+  workers_count=$3
+  worker_repo=$4
+
+  for (( c=1; c<=$masters_count; c++ ))
+  do
+    master_address=graphdb-master-$c
+    curl -o response.json -H 'content-type: application/json'   -d "{\"type\":\"read\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$master_repo\",\"attribute\":\"NodeStatus\"}"   http://$master_address:7200/jolokia/
+    linked_workers_count=$(grep -ow ON "response.json" | wc -l)
+    missing_workers_count=$(grep -ow ON "response.json" | wc -l)
+
+    if $linked_workers_count != $workers_count ; then
+      echo "The cluster has instances that are not connected, but they should be. Can't determine workers which must be disconnected from the cluster, please do it manually!"
+    else
+      worker_to_be_unlinked=$linked_workers_count+$missing_workers_count
+      for (( x=1; x<=$missing_workers_count; x++ ))
+      do
+        unlinkWorker $master_repo $master_address graphdb-worker-$worker_to_be_unlinked $worker_repo
+        worker_to_be_unlinked=$worker_to_be_unlinked-1
+      done
+    fi
     linkWorkerToMaster $1 $master_repo $worker_address $worker_repository
   done
 

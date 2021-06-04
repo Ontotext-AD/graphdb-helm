@@ -1,3 +1,4 @@
+{{ if .Values.kong.enabled }}
 ---
 apiVersion: {{ .Values.versions.deployment }}
 kind: Deployment
@@ -131,3 +132,4 @@ spec:
   sessionAffinity: None
 status:
   loadBalancer: {}
+{{ end }}

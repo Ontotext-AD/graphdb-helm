@@ -4,22 +4,22 @@
 {{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
 
 {{ $worker_endpoint := printf "http://graphdb-worker-%d:7200" $worker_index }}
-{{ $worker_repo := $.Values.graphdb.workers.repository }}
 
 ---
-apiVersion: {{ $.Values.versions.deployment }}
-kind: Deployment
+apiVersion: {{ $.Values.versions.statefulset }}
+kind: StatefulSet
 metadata:
   name: graphdb-worker-{{ $worker_index }}
   labels:
     app: graphdb-worker-{{ $worker_index }}
 spec:
   replicas: 1
+  serviceName: graphdb-worker-{{ $worker_index }}
   # Important to define this strategy instead of the default rolling update, otherwise when
   # performing helm update, GraphDB won't release its lock from the repositories and the new
   # pod won't be able to start.
-  strategy:
-    type: Recreate
+{{/*  strategy:*/}}
+{{/*    type: Recreate*/}}
   selector:
     matchLabels:
       app: graphdb-worker-{{ $worker_index }}
@@ -38,7 +38,7 @@ spec:
             claimName: graphdb-worker-{{ $worker_index }}-data-pvc
         - name: graphdb-worker-repo-config
           configMap:
-            name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.workers.repositoryConfigmap }}
+            name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.workers.repositoryConfigmap }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
@@ -50,7 +50,14 @@ spec:
       imagePullSecrets:
         - name: {{ $.Values.deployment.imagePullSecret }}
       {{ end }}
-      nodeSelector: {{ default $.Values.graphdb.workers.nodeSelector (include "resolveWorkerValue" (dict "nodeSelector" $.Values.graphdb.workers.nodes "value_name" "nodeSelector" "worker_index" $worker_index)) | toYaml | nindent 8  }}
+      nodeSelector:
+        {{- default "{}" (default ($.Values.graphdb.workers.nodeSelector | toYaml ) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "nodeSelector" "worker_index" $worker_index))) | nindent 8  }}
+      affinity:
+        {{- default "{}" (default ($.Values.graphdb.workers.affinity | toYaml) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "affinity" "worker_index" $worker_index))) | nindent 8  }}
+      tolerations:
+        {{- default "{}" (default ($.Values.graphdb.workers.tolerations | toYaml) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "tolerations" "worker_index" $worker_index))) | nindent 8 }}
+      topologySpreadConstraints:
+        {{- default "" (default ($.Values.graphdb.workers.topologySpreadConstraints | toYaml) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "topologySpreadConstraints" "worker_index" $worker_index))) | nindent 8 }}
       containers:
         - name: graphdb-worker-{{ $worker_index }}
           image: {{ $.Values.images.graphdb }}
@@ -117,15 +124,20 @@ spec:
           args:
             - |
               set -eu
-              mkdir -p /opt/graphdb/home/data/repositories/{{ $worker_repo }} ;
-              cd /opt/graphdb/home/data/repositories/{{ $worker_repo }} ;
+              for filename in /tmp/graphdb/*.ttl; do
+                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
+                echo "Repo name: $repositoryName"
+                echo "File name: $filename"
+                mkdir -p /opt/graphdb/home/data/repositories/$repositoryName ;
+                cd /opt/graphdb/home/data/repositories/$repositoryName ;
 
-              # If the repo configuration exists -> skip provisioning
-              [ -f config.ttl ] && echo "Repository exists, exiting..." && exit 0
+                # If the repo configuration exists -> skip provisioning
+                [ -f config.ttl ] && echo "Repository $repositoryName exists, exiting..." && exit 0
 
-              echo 'Provisioning GraphDB {{ $worker_repo }} repository config.ttl' ;
-              cp /tmp/graphdb/config.ttl ./config.ttl ;
-              echo 'Done'
+                echo "Provisioning GraphDB $repositoryName repository with file $filename" ;
+                cp $filename ./config.ttl ;
+                echo 'Done'
+              done
         # LOADRDF TOOL
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.loadrdf.trigger }}
         - name: loadrdf-tool

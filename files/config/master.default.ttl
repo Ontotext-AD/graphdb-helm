@@ -8,8 +8,8 @@
 @prefix owlim: <http://www.ontotext.com/trree/owlim#>.
 
 [] a rep:Repository ;
-    rep:repositoryID "master-repo" ;
-    rdfs:label "GraphDB master for master-repo" ;
+    rep:repositoryID "testrepo" ;
+    rdfs:label "GraphDB master for testrepo" ;
     rep:repositoryImpl [
         rep:repositoryType "owlim:ReplicationCluster" ;
     ].

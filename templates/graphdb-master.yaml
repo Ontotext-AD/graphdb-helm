@@ -2,6 +2,7 @@
 {{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 
 {{ $worker_endpoint := printf "http://graphdb-master-%d:7200" $master_index }}
+{{- $authToken := ((printf "%s:%s" $.Values.graphdb.security.provisioningUsername $.Values.graphdb.security.provisioningPassword) | b64enc) }}
 
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
@@ -45,6 +46,9 @@ spec:
         - name: graphdb-master-repo-config
           configMap:
             name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.masters.repositoryConfigmap }}
+        - name: graphdb-master-settings-config
+          configMap:
+            name: {{ required "Config map with settings.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
       {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
         - name: {{ $.Values.deployment.imagePullSecret }}
@@ -84,18 +88,27 @@ spec:
             httpGet:
               path: /repositories
               port: graphdb-m-{{ $master_index }}
+              httpHeaders:
+                - name: Authorization
+                  value: 'Basic {{ $authToken }}'
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /repositories
               port: graphdb-m-{{ $master_index }}
+              httpHeaders:
+              - name: Authorization
+                value: 'Basic {{ $authToken }}'
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /repositories
               port: graphdb-m-{{ $master_index }}
+              httpHeaders:
+              - name: Authorization
+                value: 'Basic {{ $authToken }}'
             initialDelaySeconds: 60
             periodSeconds: 10
       initContainers:
@@ -145,6 +158,30 @@ spec:
                 cp $filename ./config.ttl ;
                 echo 'Done'
               done
+        # PROVISION SETTINGS AND SECURITY
+        - name: provision-settings
+          image: {{ $.Values.images.busybox }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-master-storage
+              mountPath: /opt/graphdb/home
+            - name: graphdb-master-settings-config
+              mountPath: /tmp/graphdb
+          command: ['sh', '-c']
+          args:
+            - |
+              set -eu
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && -f /tmp/graphdb/settings.js ]]; then
+                echo "Provisioning users settings with settings.js file..."
+                mkdir -p /opt/graphdb/home/work/workbench ;
+                cp /tmp/graphdb/settings.js /opt/graphdb/home/work/workbench/settings.js
+              fi
+              if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb/graphdb.properties ]]; then
+                echo "Provisioning graphdb properties file..."
+                mkdir -p /opt/graphdb/home/conf ;
+                cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
+              fi
+              echo 'Done'
 
 #TODO: The backup should be reworked to work with an array of repositories. The restore must get a
 #repository name from the values file, but first we have to rework the restore procedure so the

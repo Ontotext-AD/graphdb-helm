@@ -2,10 +2,10 @@
 # Helm chart for GraphDB EE
 #
 apiVersion: v2
-name: gdb-ee
+name: graphdb
 description: Helm chart for GraphDB EE
 type: application
-version: 0.1.0
-appVersion: 9.5.0
+version: 9.8.0
+appVersion: 9.8.0
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png

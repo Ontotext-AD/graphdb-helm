@@ -7,6 +7,7 @@ metadata:
   name: link-graphdb-cluster-job
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
     spec:
@@ -16,7 +17,6 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0
-
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
@@ -75,7 +75,6 @@ spec:
 
                   {{- range .Values.graphdb.clusterConfig.mutedMasters }}
                     /usr/local/bin/graphdb.sh setInstanceMuted graphdb-{{ . }} "$repositoryName" "{{ $authToken }}";
-                    /usr/local/bin/graphdb.sh setInstanceReadOnly graphdb-{{ . }} "$repositoryName" "{{ $authToken }}";
                   {{- end }}
 
                   {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}

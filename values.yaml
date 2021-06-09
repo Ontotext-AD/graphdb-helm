@@ -66,6 +66,9 @@ deployment:
       read: 60
       send: 60
 
+ingress:
+  enabled: true
+
 # KONG API gateway configurations.
 # This gateway sits behind the ingress and exposes the rest of the components.
 # By default Kong is deployed without database, e.g. stateless mode.
@@ -140,11 +143,6 @@ graphdb:
     provisioningPassword: iHaveSuperpowers
 
   masters:
-    # -- The repository name to be created for all masters.
-    # This repository will be initialized during of Helm's post install hooks.
-    repositoriesConfigmap: graphdb-repo-default-configmap
-    #TODO: security - provide configmap (settings.js) for users provisioning
-
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
     repositoryConfigmap: graphdb-repo-default-configmap
@@ -310,13 +308,6 @@ graphdb:
       storageClassName: standard
       # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
       storage: 10G
-      # -- Reference to a configuration map containing a worker node repository 'config.ttl' file
-      # used for initialization in the post install hook.
-      repositoryConfigmap: graphdb-worker-repo-default-configmap
-      # Extra arguments passed to GDB_JAVA_OPTS environment variable
-      # See http://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html
-      # Note: Same as for the master node
-
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html

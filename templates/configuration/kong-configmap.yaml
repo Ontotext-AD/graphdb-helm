@@ -1,3 +1,4 @@
+{{- if .Values.kong.enabled }}
 ---
 apiVersion: {{ .Values.versions.configmap }}
 kind: ConfigMap
@@ -15,3 +16,4 @@ data:
   KONG_ADMIN_ACCESS_LOG: "/dev/stdout"
   KONG_PROXY_ERROR_LOG: "/dev/stderr"
   KONG_ADMIN_ERROR_LOG: "/dev/stderr"
+{{- end }}

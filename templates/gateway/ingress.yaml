@@ -1,4 +1,4 @@
-#TODO: Add toggle
+{{- if .Values.ingress.enabled }}
 apiVersion: {{ .Values.versions.ingress }}
 kind: Ingress
 metadata:
@@ -31,3 +31,4 @@ spec:
                 name: kong-proxy
                 port:
                   number: 8000
+{{- end }}

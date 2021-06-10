@@ -15,6 +15,9 @@ metadata:
   labels:
     name: graphdb-default-master-{{ $master_index }}-pv
 spec:
+  claimRef:
+    name: graphdb-master-{{ $master_index }}-data-pvc
+    namespace: {{ $.Release.Namespace }}
   storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce

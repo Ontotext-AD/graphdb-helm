@@ -154,7 +154,7 @@ graphdb:
     # Important: Must be created beforehand
     license: graphdb-license
     # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
     # -- Schedule and assign on specific node for ALL masters. By default, no restrictions are applied. This can be specified per instance in the nodes section.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 #    nodeSelector:
@@ -178,7 +178,7 @@ graphdb:
     # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
       - name: master-1
-        java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+        java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
 #        nodeSelector:
 #          topology.kubernetes.io/zone: uksouth-2
         license: graphdb-license
@@ -213,7 +213,7 @@ graphdb:
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
-      # -- Name reference of a persistent volume to which the claim will try to attach.
+      # -- Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
       # Example result: graphdb-default-master-1-pv
       volumeNamePrefix: graphdb-default-master
       storageClassName: standard
@@ -229,7 +229,7 @@ graphdb:
     # Important: Must be created beforehand
     license: graphdb-license
     # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: " -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
     # -- Schedule and assign on specific node for ALL workers. By default, no restrictions are applied. This can be specified per instance in the nodes section.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 #    nodeSelector:
@@ -272,7 +272,7 @@ graphdb:
 #          nodeSelector:
 #            topology.kubernetes.io/zone: uksouth-1
       - name: worker-2
-        java_args: " -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
+        java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport "
 #        topologySpreadConstraints:
 #        - maxSkew: 1
 #          topologyKey: zone
@@ -302,7 +302,7 @@ graphdb:
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
-      # -- Name reference prefix of a persistent volume to which the claim will try to attach.
+      # -- Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
       # Example result: graphdb-default-worker-1-pv
       volumeNamePrefix: graphdb-default-worker
       storageClassName: standard

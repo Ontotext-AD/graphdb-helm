@@ -16,6 +16,9 @@ metadata:
   labels:
     name: graphdb-default-worker-{{ $worker_index }}-pv
 spec:
+  claimRef:
+    name: graphdb-worker-{{ $worker_index }}-data-pvc
+    namespace: {{ $.Release.Namespace }}
   storageClassName: {{ $.Values.graphdb.workers.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce

@@ -5,7 +5,7 @@ apiVersion: v2
 name: graphdb
 description: Helm chart for GraphDB EE
 type: application
-version: 9.8.1-TR4
-appVersion: 9.8.1-TR4
+version: 9.8.1-TR9
+appVersion: 9.8.1-TR9
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png

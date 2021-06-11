@@ -10,7 +10,7 @@ function waitService {
   local max_attempts=100
 
   echo "Waiting for ${address}"
-  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${token}" --silent --fail ${address}); do
+  until $(curl --output /dev/null -sSL -m 5 -H "Authorization: Basic ${token}" --silent --fail ${address}); do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1
@@ -66,7 +66,7 @@ function linkWorkerToMaster {
   addInstanceAsRemoteLocation $1 $3 $token
 
   echo "Linking worker with repo endpoint ${worker_repo_endpoint}"
-  curl -o response.json -fsSL -m 5 -X POST -H "Authorization: Basic ${token}" ${master_address}/jolokia/ \
+  curl -o response.json -sSL -m 5 -X POST -H "Authorization: Basic ${token}" ${master_address}/jolokia/ \
     --header 'Content-Type: multipart/form-data' \
     --data-raw "{
       \"type\": \"exec\",
@@ -94,7 +94,7 @@ function setInstanceReadOnly {
 
   echo "Setting instance $instance_address as readonly"
 
-  curl -o response.json -fsSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"ReadOnly\",\"value\":true}" $instance_address/jolokia
+  curl -o response.json -sSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"ReadOnly\",\"value\":true}" $instance_address/jolokia
 
   if grep -q '"status":200' "response.json"; then
       echo "Successfully set instance $instance_address as read only"
@@ -112,7 +112,7 @@ function setInstanceMuted {
 
   echo "Setting instance $instance_address as muted"
 
-  curl -o response.json -fsSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"Mode\",\"value\":\"MUTE\"}" $instance_address/jolokia/
+  curl -o response.json -sSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$repository\",\"attribute\":\"Mode\",\"value\":\"MUTE\"}" $instance_address/jolokia/
 
   if grep -q '"status":200' "response.json"; then
       echo "Successfully set instance $instance_address as muted"
@@ -131,8 +131,9 @@ function addInstanceAsRemoteLocation {
   local password=$(echo $token | base64 -d | cut -d':' -f2)
 
   echo "Adding worker $worker_address as remote location of $master_address"
-
-  curl ${master_address}/rest/locations -fsSL -m 5 -o response.json -H "Authorization: Basic $token" -H 'Content-Type:application/json' -H 'Accept: application/json, text/plain, */*' --data-raw "{\"uri\":\"${worker_address}\",\"username\":\"${username}\", \"authType\":\"basic\", \"password\":\"${password}\", \"active\":\"false\"}"
+  echo "${username} -> pass ${password}"
+  echo "{\"uri\":\"${worker_address}\",\"username\":\"${username}\", \"authType\":\"basic\", \"password\":\"${password}\", \"active\":\"false\"}"
+  curl ${master_address}/rest/locations -sSL -m 5 -o response.json -H "Authorization: Basic $token" -H 'Content-Type:application/json' -H 'Accept: application/json, text/plain, */*' --data-raw "{\"uri\":\"${worker_address}\", \"username\":\"${username}\", \"authType\":\"basic\", \"password\":\"${password}\", \"active\":\"false\"}"
 
   if grep -q 'Success\|connected' "response.json"; then
       echo "Successfully added $worker_address as remote location of $master_address"
@@ -154,7 +155,7 @@ function setSyncPeer {
 
   echo "Setting $instance2_address as sync peer for $instance1_address"
 
-  curl -o response.json -fsSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
+  curl -o response.json -sSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
   if grep -q '"status":200' "response.json"; then
       echo "Successfully set sync peer between $instance1_address and $instance2_address"
   else
@@ -190,8 +191,8 @@ function unlinkWorker {
   local token=$5
 
   echo "Unlinking $worker_address from $master_address"
-  curl -X 'DELETE' "http://$master_address:7200/graphdb/rest/cluster/masters/$master_repo/workers?masterLocation=local" -fsSL -m 5 -H "Authorization: Basic $token" --data-urlencode "workerURL=http://$worker_address:7200/repositories/$worker_repo"
-  curl -o response.json -H 'content-type: application/json' -fsSL -m 5 -H "Authorization: Basic $token" -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
+  curl -X 'DELETE' "http://$master_address:7200/graphdb/rest/cluster/masters/$master_repo/workers?masterLocation=local" -sSL -m 5 -H "Authorization: Basic $token" --data-urlencode "workerURL=http://$worker_address:7200/repositories/$worker_repo"
+  curl -o response.json -H 'content-type: application/json' -sSL -m 5 -H "Authorization: Basic $token" -d "{\"type\":\"exec\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance1_repository\",\"operation\":\"addSyncPeer\",\"arguments\":[\"$instance2_address/repositories/$instance2_repository\",\"$instance2_address/repositories/$instance2_repository\"]}"   $instance1_address/jolokia/
   if grep -q '"status":200' "response.json"; then
       echo "Successfully unlinked $master_address from $worker_address"
   else
@@ -211,7 +212,7 @@ function unlinkDownScaledInstances {
   for (( c=1; c<=$masters_count; c++ ))
   do
     local master_address=graphdb-master-$c
-    curl -o response.json -fsSL -m 5 -H 'content-type: application/json'  -H "Authorization: Basic $token" -d "{\"type\":\"read\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$master_repo\",\"attribute\":\"NodeStatus\"}"   http://$master_address:7200/jolokia/
+    curl -o response.json -sSL -m 5 -H 'content-type: application/json'  -H "Authorization: Basic $token" -d "{\"type\":\"read\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$master_repo\",\"attribute\":\"NodeStatus\"}"   http://$master_address:7200/jolokia/
     local linked_workers_count=$(grep -ow ON "response.json" | wc -l)
     local missing_workers_count=$(grep -ow ON "response.json" | wc -l)
 
@@ -251,7 +252,7 @@ function setNodeID {
   local instance_repository=$2
   local token=$3
   echo "Setting NodeID for $instance_address"
-  curl -o response.json -fsSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance_repository\",\"attribute\":\"NodeID\",\"value\":\"$instance_address/repositories/$instance_repository\"}" $instance_address/jolokia/
+  curl -o response.json -sSL -m 5 -H 'content-type: application/json' -H "Authorization: Basic $token" -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance_repository\",\"attribute\":\"NodeID\",\"value\":\"$instance_address/repositories/$instance_repository\"}" $instance_address/jolokia/
   if grep -q '"status":200' "response.json"; then
       echo "Successfully set NodeID for $instance_address"
   else

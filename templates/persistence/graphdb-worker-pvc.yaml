@@ -10,7 +10,11 @@ metadata:
     name: graphdb-worker-{{ $worker_index }}-data-pvc
 spec:
   {{- if $.Values.graphdb.workers.persistence.volumeNamePrefix }}
+    {{- if eq $.Values.graphdb.workers.persistence.volumeNamePrefix "graphdb-default-worker" }}
   volumeName: {{ $.Release.Namespace }}-{{ $.Values.graphdb.workers.persistence.volumeNamePrefix }}-{{$worker_index}}-pv
+    {{- else }}
+  volumeName: {{ $.Values.graphdb.workers.persistence.volumeNamePrefix }}-{{$worker_index}}-pv
+    {{- end }}
   {{- end }}
   storageClassName: {{ $.Values.graphdb.workers.persistence.storageClassName }}
   accessModes:

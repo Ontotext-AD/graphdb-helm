@@ -20,6 +20,12 @@ spec:
   selector:
     matchLabels:
       app: graphdb-worker-{{ $worker_index }}
+  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+  volumeClaimTemplates:
+    - metadata:
+        name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+      spec: {{ toYaml $.Values.graphdb.workers.persistence.volumeClaimTemplateSpec | nindent 8 }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -30,9 +36,11 @@ spec:
         - name: graphdb-license
           secret:
             secretName: {{ default $.Values.graphdb.workers.license (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "license" "worker_index" $worker_index)) }}
+        {{- if not (hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec") }}
         - name: graphdb-worker-storage
           persistentVolumeClaim:
             claimName: graphdb-worker-{{ $worker_index }}-data-pvc
+        {{- end }}
         - name: graphdb-worker-repo-config
           configMap:
             name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.workers.repositoryConfigmap }}
@@ -69,7 +77,11 @@ spec:
             - configMapRef:
                 name: graphdb-worker-{{ $worker_index }}-configmap
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
           resources: {{ $.Values.graphdb.workers.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
@@ -106,7 +118,11 @@ spec:
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-license
               mountPath: /tmp/license/
@@ -125,7 +141,11 @@ spec:
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-worker-repo-config
               mountPath: /tmp/graphdb
@@ -153,7 +173,11 @@ spec:
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-master-settings-config
               mountPath: /tmp/graphdb
@@ -185,7 +209,11 @@ spec:
               cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
               memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-worker-preload-data
               mountPath: /tmp/graphdb/
@@ -210,7 +238,11 @@ spec:
               cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
               memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-worker-preload-data
               mountPath: /tmp/graphdb/
@@ -235,7 +267,11 @@ spec:
               cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
               memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
           command: ['sh', '-c']
           args:

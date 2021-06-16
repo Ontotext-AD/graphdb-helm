@@ -219,6 +219,14 @@ graphdb:
       storageClassName: standard
       # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
       storage: 10G
+      # use dynamic volume provisioning
+      # volumeClaimTemplateSpec:
+      #   accessModes:
+      #     - "ReadWriteOnce"
+      #   resources:
+      #     requests:
+      #       storage: "10Gi"
+      #   storageClassName: standard
 
   workers:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
@@ -308,6 +316,14 @@ graphdb:
       storageClassName: standard
       # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
       storage: 10G
+      # use dynamic volume provisioning
+      # volumeClaimTemplateSpec:
+      #   accessModes:
+      #     - "ReadWriteOnce"
+      #   resources:
+      #     requests:
+      #       storage: "10Gi"
+      #   storageClassName: standard
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html

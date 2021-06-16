@@ -19,6 +19,12 @@ spec:
   selector:
     matchLabels:
       app: graphdb-master-{{ $master_index }}
+  {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+  volumeClaimTemplates:
+    - metadata:
+        name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+      spec: {{ toYaml $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec | nindent 8 }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -29,9 +35,11 @@ spec:
         - name: graphdb-master-license
           secret:
             secretName: {{ default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $master_index)) }}
+        {{- if not (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") }}
         - name: graphdb-master-storage
           persistentVolumeClaim:
             claimName: graphdb-master-{{ $master_index }}-data-pvc
+        {{- end }}
         #TODO: The backup should be reworked to work with an array of repositories. The restore must get a
         #repository name from the values file, but first we have to rework the restore procedure so the
         #backups must be placed in proper folders according to the repository name
@@ -69,7 +77,11 @@ spec:
             - configMapRef:
                 name: graphdb-master-{{ $master_index }}-configmap
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-master-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
           #TODO: The backup should be reworked to work with an array of repositories. The restore must get a
           #repository name from the values file, but first we have to rework the restore procedure so the
@@ -114,7 +126,11 @@ spec:
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-master-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-master-license
               mountPath: /tmp/license/
@@ -133,7 +149,11 @@ spec:
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-master-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-master-repo-config
               mountPath: /tmp/graphdb
@@ -160,7 +180,11 @@ spec:
           image: {{ $.Values.images.busybox }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-master-storage
+            {{- end }}
               mountPath: /opt/graphdb/home
             - name: graphdb-master-settings-config
               mountPath: /tmp/graphdb

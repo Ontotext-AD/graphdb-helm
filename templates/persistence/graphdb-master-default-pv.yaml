@@ -1,6 +1,7 @@
-{{ if or (ne $.Values.graphdb.masters.persistence.storageClassName "standard") (ne $.Values.graphdb.masters.persistence.storageClassName "") }}
-{{ if eq .Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-default-master" }}
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
+{{- if not (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") }}
+{{- if or (ne $.Values.graphdb.masters.persistence.storageClassName "standard") (ne $.Values.graphdb.masters.persistence.storageClassName "") }}
+{{- if eq .Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-default-master" }}
+{{- range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 #
 # Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
 # for Minikube deployments.
@@ -26,6 +27,7 @@ spec:
   hostPath:
     path: {{ $.Values.deployment.storage }}/graphdb-master-{{ $master_index }}-data
 
-{{ end }}
-{{ end }}
-{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end}}

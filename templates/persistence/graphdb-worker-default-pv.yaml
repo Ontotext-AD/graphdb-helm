@@ -1,7 +1,8 @@
-{{ if or (ne $.Values.graphdb.workers.persistence.storageClassName "standard") (ne $.Values.graphdb.workers.persistence.storageClassName "") }}
-{{ if ne .Values.graphdb.topology "standalone" }}
-{{ if eq .Values.graphdb.workers.persistence.volumeNamePrefix "graphdb-default-worker" }}
-{{ range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
+{{- if not (hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec") }}
+{{- if or (ne $.Values.graphdb.workers.persistence.storageClassName "standard") (ne $.Values.graphdb.workers.persistence.storageClassName "") }}
+{{- if ne .Values.graphdb.topology "standalone" }}
+{{- if eq .Values.graphdb.workers.persistence.volumeNamePrefix "graphdb-default-worker" }}
+{{- range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
 #
 # Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
 # for Minikube deployments.
@@ -27,7 +28,8 @@ spec:
   hostPath:
     path: {{ $.Values.deployment.storage }}/graphdb-worker-{{ $worker_index }}-data
 
-{{ end }}
-{{ end }}
-{{ end }}
-{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

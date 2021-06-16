@@ -7,8 +7,8 @@ metadata:
   labels:
     name: graphdb-master-{{ $master_index }}-data-pvc
 spec:
-  {{- if eq $.Values.graphdb.masters.persistence.storageClassName "standard" }}
-  volumeName:  {{ $.Values.graphdb.masters.persistence.volumeNamePrefix }}-{{$master_index}}-pv
+  {{- if $.Values.graphdb.masters.persistence.volumeNamePrefix }}
+  volumeName:  {{ $.Release.Namespace }}-{{ $.Values.graphdb.masters.persistence.volumeNamePrefix }}-{{$master_index}}-pv
   {{- end }}
   storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
   accessModes:

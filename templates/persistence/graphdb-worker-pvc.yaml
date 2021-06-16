@@ -9,8 +9,8 @@ metadata:
   labels:
     name: graphdb-worker-{{ $worker_index }}-data-pvc
 spec:
-  {{- if eq $.Values.graphdb.masters.persistence.storageClassName "standard" }}
-  volumeName: {{ $.Values.graphdb.workers.persistence.volumeNamePrefix }}-{{$worker_index}}-pv
+  {{- if $.Values.graphdb.workers.persistence.volumeNamePrefix }}
+  volumeName: {{ $.Release.Namespace }}-{{ $.Values.graphdb.workers.persistence.volumeNamePrefix }}-{{$worker_index}}-pv
   {{- end }}
   storageClassName: {{ $.Values.graphdb.workers.persistence.storageClassName }}
   accessModes:

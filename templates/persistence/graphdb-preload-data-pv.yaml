@@ -8,9 +8,9 @@
 apiVersion: {{ $.Values.versions.pv }}
 kind: PersistentVolume
 metadata:
-  name: graphdb-worker-default-worker-preload-data-pv
+  name: {{ $.Release.Namespace }}-graphdb-worker-default-worker-preload-data-pv
   labels:
-    name: graphdb-worker-default-worker-preload-data-pv
+    name: {{ $.Release.Namespace }}-graphdb-worker-default-worker-preload-data-pv
 spec:
   storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName }}
   accessModes:

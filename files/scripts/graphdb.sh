@@ -10,7 +10,7 @@ function waitService {
   local max_attempts=100
 
   echo "Waiting for ${address}"
-  until $(curl --output /dev/null -sSL -m 5 -H "Authorization: Basic ${token}" --silent --fail ${address}); do
+  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${token}" --silent --fail ${address}); do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1

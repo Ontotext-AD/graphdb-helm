@@ -15,11 +15,8 @@ metadata:
 spec:
   replicas: 1
   serviceName: graphdb-worker-{{ $worker_index }}
-  # Important to define this strategy instead of the default rolling update, otherwise when
-  # performing helm update, GraphDB won't release its lock from the repositories and the new
-  # pod won't be able to start.
-{{/*  strategy:*/}}
-{{/*    type: Recreate*/}}
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: graphdb-worker-{{ $worker_index }}

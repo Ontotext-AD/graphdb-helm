@@ -9,8 +9,8 @@
 @prefix shacl: <http://rdf4j.org/config/sail/shacl#>.
 
 [] a rep:Repository ;
-    rep:repositoryID "testrepo" ;
-    rdfs:label "GraphDB worker for testrepo" ;
+    rep:repositoryID "default" ;
+    rdfs:label "GraphDB worker for default" ;
     rep:repositoryImpl [
         rep:repositoryType "owlim:ReplicationClusterWorker" ;
         rep:delegate [

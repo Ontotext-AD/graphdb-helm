@@ -354,6 +354,22 @@ For more information about the Storage tool see https://graphdb.ontotext.com/doc
 By default, GraphDB's Helm chart comes with a default Ingress and also Kong for more flexibility in configuring instances paths.
 Both the Ingress and Kong can be disabled by switching `kong.enabled` and `ingress.enabled`.
 
+### Cloud deployments specifics
+
+Some cloud kubernetes clusters have some specifics that should be noted. Here are some useful tips on some cloud K8s clusters:
+
+##### Google cloud
+
+In Google's k8s cluster services, the root directory is not writable. By default GraphDB's chart uses `/data` directory to store instances data.
+If you're using Google cloud, please change this path to something else, not located on the root level.
+
+##### Microsoft Azure
+
+We recommend not to use the Microsoft Azure storage of type `azurefile`. The write speeds of this storage type when used in a Kubernetes cluster is
+not good enough for GraphDB and we recommend not to use it in production environments.
+
+See https://github.com/Azure/AKS/issues/223
+
 ### values.yaml
 
 Helm allows you to override values from [values.yaml](values.yaml) in several ways.

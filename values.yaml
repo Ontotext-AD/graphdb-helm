@@ -155,53 +155,14 @@ graphdb:
     license: graphdb-license
     # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-    # -- Schedule and assign on specific node for ALL masters. By default, no restrictions are applied. This can be specified per instance in the nodes section.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-#    nodeSelector:
-#      diskType: ssd
-#      cpuType: intel
-    affinity:
-#      nodeAffinity:
-#        preferredDuringSchedulingIgnoredDuringExecution:
-#          - weight: 1
-#            preference:
-#              matchExpressions:
-#                - key: node.kubernetes.io/instance-type
-#                  operator: In
-#                  values:
-#                    - Standard_D2as_v4
-#                    - Standard_DS2_v2
-#                - key: hdd
-#                  operator: In
-#                  values:
-#                    - ssd
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
+    # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction
     # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
       - name: master-1
         java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-#        nodeSelector:
-#          topology.kubernetes.io/zone: uksouth-2
         license: graphdb-license
-#        affinity:
-#          nodeAffinity:
-#            preferredDuringSchedulingIgnoredDuringExecution:
-#              - weight: 1
-#                preference:
-#                  matchExpressions:
-#                    - key: node.kubernetes.io/instance-type
-#                      operator: In
-#                      values:
-#                        - Standard_D2as_v4
-#                        - Standard_DS2_v2
-#                    - key: hdd
-#                      operator: NotIn
-#                      values:
-#                        - ssd
-#        tolerations:
-#        - key: "toleration"
-#          operator: "Equal"
-#          value: "blablaaa"
-#          effect: "NoSchedule"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
@@ -238,75 +199,17 @@ graphdb:
     license: graphdb-license
     # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-    # -- Schedule and assign on specific node for ALL workers. By default, no restrictions are applied. This can be specified per instance in the nodes section.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-#    nodeSelector:
-#      kubernetes.io/hostname: aks-pool2-18158390-vmss000000
-#    affinity:
-#      nodeAffinity:
-#        requiredDuringSchedulingIgnoredDuringExecution:
-#          nodeSelectorTerms:
-#          - matchExpressions:
-#            - key: node.kubernetes.io/instance-type
-#              operator: In
-#              values:
-#                - Standard_D2as_v4
-#                - Standard_DS2_v2
-#            - key: cpu
-#              operator: NotIn
-#              values:
-#                - intel
-#      podAntiAffinity:
-#        preferredDuringSchedulingIgnoredDuringExecution:
-#        - weight: 100
-#          podAffinityTerm:
-#            labelSelector:
-#              matchExpressions:
-#              - key: hdd
-#                operator: In
-#                values:
-#                - nvme
-#            topologyKey: topology.kubernetes.io/zone
-#    tolerations:
-#    - key: "toleration"
-#      operator: "Equal"
-#      value: "blabla"
-#      effect: "NoSchedule"
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
+    # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
+    # See https://kubernetes.io/docs/concepts/scheduling-eviction
+
     topologySpreadConstraints:
     # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
     nodes:
       - name: worker-1
         license: graphdb-license
-#          nodeSelector:
-#            topology.kubernetes.io/zone: uksouth-1
       - name: worker-2
         java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport "
-#        topologySpreadConstraints:
-#        - maxSkew: 1
-#          topologyKey: zone
-#          whenUnsatisfiable: DoNotSchedule
-#          labelSelector:
-#            matchLabels:
-#              foo: rdrfgdrgfdrgdr
-#        tolerations:
-#        - key: "toleration"
-#          operator: "Equal"
-#          value: "blablax"
-#          effect: "NoSchedule"
-#        nodeSelector:
-#          topology.kubernetes.io/zone: uksouth-3
-#        affinity:
-#          podAntiAffinity:
-#            preferredDuringSchedulingIgnoredDuringExecution:
-#              - weight: 100
-#                podAffinityTerm:
-#                  labelSelector:
-#                    matchExpressions:
-#                    - key: agentpool
-#                      operator: In
-#                      values:
-#                      - pool3
-#                  topologyKey: topology.kubernetes.io/zone
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -385,11 +288,9 @@ graphdb:
   tools:
     resources:
       limits:
-        cpu: 4
-        memory: "10Gi"
+        memory: "10G"
       requests:
-        cpu: 4
-        memory: "10Gi"
+        memory: "10G"
     # -- Tool to preload data in a chosen repo
     # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html
     preload:

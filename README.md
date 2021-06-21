@@ -3,10 +3,7 @@
 ## WARNING
 
 This is a basic experimental Helm chart for GraphDB. We're working on some features that are missing at the moment such as:
-- Deploying with security
-- Provisioning of users and roles
-- Provisioning of multiple repositories
-- Better scheduling features for high availability such as pod affinity, taints, tolerations, topology spread constraints
+
 - Autoscaling
 
 ## Install
@@ -205,20 +202,24 @@ See `<component>.configmap` and `<component>.secret`.
 templates directly.
 
 
-### GraphDB repository
+### GraphDB repositories
 
 By default, the provisioning creates a default repository in GraphDB. This repo is provided by
-`graphdb-repo-default-configmap` which reads it from
-[worker.default.ttl](files/config/worker.default.ttl).
+`graphdb-master-repo-default-configmap` for master instances and `graphdb-worker-repo-default-configmap` for worker instances.
+The repositories are created using .ttl repository configuration files, by default those are [worker.default.ttl](files/config/worker.default.ttl) and [master.default.ttl](files/config/master.default.ttl).
+
+Provisioning of multiple repositories is also supported. If the configmaps contain more than one .ttl file, the provisioning will create the repositories from all .ttl files contained in the configmap.
+Note that `master` and `worker` repositories are different and must be supplied correctly in a cluster environment.
+Also note that when standalone GraphDB instance is used, the master configmap is used, but with a `worker` `config.ttl`!
 
 To change the default TTL, you can prepare another configuration map containing a
-*config.ttl* file entry:
+`config.ttl` file(s)  entry:
 
 ```bash
 kubectl create configmap graphdb-repo-configmap --from-file=config.ttl
 ```
 
-After that, update the property `graphdb.repositoryConfigmap` from
+After that, update the property `graphdb.masters.repositoryConfigmap` / `graphdb.workers.repositoryConfigmap` from
 [values.yaml](values.yaml) to refer to the new configuration map.
 
 ### Customizing GraphDB cluster and GraphDB specific properties
@@ -268,9 +269,35 @@ nodes:
         license: graphdb-license
 ```
 
-For now the supported configurations are `java_args`, `node_selector` and `license`
+For now the supported configurations are `java_args`, `nodeSelector`, `license`, `affinity`, `tolerations`, `topologySpreadConstraints`
 
-For more information about node selectors see https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+For more information about node scheduling options see https://kubernetes.io/docs/concepts/scheduling-eviction
+
+#### Deploying GraphDB with security
+
+GraphDB's Helm chart supports deploying GraphDB with or without security. This can be toggled through `graphdb.security.enabled`.
+If it is deployed with security enabled, a special provisioning user is used for repository provisioning, cluster linking, health checks and so on.
+Additional users can be added through the settings file: `files/config/settings.js`. The users are described with their roles, username and a bcrypt64 password. 
+
+The file is provisioned before GraphDB's startup with the configmap `graphdb.masters.settingsConfigmap`.
+It can be overridden with other configmap containing the `settings.js` file. The same configmap is used for the `graphdb.properties` file as well.
+Note that the `provisioning` user is required when security is turned on!
+
+By default if the security is turned on, GraphDB's basic security method is used. More complicated security configurations
+can be configured using additional configurations in `graphdb.properties`.
+
+See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
+
+#### Provisioning additional properties
+
+Most of GraphDB's properties can be passed through `java_args`. Another option is to supply a `graphdb.properties` file.
+This file is provisioned on all GraphDB instances during GraphDB's startup using configmap `graphdb.masters.settingsConfigmap`.
+It can be overridden with other configmap containing the `graphdb.properties` file. The same configmap is used for the `settings.js` file as well.
+
+The `graphdb.properties` file is also used for more complex security configurations such as LDAP, Oauth, Kerberos.
+
+See https://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html?highlight=properties
+See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
 
 #### Backup, restore and cleanup options
 
@@ -321,6 +348,11 @@ For more information about the LoadRDF tool see: https://graphdb.ontotext.com/do
   - options - additional options to run the storage-tool with. 
 
 For more information about the Storage tool see https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
+
+### Networking
+
+By default, GraphDB's Helm chart comes with a default Ingress and also Kong for more flexibility in configuring instances paths.
+Both the Ingress and Kong can be disabled by switching `kong.enabled` and `ingress.enabled`.
 
 ### values.yaml
 

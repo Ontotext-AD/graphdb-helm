@@ -14,12 +14,11 @@ The example will return the global workers license or a specific worker license 
   {{- range .nodes }}
     {{- if (eq (trimPrefix "worker-" .name | int64) ( $worker_index | int64)) }}
       {{- if (hasKey . $value_name) }}
-        {{- get . $value_name }}
+        {{- if or (kindIs "map" (get . $value_name)) (kindIs "slice" (get . $value_name)) }} {{- get . $value_name | toYaml }} {{- else }} {{- get . $value_name }} {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
-
 
 {{/*
 Same as above, but for masters nodes
@@ -30,7 +29,7 @@ Same as above, but for masters nodes
 {{- range .nodes }}
   {{- if (eq (trimPrefix "master-" .name | int64) ( $master_index | int64)) }}
     {{- if (hasKey . $value_name) }}
-      {{- get . $value_name }}
+      {{- if or (kindIs "map" (get . $value_name)) (kindIs "slice" (get . $value_name)) }} {{- get . $value_name | toYaml }} {{- else }} {{- get . $value_name }} {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}

@@ -1,3 +1,4 @@
+{{- if .Values.ingress.enabled }}
 apiVersion: {{ .Values.versions.ingress }}
 kind: Ingress
 metadata:
@@ -24,6 +25,10 @@ spec:
       http:
         paths:
           - path: /
+            pathType: Prefix
             backend:
-              serviceName: kong-proxy
-              servicePort: 8000
+              service:
+                name: kong-proxy
+                port:
+                  number: 8000
+{{- end }}

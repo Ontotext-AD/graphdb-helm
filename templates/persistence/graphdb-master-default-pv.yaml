@@ -1,6 +1,7 @@
-
-{{ if eq .Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-master-default" }}
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
+{{- if not (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") }}
+{{- if or (ne $.Values.graphdb.masters.persistence.storageClassName "standard") (ne $.Values.graphdb.masters.persistence.storageClassName "") }}
+{{- if eq .Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-default-master" }}
+{{- range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 #
 # Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
 # for Minikube deployments.
@@ -11,11 +12,14 @@
 apiVersion: {{ $.Values.versions.pv }}
 kind: PersistentVolume
 metadata:
-  name: graphdb-master-default-master-{{ $master_index }}-pv
+  name: {{ $.Release.Namespace }}-graphdb-default-master-{{ $master_index }}-pv
   labels:
-    name: graphdb-master-default-master-{{ $master_index }}-pv
+    name: {{ $.Release.Namespace }}-graphdb-default-master-{{ $master_index }}-pv
 spec:
-  storageClassName: "standard"
+  claimRef:
+    name: graphdb-master-{{ $master_index }}-data-pvc
+    namespace: {{ $.Release.Namespace }}
+  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce
   capacity:
@@ -23,5 +27,7 @@ spec:
   hostPath:
     path: {{ $.Values.deployment.storage }}/graphdb-master-{{ $master_index }}-data
 
-{{ end }}
-{{ end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end}}

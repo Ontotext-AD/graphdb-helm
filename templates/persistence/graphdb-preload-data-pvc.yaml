@@ -5,8 +5,8 @@ metadata:
   labels:
     name: graphdb-worker-preload-data-pvc
 spec:
-  volumeName: graphdb-worker-default-worker-preload-data-pv
-  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
+  volumeName: {{ $.Release.Namespace }}-graphdb-worker-default-worker-preload-data-pv
+  storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce
   resources:

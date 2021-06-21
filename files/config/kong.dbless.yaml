@@ -63,4 +63,4 @@ services:
         strip_path: true
         preserve_host: false
   # {{ end }} range
-  # {{ end }} cluster & expose check
+  # {{ end }} cluster

@@ -16,7 +16,7 @@ metadata:
 spec:
   {{ if .Values.deployment.tls.enabled }}
   tls:
-    - secretName: {{ required "TLS secret is required!" .Values.deployment.tls.configmap }}
+    - secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
       hosts:
       - {{ .Values.deployment.host | quote }}
   {{ end }}

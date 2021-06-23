@@ -50,10 +50,11 @@ spec:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
+        {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
         - name: graphdb-worker-preload-data
           persistentVolumeClaim:
             claimName: graphdb-worker-preload-data-pvc
-
+        {{- end }}
       {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
         - name: {{ $.Values.deployment.imagePullSecret }}
@@ -87,29 +88,20 @@ spec:
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
           startupProbe:
             httpGet:
-              path: /repositories
+              path: /protocol
               port: graphdb-m-{{ $worker_index }}
-              httpHeaders:
-              - name: Authorization
-                value: 'Basic {{ $authToken }}'
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /repositories
+              path: /protocol
               port: graphdb-m-{{ $worker_index }}
-              httpHeaders:
-              - name: Authorization
-                value: 'Basic {{ $authToken }}'
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /repositories
+              path: /protocol
               port: graphdb-m-{{ $worker_index }}
-              httpHeaders:
-              - name: Authorization
-                value: 'Basic {{ $authToken }}'
             initialDelaySeconds: 10
             periodSeconds: 10
       initContainers:

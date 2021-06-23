@@ -92,32 +92,22 @@ spec:
 {{/*            {{- end }}*/}}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
-          # TODO: Check what will happen if some pod dies
           startupProbe:
             httpGet:
-              path: /repositories
+              path: /protocol
               port: graphdb-m-{{ $master_index }}
-              httpHeaders:
-                - name: Authorization
-                  value: 'Basic {{ $authToken }}'
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /repositories
+              path: /protocol
               port: graphdb-m-{{ $master_index }}
-              httpHeaders:
-              - name: Authorization
-                value: 'Basic {{ $authToken }}'
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /repositories
+              path: /protocol
               port: graphdb-m-{{ $master_index }}
-              httpHeaders:
-              - name: Authorization
-                value: 'Basic {{ $authToken }}'
             initialDelaySeconds: 60
             periodSeconds: 10
       initContainers:

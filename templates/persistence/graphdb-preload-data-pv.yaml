@@ -8,10 +8,13 @@
 apiVersion: {{ $.Values.versions.pv }}
 kind: PersistentVolume
 metadata:
-  name: {{ $.Release.Namespace }}-graphdb-worker-default-worker-preload-data-pv
+  name: {{ $.Release.Namespace }}-graphdb-preload-data-pv
   labels:
-    name: {{ $.Release.Namespace }}-graphdb-worker-default-worker-preload-data-pv
+    name: {{ $.Release.Namespace }}-graphdb-preload-data-pv
 spec:
+  claimRef:
+    name: graphdb-worker-preload-data-pvc
+    namespace: {{ $.Release.Namespace }}
   storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName }}
   accessModes:
     - ReadWriteOnce

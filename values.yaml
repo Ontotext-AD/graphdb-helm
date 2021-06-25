@@ -114,7 +114,7 @@ graphdb:
   # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
   # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
   # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
-  topology: "1m_3w"
+  topology: "standalone"
   clusterConfig:
     # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
     masterWorkerMapping:
@@ -130,7 +130,7 @@ graphdb:
     # -- Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology.
     syncPeersMapping:
       - master-1 <-> master-2
-    workersCount: 2
+    workersCount: 3
     mastersCount: 1
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
@@ -154,7 +154,7 @@ graphdb:
     # Important: Must be created beforehand
     license: graphdb-license
     # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m -Dgraphdb.home.work=/mnt/graphdb"
+    java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
     # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
     # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction

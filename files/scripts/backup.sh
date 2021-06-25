@@ -11,7 +11,7 @@ function waitService {
   echo "Waiting for ${address}"
   until $(curl -sSL --output /dev/null --fail ${address}); do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
-      echo "Max attempts reached"
+      echo "Max attempts for ${address} reached"
       exit 1
     fi
 
@@ -23,7 +23,7 @@ function waitService {
 
 waitService http://graphdb-master-1:7200/rest/repositories/${repo_name}/size
 
-currentDate=$(date +'%m-%d-%Y-%H-%M')
+currentDate=$(date +'%Y-%m-%d-%H-%M')
 backupDir="${repo_name}-${currentDate}"
 
 i=0
@@ -33,7 +33,7 @@ then
   do
     curl -o response.json -sSL -H 'content-type: application/json' -d "{\"type\":\"exec\",\"mbean\":\"com.ontotext:type=OwlimRepositoryManager,name=\\\"Repository (/opt/graphdb/home/data/repositories/$repo_name/storage/)\\\"\",\"operation\":\"createZipBackup\",\"arguments\":[\"$backupDir\"]}" http://graphdb-master-1:7200/jolokia/
     if grep -q '"status":200' "response.json"; then
-      echo "Successfully made a backup!"
+      echo "Successfully made a backup for repository ${repo_name} in folder ${backupDir}!"
       break
     else
       echo "Curl command failed, response was:"
@@ -47,7 +47,7 @@ else
   do
     curl -o response.json -sSL -H 'content-type: application/json' -d "{\"type\":\"exec\", \"mbean\":\"ReplicationCluster:name=ClusterInfo\/${repo_name}\", \"operation\":\"backup\", \"arguments\":[\"${backupDir}\"]}" http://graphdb-master-1:7200/jolokia/
     if grep -q '"status":200' "response.json"; then
-      echo "Successfully made a backup!"
+      echo "Successfully made a backup for repository ${repo_name} in folder ${backupDir}!"
       break
     else
       echo "Curl command failed, response was:"

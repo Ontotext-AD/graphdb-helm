@@ -5,9 +5,11 @@ metadata:
   name: backup-cluster
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
-    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
 spec:
-  schedule: {{ .Values.graphdb.backupRestore.auto_backup | quote}}
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  schedule: {{ .Values.graphdb.backupRestore.auto_backup | quote }}
   jobTemplate:
     spec:
       template:

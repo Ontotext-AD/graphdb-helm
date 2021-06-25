@@ -247,15 +247,16 @@ graphdb:
 
   backupRestore:
     # -- Enable auto/manual backups.
-    enable_backups: true
-    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv
+    enable_backups: false
+    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the graphdb-backup-pv
     # (default folder - /data/graphdb-backups).
-    # The backups are saved in format MM-DD-YYYY-hh-mm
-    # TODO: Add PV options for backups
-    auto_backup: "*/2 * * * *"
+    # The backups are saved in format MM-DD-YYYY-hh-mm in UTC!
+    auto_backup: "0 0 23 ? * MON *"
     repositories:
       - default
-      - test
+    # -- Enables cleanup of the backups directory.
+    # WARNING!!! This can be used only by storage classes that have access mode ReadWriteMany because the backups PVC must be attached to a second pod.
+    enable_automatic_backups_cleanup: false
     # -- Cleans up the backups directory.
     # Makes sure that there is a limit of the stored backups.
     # Each or both of backups_count and backups_max_age could be used.
@@ -264,25 +265,29 @@ graphdb:
     backups_count: "2"
     # -- Max number of days for backups.
     backup_max_age: "2"
-    # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
-    # Please bear in mind that there could be a time difference with the kubernetes environment
-    trigger_backup: "31.03.2021 14:52"
+    # -- A future date at which we want to trigger a backup. Must be given in format YYYY-DD-MM hh:mm
+    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
+    trigger_backup: ""
 
-#    # -- Trigger restore at a given time from a given file.
-#    enable_restore: false
-#    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
-#    # For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
-#    #TODO: WHAT TIMEZONE IS THIS?!
-#    trigger_restore: "31.03.2021 14:50"
-#    # -- The name of the backup directory we want to restore.
-#    # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
-#    restore_from_backup: "03-31-2021-14-47"
-#    persistence:
-#      # -- Set to true if you want to persist the backups PV after helm uninstall.
-#      keep_volume: false
-#      storageClassName: standard
-#      # -- Storage size request for the backup pv. The persistent volume has to be able to satisfy the size.
-#      storage: 10G
+    # -- Trigger restore at a given time from a given file.
+    enable_restore: false
+    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
+    # For a standalone the restore is called from an init container. Must be given in format YYYY-DD-MM hh:mm
+    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
+    trigger_restore: "2021-06-24 13:28"
+    # -- The name of the backup directory we want to restore.
+    # Must be given in format YYYY-DD-MM-hh-mm, where YYYY-DD-MM-hh-mm is your backup directory. The backup directory name contains the repository name too, but it must be omitted here.
+    restore_from_backup: "2021-06-24-12-59"
+    # -- The name of the repository we want to restore.
+    restore_repository: default
+    persistence:
+     volumeClaimTemplateSpec:
+       accessModes:
+         - "ReadWriteOnce"
+       resources:
+         requests:
+           storage: "10Gi"
+       storageClassName: standard
 
   # -- Tools for loading, scanning and repairing data in repos
   tools:

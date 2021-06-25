@@ -34,3 +34,19 @@ Same as above, but for masters nodes
   {{- end }}
 {{- end }}
 {{- end }}
+
+{{- define "shouldRenderBackupVolumeClaimTemplate" -}}
+  {{- if or .backupRestore.enable_backups .backupRestore.enable_restore }}
+      {{- if and .backupRestore.persistence.volumeClaimTemplateSpec (eq .master_index 1)}}
+        {{- print true -}}
+      {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- define "shouldRenderToolsVolumeClaimTemplate" -}}
+  {{- if or .tools.preload.trigger .tools.loadrdf.trigger }}
+    {{- if and .tools.persistence.volumeClaimTemplateSpec (eq .master_index 1)}}
+      {{- print "true" -}}
+    {{- end }}
+  {{- end }}
+{{- end }}

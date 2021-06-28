@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   name: ingress
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.class: {{ .Values.deployment.ingress.class }}
     {{ if .Values.deployment.tls.enabled }}
     ingress.kubernetes.io/force-ssl-redirect: "true"
     {{ end }}

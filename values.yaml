@@ -69,6 +69,9 @@ deployment:
 ingress:
   enabled: true
 
+  # custom ingress class
+  class: nginx
+
 # KONG API gateway configurations.
 # This gateway sits behind the ingress and exposes the rest of the components.
 # By default Kong is deployed without database, e.g. stateless mode.

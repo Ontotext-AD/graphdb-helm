@@ -196,7 +196,7 @@ spec:
           volumeMounts:
             - name: graphdb-master-storage
               mountPath: /opt/graphdb/
-            - name: graphdb-backup
+            - name: graphdb-backup-pvc
               mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
           command: ['sh', '-c']
           args:

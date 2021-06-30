@@ -5,7 +5,7 @@ metadata:
   name: backup-cleanup
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
-    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-failed
 spec:
   schedule: {{ .Values.graphdb.backupRestore.cleanup_cron | quote }}
   failedJobsHistoryLimit: 2

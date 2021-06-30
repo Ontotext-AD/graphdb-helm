@@ -1,4 +1,4 @@
-{{- if and (hasKey .Values.graphdb.backupRestore "trigger_backup") .Values.graphdb.backupRestore }}
+{{- if hasKey .Values.graphdb.backupRestore "trigger_backup"}}
 apiVersion: batch/v1
 kind: Job
 metadata:

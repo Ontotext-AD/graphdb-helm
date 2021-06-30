@@ -5,7 +5,7 @@ metadata:
   name: backup-cluster
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
-    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-failed
 spec:
   failedJobsHistoryLimit: 2
   successfulJobsHistoryLimit: 2

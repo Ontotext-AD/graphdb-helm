@@ -1,0 +1,227 @@
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
+    <jmxConfigurator />
+
+    <!-- Try to guess the logs destination based on the application server or fallback to a default logs directory(embedded mode)
+    NOTE: We are using a really old version of logback so we have to use p().isEmpty instead of isDefined -->
+
+    <if condition='p("logDestinationDirectory").isEmpty()'>
+        <then>
+            <!-- catalina.base if we are running on tomcat -->
+            <if condition='!p("catalina.base").isEmpty()'>
+                <then>
+                    <property name="logDestinationDirectory" value="${catalina.base}/logs/graphdb"/>
+                </then>
+                <else>
+                    <!-- jetty.base if we are running on tomcat -->
+                    <if condition='!p("jetty.base").isEmpty()'>
+                        <then>
+                            <property name="logDestinationDirectory" value="${jetty.base}/logs/graphdb"/>
+                        </then>
+                        <else>
+                            <!-- we are running in embedded mode -->
+                            <property name="logDestinationDirectory" value="logs"/>
+                        </else>
+                    </if>
+                </else>
+            </if>
+        </then>
+    </if>
+
+    <property name="defaultPattern" value="[%-5p] %d{ISO8601} [%t | %c{5}]%X{headers} %m%n%ex" />
+    <property name="encoding" value="UTF-8" />
+
+    <!-- Audit log. Contains security related things -->
+    <appender name="AuditLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/audit-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="MainLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/main-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="ErrorLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/error-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- Enterprise log. Contains the cluster-related logs -->
+    <appender name="EnterpriseLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/enterprise-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="HttpLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/http-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="QueryLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/query-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="SlowQueryLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logDestinationDirectory}/slow-query-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${defaultPattern}</pattern>
+            <charset>${encoding}</charset>
+        </encoder>
+    </appender>
+
+    <if condition='!p("graphdb.foreground").isEmpty()'>
+        <then>
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>${defaultPattern}</pattern>
+                </encoder>
+            </appender>
+        </then>
+    </if>
+
+    <!-- Log all repository, user creations, modifications and deletions. Also logs successful or not attempts to
+    login into system. Updates, queries and imports to repository. Set to "INFO" level for logging all former updates.
+    Will log exceptions on "ERROR" level. Additivity is set to "false" and called first to prevent the messages
+    from cluttering the other logs. -->
+    <logger name="com.ontotext.forest.security.audit.AuditLoggingFilter" level="INFO" additivity="false">
+        <appender-ref ref="AuditLog"/>
+    </logger>
+
+    <!-- Log update operations on workers. Set to "INFO" level for logging all updates in workers' QueryLog.
+     Will log exceptions on "ERROR" level. Additivity is set to "false" and called first to prevent the messages
+     from cluttering the other logs.-->
+    <logger name="com.ontotext.trree.monitorRepository.MonitorRepositoryConnection" level="INFO" additivity="false">
+        <appender-ref ref="QueryLog"/>
+    </logger>
+
+    <!-- Log operations on the master or/and the workers. Set to "INFO" level for logging all operations.
+     Will log exceptions on "ERROR" level. Additivity is set to "false" and called first to prevent the messages
+     from cluttering the other logs.-->
+    <logger name="com.ontotext.trree.replicationcluster.api.ClusterOperation" level="INFO" additivity="false">
+        <appender-ref ref="QueryLog"/>
+    </logger>
+    <logger name="com.ontotext.trree.query.LoggingClosableIteration" level="INFO" additivity="false">
+        <appender-ref ref="QueryLog"/>
+    </logger>
+
+    <!-- Log slow queries on "INFO" level. Queries are deemed "slow" if they take more than "SlowOpThresholdMs" from the
+          master JMX bean. Set the level to "OFF" to stop this log. Additivity is set to "false" and called first to prevent the messages
+          from cluttering the other logs. -->
+    <logger name="slow-queries" level="INFO" additivity="false">
+        <appender-ref ref="SlowQueryLog"/>
+    </logger>
+
+    <!-- Enterprise loggers. Additivity is set to "false" so that the messages do not appear in the main log as well -->
+    <logger name="com.ontotext.trree.replicationcluster" level="INFO" additivity="false">
+        <appender-ref ref="EnterpriseLog"/>
+    </logger>
+
+    <logger name="com.ontotext.repository.http" level="INFO" additivity="false">
+        <appender-ref ref="EnterpriseLog"/>
+    </logger>
+
+
+    <!-- HTTP logger -->
+    <logger name="com.ontotext.trree.util.Http" level="INFO" additivity="false">
+        <appender-ref ref="HttpLog"/>
+    </logger>
+
+    <root>
+        <level value="${graphdb.logger.root.level:-INFO}"/>
+        <appender-ref ref="MainLog"/>
+        <appender-ref ref="ErrorLog" />
+        <if condition='!p("graphdb.foreground").isEmpty()'>
+            <then>
+                <appender-ref ref="STDOUT"/>
+            </then>
+        </if>
+    </root>
+
+    <!-- Make some of the more verbose loggers less chatty -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+    <logger name="com.github.ziplet" level="WARN"/>
+    <logger name="springfox.documentation" level="WARN"/>
+
+    <!-- OpenRefine loggers be less verbose -->
+    <logger name="CsvExporter" level="WARN"/>
+    <logger name="FileProjectManager" level="WARN"/>
+    <logger name="HistoryEntry" level="WARN"/>
+    <logger name="ImportingParserBase" level="WARN"/>
+    <logger name="JsonParser" level="WARN"/>
+    <logger name="ProjectManager" level="WARN"/>
+    <logger name="RecordModel" level="WARN"/>
+    <logger name="TreeImportUtilities" level="WARN"/>
+    <logger name="velocity" level="WARN"/>
+    <logger name="Velocity.*" level="WARN"/>
+    <logger name="XmlImportUtilities" level="WARN"/>
+    <logger name="binning_clusterer" level="WARN"/>
+    <logger name="butterfly" level="WARN"/>
+    <logger name="butterfly.*" level="WARN"/>
+    <logger name="command" level="WARN"/>
+    <logger name="compute-clusters_command" level="WARN"/>
+    <logger name="create-import-job_command" level="WARN"/>
+    <logger name="create-project_command" level="WARN"/>
+    <logger name="get-scatterplot_command" level="WARN"/>
+    <logger name="import-project_command" level="WARN"/>
+    <logger name="importing" level="WARN"/>
+    <logger name="importing-controller_command" level="WARN"/>
+    <logger name="importing-utilities" level="WARN"/>
+    <logger name="javascript" level="WARN"/>
+    <logger name="kNN_clusterer" level="WARN"/>
+    <logger name="open" level="WARN"/>
+    <logger name="office" level="WARN"/>
+    <logger name="project" level="WARN"/>
+    <logger name="project_metadata" level="WARN"/>
+    <logger name="project_metadata_utilities" level="WARN"/>
+    <logger name="project_utilities" level="WARN"/>
+    <logger name="recon-config" level="WARN"/>
+    <logger name="recon-operation" level="WARN"/>
+    <logger name="refine" level="WARN"/>
+    <logger name="refine-standard-recon" level="WARN"/>
+    <logger name="refine_clientSideResourceManager" level="WARN"/>
+    <logger name="scatterplot_facet" level="WARN"/>
+
+    <!-- GeoSPAQRL related deps be less verbose -->
+    <logger name="hsqldb.*" level="WARN"/>
+    <logger name="org.geotoolkit.*" level="WARN"/>
+
+    <!-- SemanticVectors related logger be less verbose -->
+    <logger name="pitt.search.semanticvectors.DocVectors" level="WARN"/>
+</configuration>

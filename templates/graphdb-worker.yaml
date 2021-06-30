@@ -187,6 +187,11 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb/logback.xml ]]; then
+                echo "Provisioning logging config file..."
+                mkdir -p /opt/graphdb/home/conf ;
+                cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
+              fi
               echo 'Done'
         # LOADRDF TOOL
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.loadrdf.trigger }}

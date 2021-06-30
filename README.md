@@ -292,7 +292,8 @@ See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
 
 Most of GraphDB's properties can be passed through `java_args`. Another option is to supply a `graphdb.properties` file.
 This file is provisioned on all GraphDB instances during GraphDB's startup using configmap `graphdb.masters.settingsConfigmap`.
-It can be overridden with other configmap containing the `graphdb.properties` file. The same configmap is used for the `settings.js` file as well.
+It can be overridden with other configmap containing the `graphdb.properties` file. 
+The same configmap is used for the `settings.js` and `logback.xml` file as well.
 
 The `graphdb.properties` file is also used for more complex security configurations such as LDAP, Oauth, Kerberos.
 

@@ -11,3 +11,5 @@ data:
 {{ tpl (.Files.Get "files/config/settings.js" | indent 4) . }}
   graphdb.properties: |-
 {{ tpl (.Files.Get "files/config/graphdb.properties" | indent 4) . }}
+  logback.xml: |-
+{{ tpl (.Files.Get "files/config/logback.xml" | indent 4) . }}

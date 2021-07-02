@@ -58,6 +58,7 @@ deployment:
 
   # -- Ingress related configurations
   ingress:
+    class: nginx
     # -- Sets the maximum size for all requests to the underlying Nginx
     maxRequestSize: 512M
     # -- Default timeouts in seconds for the underlying Nginx.
@@ -104,7 +105,7 @@ kong:
   # Default resource limitations.
   resources:
     limits:
-      memory: 2048Mi
+      memory: 1024Mi
   # Schedule and assign on specific node. By default, no restrictions are applied.
   # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   nodeSelector: {}

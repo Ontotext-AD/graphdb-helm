@@ -34,7 +34,7 @@ spec:
     {{- end }}
     {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
     - metadata:
-        name: graphdb-wb-import-dir
+        name: graphdb-server-import-dir
       spec: {{ toYaml $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
   template:
@@ -92,7 +92,7 @@ spec:
               mountPath: /opt/graphdb/backups
             {{- end }}
             {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
-            - name: graphdb-wb-import-dir
+            - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}

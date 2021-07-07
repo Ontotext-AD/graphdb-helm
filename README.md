@@ -313,6 +313,11 @@ Those options are described in the subsection `graphdb.backupRestore.*` and they
 - restore_from_backup - the name of the backup directory we want to restore. Must be given in format YYYY-MM-DD hh:mm, where YYYY-MM-DD hh:mm is your backup directory
 - restore_repository - the name of the repository that we want to restore.
 
+#### Importing data from existing persistent volume
+GraphDB supports attaching a folder as an import directory. The directory's content s visible in the Workbench and can be imported. 
+In the Helm chart you can use existing PV as an import directory. This is done through `graphdb.import_directory_mount` using a `volumeClaimTemplateSpec`.
+This way a dynamic PV/PVC can be provisioned, or you can use an existing PV. If an existing PV is used, have in mind that the dynamically provisioned PVC name is `graphdb-server-import-dir-graphdb-master-1-0`, so an appropriate `claimRef` must be added to the existing PV.
+
 #### Preload, LoadRDF, Storage tools
 GraphDB's Helm chart supports preload and LoadRDF tools for preloading data. It also supports Storage tool for scanning and repairing data. There are a few options that are used to run the needed commands.
 

@@ -19,7 +19,7 @@ spec:
   selector:
     matchLabels:
       app: graphdb-master-{{ $master_index }}
-  {{- if or (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+  {{- if or (or (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index))) (and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1)) }}
   volumeClaimTemplates:
   {{- end }}
     {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -31,6 +31,11 @@ spec:
     - metadata:
         name: graphdb-backup-pvc
       spec: {{ toYaml $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec | nindent 8 }}
+    {{- end }}
+    {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
+    - metadata:
+        name: graphdb-server-import-dir
+      spec: {{ toYaml $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
   template:
     metadata:
@@ -85,6 +90,10 @@ spec:
             {{- if and (eq ($master_index | int64) 1) (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
             - name: graphdb-backup-pvc
               mountPath: /opt/graphdb/backups
+            {{- end }}
+            {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
+            - name: graphdb-server-import-dir
+              mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere

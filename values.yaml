@@ -249,6 +249,18 @@ graphdb:
     # Should be configured in the API gateway (or any other proxy in front)
     subpath: /graphdb
 
+  # Attach additional PV which will be used as an import directory
+  # https://graphdb.ontotext.com/documentation/standard/loading-data-using-the-workbench.html#importing-server-files
+  import_directory_mount:
+    enabled: false
+    volumeClaimTemplateSpec:
+     accessModes:
+       - "ReadWriteOnce"
+     resources:
+       requests:
+         storage: "10Gi"
+     storageClassName: standard
+
   backupRestore:
     # -- Enable auto/manual backups.
     enable_backups: false

@@ -172,9 +172,9 @@ graphdb:
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
     resources:
       limits:
-        memory: 1Gi
+        memory: 2Gi
       requests:
-        memory: 1Gi
+        memory: 2Gi
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -237,9 +237,9 @@ graphdb:
     # Note: Same as for the master node
     resources:
       limits:
-        memory: 1Gi
+        memory: 2Gi
       requests:
-        memory: 1Gi
+        memory: 2Gi
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
   #configmap: graphdb-configmap

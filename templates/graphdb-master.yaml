@@ -102,18 +102,21 @@ spec:
               path: /protocol
               port: graphdb-m-{{ $master_index }}
             failureThreshold: 30
+            timeoutSeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /protocol
               port: graphdb-m-{{ $master_index }}
             initialDelaySeconds: 5
+            timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /protocol
               port: graphdb-m-{{ $master_index }}
             initialDelaySeconds: 60
+            timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
         # LICENSE PROVISION

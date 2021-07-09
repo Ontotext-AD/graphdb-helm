@@ -56,6 +56,7 @@ deployment:
 
   # -- Ingress related configurations
   ingress:
+    enabled: true
     class: nginx
     # -- Sets the maximum size for all requests to the underlying Nginx
     maxRequestSize: 512M
@@ -64,12 +65,6 @@ deployment:
       connect: 5
       read: 60
       send: 60
-
-ingress:
-  enabled: true
-
-  # custom ingress class
-  class: nginx
 
 # KONG API gateway configurations.
 # This gateway sits behind the ingress and exposes the rest of the components.

@@ -14,6 +14,10 @@ spec:
     spec:
       template:
         spec:
+        {{- if hasKey $.Values.deployment "imagePullSecret" }}
+          imagePullSecrets:
+            - name: {{ $.Values.deployment.imagePullSecret }}
+        {{- end }}
           containers:
             - name: backup-del
               image: {{ .Values.images.graphdb }}

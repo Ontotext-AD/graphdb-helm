@@ -7,6 +7,10 @@ spec:
   ttlSecondsAfterFinished: 60
   template:
     spec:
+      {{- if hasKey $.Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ $.Values.deployment.imagePullSecret }}
+      {{- end }}
       containers:
         - name: run-script-manual-backup
           image: {{ .Values.images.graphdb }}

@@ -1,3 +1,4 @@
+{{- if or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger }}
 apiVersion: {{ $.Values.versions.pvc }}
 kind: PersistentVolumeClaim
 metadata:
@@ -12,3 +13,4 @@ spec:
   resources:
     requests:
       storage: {{ $.Values.graphdb.masters.persistence.storage }}
+{{- end }}

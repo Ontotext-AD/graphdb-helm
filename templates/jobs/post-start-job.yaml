@@ -12,6 +12,10 @@ spec:
   ttlSecondsAfterFinished: 300
   template:
     spec:
+      {{- if hasKey $.Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ $.Values.deployment.imagePullSecret }}
+      {{- end }}
       containers:
         - name: link-graphdb-cluster
           image: {{ .Values.images.graphdb }}

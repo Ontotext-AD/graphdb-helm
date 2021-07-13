@@ -210,8 +210,10 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
             - name: graphdb-worker-preload-data
               mountPath: /tmp/graphdb/
+            {{- end }}
           command: ['sh', '-c']
           args:
             - |

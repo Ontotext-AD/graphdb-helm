@@ -219,7 +219,7 @@ spec:
             - |
               cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
               echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
-              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
+              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
               echo "preload with loadrdf tool is done"
               {{- end }}
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.preload.trigger }}

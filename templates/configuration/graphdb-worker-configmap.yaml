@@ -13,7 +13,8 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-worker-{{ $worker_index }}
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ $.Values.deployment.host }}{{ $.Values.graphdb.workbench.subpath }}-worker-{{ $worker_index }},http://graphdb-worker-{{ $worker_index }}:7200/
+    -Dgraphdb.external-url={{ $.Values.deployment.protocol }}://graphdb-worker-{{ $worker_index }}:7200/
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
     -Dgraphdb.home.conf=/opt/graphdb/home/conf

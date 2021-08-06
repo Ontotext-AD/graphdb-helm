@@ -1,29 +1,36 @@
-#TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-#repository name from the values file, but first we have to rework the restore procedure so the
-#backups must be placed in proper folders according to the repository name
-{{/*{{- if and (hasKey .Values.graphdb.backupRestore "trigger_backup") .Values.graphdb.backupRestore.enable_backups }}*/}}
-{{/*apiVersion: batch/v1beta1*/}}
-{{/*kind: CronJob*/}}
-{{/*metadata:*/}}
-{{/*  name: run-manual-backup*/}}
-{{/*spec:*/}}
-{{/*  schedule: "* * * * *"*/}}
-{{/*  jobTemplate:*/}}
-{{/*    spec:*/}}
-{{/*      template:*/}}
-{{/*        spec:*/}}
-{{/*          containers:*/}}
-{{/*            - name: run-script-manual-backup*/}}
-{{/*              image: {{ .Values.images.graphdb }}*/}}
-{{/*              volumeMounts:*/}}
-{{/*                - name: graphdb-utils*/}}
-{{/*                  mountPath: /tmp/utils*/}}
-{{/*              command: ['bash',*/}}
-{{/*                        '-c',*/}}
-{{/*                        'cp /tmp/utils/runManualBackup.sh /tmp/utils/backup.sh /usr/local/bin/; chmod +x /usr/local/bin/runManualBackup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/runManualBackup.sh "{{.Values.graphdb.backupRestore.trigger_backup}}" "{{.Values.graphdb.masters.repository}}" {{ .Values.graphdb.topology | quote }} >> /proc/1/fd/1']*/}}
-{{/*          restartPolicy: Never*/}}
-{{/*          volumes:*/}}
-{{/*            - name: graphdb-utils*/}}
-{{/*              configMap:*/}}
-{{/*                name: graphdb-utils-configmap*/}}
-{{/*{{- end }}*/}}
+{{- if hasKey .Values.graphdb.backupRestore "trigger_backup"}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: run-manual-backup
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      {{- if hasKey $.Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ $.Values.deployment.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: run-script-manual-backup
+          image: {{ .Values.images.graphdb }}
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['bash',
+                    '-c']
+          args:
+            - |
+              cp /tmp/utils/runManualBackup.sh /tmp/utils/backup.sh /usr/local/bin/;
+              chmod +x /usr/local/bin/runManualBackup.sh;
+              chmod +x /usr/local/bin/backup.sh;
+              {{- range .Values.graphdb.backupRestore.repositories }}
+              /usr/local/bin/runManualBackup.sh "{{ $.Values.graphdb.backupRestore.trigger_backup }}" "{{ . }}" {{ $.Values.graphdb.topology | quote }}
+              {{- end }}
+              >> /proc/1/fd/1
+      restartPolicy: OnFailure
+      volumes:
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+{{- end }}

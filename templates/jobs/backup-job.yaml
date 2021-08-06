@@ -1,29 +1,39 @@
-#TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-#repository name from the values file, but first we have to rework the restore procedure so the
-#backups must be placed in proper folders according to the repository name
-{{/*{{- if and (hasKey .Values.graphdb.backupRestore "auto_backup") .Values.graphdb.backupRestore.enable_backups }}*/}}
-{{/*apiVersion: batch/v1beta1*/}}
-{{/*kind: CronJob*/}}
-{{/*metadata:*/}}
-{{/*  name: backup-cluster*/}}
-{{/*spec:*/}}
-{{/*  schedule: {{ .Values.graphdb.backupRestore.auto_backup | quote}}*/}}
-{{/*  jobTemplate:*/}}
-{{/*    spec:*/}}
-{{/*      template:*/}}
-{{/*        spec:*/}}
-{{/*          containers:*/}}
-{{/*            - name: backup*/}}
-{{/*              image: {{ .Values.images.graphdb }}*/}}
-{{/*              volumeMounts:*/}}
-{{/*                - name: graphdb-utils*/}}
-{{/*                  mountPath: /tmp/utils*/}}
-{{/*              command: ['bash',*/}}
-{{/*                        '-c',*/}}
-{{/*                        'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh; /usr/local/bin/backup.sh "{{.Values.graphdb.masters.repository}}" {{ .Values.graphdb.topology | quote }} >> /proc/1/fd/1']*/}}
-{{/*          restartPolicy: Never*/}}
-{{/*          volumes:*/}}
-{{/*          - name: graphdb-utils*/}}
-{{/*            configMap:*/}}
-{{/*              name: graphdb-utils-configmap*/}}
-{{/*{{- end }}*/}}
+{{- if and (hasKey .Values.graphdb.backupRestore "auto_backup") .Values.graphdb.backupRestore.enable_backups }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-cluster
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-failed
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  schedule: {{ .Values.graphdb.backupRestore.auto_backup | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          {{- if hasKey $.Values.deployment "imagePullSecret" }}
+          imagePullSecrets:
+            - name: {{ $.Values.deployment.imagePullSecret }}
+          {{- end }}
+          containers:
+            - name: backup
+              image: {{ .Values.images.graphdb }}
+              volumeMounts:
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+              command: ['bash',
+                        '-c',
+                        'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh;
+                        {{- range .Values.graphdb.backupRestore.repositories }}
+                        /usr/local/bin/backup.sh "{{ . }}" {{ $.Values.graphdb.topology | quote }};
+                        {{- end }}
+                        >> /proc/1/fd/1']
+          restartPolicy: Never
+          volumes:
+          - name: graphdb-utils
+            configMap:
+              name: graphdb-utils-configmap
+{{- end }}

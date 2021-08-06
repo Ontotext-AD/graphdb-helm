@@ -19,12 +19,24 @@ spec:
   selector:
     matchLabels:
       app: graphdb-master-{{ $master_index }}
-  {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+  {{- if or (or (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index))) (and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1)) }}
   volumeClaimTemplates:
+  {{- end }}
+    {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
     - metadata:
         name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
       spec: {{ toYaml $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec | nindent 8 }}
-  {{- end }}
+    {{- end }}
+    {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+    - metadata:
+        name: graphdb-backup-pvc
+      spec: {{ toYaml $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec | nindent 8 }}
+    {{- end }}
+    {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
+    - metadata:
+        name: graphdb-server-import-dir
+      spec: {{ toYaml $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
+    {{- end }}
   template:
     metadata:
       labels:
@@ -40,14 +52,6 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-master-{{ $master_index }}-data-pvc
         {{- end }}
-        #TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-        #repository name from the values file, but first we have to rework the restore procedure so the
-        #backups must be placed in proper folders according to the repository name
-{{/*        {{- if eq ($master_index | int64) 1 }}*/}}
-{{/*        - name: graphdb-backup*/}}
-{{/*          persistentVolumeClaim:*/}}
-{{/*            claimName: backup-pvc*/}}
-{{/*        {{- end }}*/}}
         - name: graphdb-master-repo-config
           configMap:
             name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.masters.repositoryConfigmap }}
@@ -83,13 +87,14 @@ spec:
             - name: graphdb-master-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-          #TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-          #repository name from the values file, but first we have to rework the restore procedure so the
-          #backups must be placed in proper folders according to the repository name
-{{/*            {{- if eq ($master_index | int64) 1 }}*/}}
-{{/*            - name: graphdb-backup*/}}
-{{/*              mountPath: /opt/graphdb/backups*/}}
-{{/*            {{- end }}*/}}
+            {{- if and (eq ($master_index | int64) 1) (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+            - name: graphdb-backup-pvc
+              mountPath: /opt/graphdb/backups
+            {{- end }}
+            {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
+            - name: graphdb-server-import-dir
+              mountPath: /opt/graphdb/home/graphdb-import
+            {{- end }}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
           startupProbe:
@@ -97,18 +102,21 @@ spec:
               path: /protocol
               port: graphdb-m-{{ $master_index }}
             failureThreshold: 30
+            timeoutSeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /protocol
               port: graphdb-m-{{ $master_index }}
             initialDelaySeconds: 5
+            timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /protocol
               port: graphdb-m-{{ $master_index }}
             initialDelaySeconds: 60
+            timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
         # LICENSE PROVISION
@@ -198,34 +206,30 @@ spec:
                 cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
               fi
               echo 'Done'
-
-#TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-#repository name from the values file, but first we have to rework the restore procedure so the
-#backups must be placed in proper folders according to the repository name
-{{/*        {{- if and (eq $.Values.graphdb.topology "standalone") ( $.Values.graphdb.backupRestore.restore_from_backup ) }}*/}}
-{{/*        - name: restore-standalone*/}}
-{{/*          image: {{ $.Values.images.busybox }}*/}}
-{{/*          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}*/}}
-{{/*          volumeMounts:*/}}
-{{/*            - name: graphdb-master-storage*/}}
-{{/*              mountPath: /opt/graphdb/*/}}
-{{/*            - name: graphdb-backup*/}}
-{{/*              mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/*/}}
-{{/*          command: ['sh', '-c']*/}}
-{{/*          args:*/}}
-{{/*            - |*/}}
-{{/*              {{ $repo := $.Values.graphdb.masters.repository -}}*/}}
-{{/*              mkdir -p /opt/graphdb/home/data/repositories/{{ $repo }} ;*/}}
-{{/*              cd /opt/graphdb/home/data/repositories/ ;*/}}
-{{/*              echo "Backup to restore: {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/"*/}}
-{{/*              if [ -d {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/ ]; then*/}}
-{{/*                rm -rf {{ $repo }}*/}}
-{{/*                unzip {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $.Values.graphdb.backupRestore.restore_from_backup }}/**/}}
-{{/*                echo "Successfully restored!"*/}}
-{{/*              else*/}}
-{{/*                echo "Nothing to restore."*/}}
-{{/*              fi*/}}
-{{/*        {{- end }}*/}}
+        {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+        - name: restore-standalone
+          image: {{ $.Values.images.busybox }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          volumeMounts:
+            - name: graphdb-master-storage
+              mountPath: /opt/graphdb/
+            - name: graphdb-backup-pvc
+              mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
+          command: ['sh', '-c']
+          args:
+            - |
+              {{ $repo := $.Values.graphdb.backupRestore.restore_repository -}}
+              mkdir -p /opt/graphdb/home/data/repositories/{{ $repo }} ;
+              cd /opt/graphdb/home/data/repositories/ ;
+              echo "Backup to restore: {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $repo }}-{{ $.Values.graphdb.backupRestore.restore_from_backup }}/"
+              if [ -d {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $repo }}-{{ $.Values.graphdb.backupRestore.restore_from_backup }}/ ]; then
+                rm -rf {{ $repo }}
+                unzip {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $repo }}-{{ $.Values.graphdb.backupRestore.restore_from_backup }}/*
+                echo "Successfully restored!"
+              else
+                echo "Nothing to restore."
+              fi
+        {{- end }}
 
 ---
 apiVersion: {{ $.Values.versions.service }}

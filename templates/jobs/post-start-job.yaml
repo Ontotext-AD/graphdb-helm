@@ -7,10 +7,15 @@ metadata:
   name: link-graphdb-cluster-job
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
 spec:
+  ttlSecondsAfterFinished: 300
   template:
     spec:
+      {{- if hasKey $.Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ $.Values.deployment.imagePullSecret }}
+      {{- end }}
       containers:
         - name: link-graphdb-cluster
           image: {{ .Values.images.graphdb }}

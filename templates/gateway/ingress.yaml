@@ -18,10 +18,10 @@ spec:
   tls:
     - secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
       hosts:
-      - {{ .Values.deployment.host | quote }}
+      - {{ include "resolveDeploymentHost" . | quote }}
   {{ end }}
   rules:
-    - host: {{ .Values.deployment.host | quote }}
+    - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
           - path: /

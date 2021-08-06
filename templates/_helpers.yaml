@@ -50,3 +50,9 @@ Same as above, but for masters nodes
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{- define "resolveDeploymentHost" -}}
+  {{- $global := .Values.global | default dict -}}
+  {{- $globalDeployment := $global.deployment | default dict -}}
+  {{- print (index $globalDeployment "host" | default (index $global "ingressHost") | default .Values.deployment.host) -}}
+{{- end }}

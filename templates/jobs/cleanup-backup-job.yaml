@@ -1,34 +1,44 @@
-#TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-#repository name from the values file, but first we have to rework the restore procedure so the
-#backups must be placed in proper folders according to the repository name
-{{/*{{- if hasKey .Values.graphdb.backupRestore "cleanup_cron" }}*/}}
-{{/*apiVersion: batch/v1beta1*/}}
-{{/*kind: CronJob*/}}
-{{/*metadata:*/}}
-{{/*  name: backup-cleanup*/}}
-{{/*spec:*/}}
-{{/*  schedule: {{ .Values.graphdb.backupRestore.cleanup_cron | quote }}*/}}
-{{/*  jobTemplate:*/}}
-{{/*    spec:*/}}
-{{/*      template:*/}}
-{{/*        spec:*/}}
-{{/*          containers:*/}}
-{{/*            - name: backup-del*/}}
-{{/*              image: {{ .Values.images.graphdb }}*/}}
-{{/*              volumeMounts:*/}}
-{{/*                - name: graphdb-utils*/}}
-{{/*                  mountPath: /tmp/utils*/}}
-{{/*                - name: graphdb-backup*/}}
-{{/*                  mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/*/}}
-{{/*              command: ['bash',*/}}
-{{/*                        '-c',*/}}
-{{/*                        'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh; /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups/backup/ {{.Values.graphdb.backupRestore.backups_count}} {{.Values.graphdb.backupRestore.backup_max_age}} >> /proc/1/fd/1' ]*/}}
-{{/*          restartPolicy: Never*/}}
-{{/*          volumes:*/}}
-{{/*            - name: graphdb-utils*/}}
-{{/*              configMap:*/}}
-{{/*                name: graphdb-utils-configmap*/}}
-{{/*            - name: graphdb-backup*/}}
-{{/*              persistentVolumeClaim:*/}}
-{{/*                claimName: backup-pvc*/}}
-{{/*{{- end }}*/}}
+{{- if and (hasKey .Values.graphdb.backupRestore "cleanup_cron")  .Values.graphdb.backupRestore.enable_automatic_backups_cleanup }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-cleanup
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-failed
+spec:
+  schedule: {{ .Values.graphdb.backupRestore.cleanup_cron | quote }}
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+        {{- if hasKey $.Values.deployment "imagePullSecret" }}
+          imagePullSecrets:
+            - name: {{ $.Values.deployment.imagePullSecret }}
+        {{- end }}
+          containers:
+            - name: backup-del
+              image: {{ .Values.images.graphdb }}
+              volumeMounts:
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+                - name: graphdb-backup
+                  mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
+              command: ['bash',
+                        '-c',
+                        'cp /tmp/utils/deleteBackup.sh /usr/local/bin/deleteBackup.sh; chmod +x /usr/local/bin/deleteBackup.sh;
+                        {{- range .Values.graphdb.backupRestore.repositories }}
+                        /usr/local/bin/deleteBackup.sh {{ $.Values.deployment.storage }}/graphdb-backups/backup {{ . }} {{ $.Values.graphdb.backupRestore.backups_count }} {{ $.Values.graphdb.backupRestore.backup_max_age }}
+                        {{- end }}
+                         >> /proc/1/fd/1' ]
+          restartPolicy: Never
+          volumes:
+            - name: graphdb-utils
+              configMap:
+                name: graphdb-utils-configmap
+            - name: graphdb-backup
+              persistentVolumeClaim:
+                claimName: graphdb-backup-pvc-graphdb-master-1-0
+{{- end }}

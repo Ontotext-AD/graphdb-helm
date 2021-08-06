@@ -1,0 +1,28 @@
+{{- if and (ne .Values.graphdb.topology "standalone") (and (hasKey .Values.graphdb.backupRestore "trigger_restore") .Values.graphdb.backupRestore.enable_restore) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restore-job
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      {{- if hasKey $.Values.deployment "imagePullSecret" }}
+      imagePullSecrets:
+        - name: {{ $.Values.deployment.imagePullSecret }}
+      {{- end }}
+      containers:
+        - name: run-script-restore-from-backup
+          image: {{ .Values.images.graphdb }}
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ['sh',
+                    '-c',
+                    'cp /tmp/utils/runRestoreBackup.sh /usr/local/bin/; chmod +x /usr/local/bin/runRestoreBackup.sh; /usr/local/bin/runRestoreBackup.sh "{{.Values.graphdb.backupRestore.trigger_restore}}" "{{.Values.graphdb.backupRestore.restore_repository}}" "{{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ .Values.graphdb.backupRestore.restore_from_backup}}" >> /proc/1/fd/1']
+      restartPolicy: OnFailure
+      volumes:
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+{{- end }}

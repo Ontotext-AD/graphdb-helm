@@ -25,10 +25,8 @@ versions:
 # Top lvl flat for easier maintenance
 images:
   kong: kong:2.1-alpine
-  graphdb: ontotext/graphdb:9.8.0-ee
+  graphdb: ontotext/graphdb:9.8.1-ee
   busybox: busybox:1.31
-  #TODO: Why this does not work with apline container??
-  alpine: ontotext/graphdb:9.8.0-ee
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
@@ -59,7 +57,6 @@ deployment:
   # -- Ingress related configurations
   ingress:
     enabled: true
-    # -- Sets ingress class
     class: nginx
     # -- Sets extra ingress annotations
     annotations: {}
@@ -103,7 +100,7 @@ kong:
   # Default resource limitations.
   resources:
     limits:
-      memory: 2048Mi
+      memory: 1024Mi
   # Schedule and assign on specific node. By default, no restrictions are applied.
   # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   nodeSelector: {}
@@ -116,7 +113,7 @@ graphdb:
   # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
   # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
   # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
-  topology: "1m_3w"
+  topology: "standalone"
   clusterConfig:
     # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
     masterWorkerMapping:
@@ -139,7 +136,7 @@ graphdb:
 
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the healthchecks and cluster linking can work properly
-    enabled: true
+    enabled: false
     provisioningUsername: provisioner
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
@@ -170,9 +167,9 @@ graphdb:
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
     resources:
       limits:
-        memory: 1Gi
+        memory: 2Gi
       requests:
-        memory: 1Gi
+        memory: 2Gi
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -235,9 +232,9 @@ graphdb:
     # Note: Same as for the master node
     resources:
       limits:
-        memory: 1Gi
+        memory: 2Gi
       requests:
-        memory: 1Gi
+        memory: 2Gi
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
   #configmap: graphdb-configmap
@@ -247,45 +244,62 @@ graphdb:
     # Should be configured in the API gateway (or any other proxy in front)
     subpath: /graphdb
 
-#TODO: The backup should be reworked to work with an array of repositories. The restore must get a
-#repository name from the values file, but first we have to rework the restore procedure so the
-#backups must be placed in proper folders according to the repository name
-#  backupRestore:
-#    # -- Enable auto/manual backups.
-#    enable_backups: false
-#    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv
-#    # (default folder - /data/graphdb-backups).
-#    # The backups are saved in format MM-DD-YYYY-hh-mm
-#    # TODO: Add PV options for backups
-#    auto_backup: "1 * * * *"
-#    # -- Cleans up the backups directory.
-#    # Makes sure that there is a limit of the stored backups.
-#    # Each or both of backups_count and backups_max_age could be used.
-#    cleanup_cron: "1 1 * * *"
-#    # -- Max number of backup dirs saved.
-#    backups_count: "5"
-#    # -- Max number of days for backups.
-#    backup_max_age: "5"
-#    # -- A future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm
-#    # Please bear in mind that there could be a time difference with the kubernetes environment
-#    trigger_backup: "31.03.2021 14:52"
-#
-#    # -- Trigger restore at a given time from a given file.
-#    enable_restore: false
-#    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
-#    # For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
-#    #TODO: WHAT TIMEZONE IS THIS?!
-#    trigger_restore: "31.03.2021 14:50"
-#    # -- The name of the backup directory we want to restore.
-#    # Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
-#    restore_from_backup: "03-31-2021-14-47"
-#    persistence:
-#      # -- Set to true if you want to persist the backups PV after helm uninstall.
-#      keep_volume: false
-#      storageClassName: standard
-#      # -- Storage size request for the backup pv. The persistent volume has to be able to satisfy the size.
-#      storage: 10G
-#
+  # Attach additional PV which will be used as an import directory
+  # https://graphdb.ontotext.com/documentation/standard/loading-data-using-the-workbench.html#importing-server-files
+  import_directory_mount:
+    enabled: false
+    volumeClaimTemplateSpec:
+     accessModes:
+       - "ReadWriteOnce"
+     resources:
+       requests:
+         storage: "10Gi"
+     storageClassName: standard
+
+  backupRestore:
+    # -- Enable auto/manual backups.
+    enable_backups: false
+    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the graphdb-backup-pv
+    # (default folder - /data/graphdb-backups).
+    # The backups are saved in format MM-DD-YYYY-hh-mm in UTC!
+    auto_backup: "0 0 23 ? * MON *"
+    repositories:
+      - default
+    # -- Enables cleanup of the backups directory.
+    # WARNING!!! This can be used only by storage classes that have access mode ReadWriteMany because the backups PVC must be attached to a second pod.
+    enable_automatic_backups_cleanup: false
+    # -- Cleans up the backups directory.
+    # Makes sure that there is a limit of the stored backups.
+    # Each or both of backups_count and backups_max_age could be used.
+    cleanup_cron: "*/2 * * * *"
+    # -- Max number of backup dirs saved.
+    backups_count: "2"
+    # -- Max number of days for backups.
+    backup_max_age: "2"
+    # -- A future date at which we want to trigger a backup. Must be given in format YYYY-DD-MM hh:mm
+    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
+    trigger_backup: ""
+
+    # -- Trigger restore at a given time from a given file.
+    enable_restore: false
+    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
+    # For a standalone the restore is called from an init container. Must be given in format YYYY-DD-MM hh:mm
+    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
+    trigger_restore: "2021-06-24 13:28"
+    # -- The name of the backup directory we want to restore.
+    # Must be given in format YYYY-DD-MM-hh-mm, where YYYY-DD-MM-hh-mm is your backup directory. The backup directory name contains the repository name too, but it must be omitted here.
+    restore_from_backup: "2021-06-24-12-59"
+    # -- The name of the repository we want to restore.
+    restore_repository: default
+    persistence:
+     volumeClaimTemplateSpec:
+       accessModes:
+         - "ReadWriteOnce"
+       resources:
+         requests:
+           storage: "10Gi"
+       storageClassName: standard
+
   # -- Tools for loading, scanning and repairing data in repos
   tools:
     resources:

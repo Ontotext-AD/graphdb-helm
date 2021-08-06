@@ -144,7 +144,7 @@ You should see the following output:
   \____|_|  \__,_| .__/|_| |_|____/|____/    |_____|_____|
                  |_|
 --------------------------------------------------------------------------------------------
-version: 9.7.0
+version: 9.8.0
 GDB cluster: true
 
 ** Please be patient while the chart is being deployed and services are available **
@@ -305,13 +305,19 @@ See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
 GraphDB's Helm chart supports automatic backup, restore and cleanup procedures. There are a few options that are used to describe the required jobs that handle those tasks.
 
 Those options are described in the subsection `graphdb.backupRestore.*` and they are:
-- auto_backup - cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm
-- cleanup_cron - cleans up the backups directory. Makes sure that there is a limit of the stored backups. Each or both of `backups_count` and `backups_max_age` could be used.
+- auto_backup - cron Schedule for auto backup. Creates an automatic backup, stored in a dynamically provisioned PV/PVC using `volumeClaimTemplates` (default folder - /data/graphdb-backups). The backups are saved in format repositoryName-YYYY-MM-DD-hh-mm
+- cleanup_cron - cleans up the backups directory. Makes sure that there is a limit of the stored backups. Each or both of `backups_count` and `backups_max_age` could be used. **NOTE: This will work only with certain types of storage classes that support ReadWriteMany!**
 - backups_count - max number of backup dirs saved.
 - backup_max_age - max number of days for backups.
-- trigger_backup - a future date at which we want to trigger a backup. Must be given in format DD.MM.YYYY hh:mm. Please bear in mind that there could be a time difference with the kubernetes environment
-- trigger_restore - a future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format DD.MM.YYYY hh:mm
-- restore_from_backup - the name of the backup directory we want to restore. Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory
+- trigger_backup - a future date at which we want to trigger a backup. Must be given in format YYYY-MM-DD hh:mm. Please bear in mind that there could be a time difference with the kubernetes environment
+- trigger_restore - a future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format YYYY-MM-DD hh:mm
+- restore_from_backup - the name of the backup directory we want to restore. Must be given in format YYYY-MM-DD hh:mm, where YYYY-MM-DD hh:mm is your backup directory
+- restore_repository - the name of the repository that we want to restore.
+
+#### Importing data from existing persistent volume
+GraphDB supports attaching a folder as an import directory. The directory's content s visible in the Workbench and can be imported. 
+In the Helm chart you can use existing PV as an import directory. This is done through `graphdb.import_directory_mount` using a `volumeClaimTemplateSpec`.
+This way a dynamic PV/PVC can be provisioned, or you can use an existing PV. If an existing PV is used, have in mind that the dynamically provisioned PVC name is `graphdb-server-import-dir-graphdb-master-1-0`, so an appropriate `claimRef` must be added to the existing PV.
 
 #### Preload, LoadRDF, Storage tools
 GraphDB's Helm chart supports preload and LoadRDF tools for preloading data. It also supports Storage tool for scanning and repairing data. There are a few options that are used to run the needed commands.
@@ -426,59 +432,73 @@ about defining resource limits.
 | deployment.storage | string | `"/data"` | The storage place where components will read/write their persistent data in case the default persistent volumes are used. They use the node's file system. |
 | deployment.tls.enabled | bool | `false` | Feature toggle for SSL termination. Disabled by default. |
 | deployment.tls.secretName | string | `nil` | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment. |
-| graphdb.tools | object | `{"loadrdf":{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":false},"preload":{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":true},"storage_tool":{"command":"scan","options":"","repository":"repo-test-1","trigger":false}}` | Tools for loading, scanning and repairing data in repos |
-| graphdb.tools.loadrdf | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":false}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html |
-| graphdb.tools.loadrdf.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p |
-| graphdb.tools.loadrdf.trigger | bool | `false` | If trigger is set to true, then the loadrdf tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
-| graphdb.tools.preload | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl ","trigger":true}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html |
-| graphdb.tools.preload.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p, -r |
-| graphdb.tools.preload.trigger | bool | `true` | If trigger is set to true, then the preload tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
-| graphdb.tools.storage_tool | object | `{"command":"scan","options":"","repository":"repo-test-1","trigger":false}` | Tool for scanning and repairing data See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html |
-| graphdb.tools.storage_tool.command | string | `"scan"` | commands to run the storage-tool with |
-| graphdb.tools.storage_tool.options | string | `""` | additional options to run the storage-tool with if you want to use the option rebuild with -srcIndex=pso -destIndex=pso or -srcIndex=pso -destIndex=pos, don't forget to make the workers' memory limits 10Gi |
-| graphdb.tools.storage_tool.repository | string | `"repo-test-1"` | repo to run command on |
-| graphdb.tools.storage_tool.trigger | bool | `false` | If trigger is set to true, then the storage tool will be run while initializing the deployment |
-| graphdb.backupRestore.auto_backup | string | `"* 0 * * *"` | Cron Schedule for auto backup. Creates an automatic backup, stored in the backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm TODO: Add PV options for backups |
-| graphdb.backupRestore.backup_max_age | string | `"5"` | Max number of days for backups. |
-| graphdb.backupRestore.backups_count | string | `"5"` | Max number of backup dirs saved. |
-| graphdb.backupRestore.cleanup_cron | string | `"* 1 * * *"` | Cleans up the backups directory. Makes sure that there is a limit of the stored backups. Each or both of backups_count and backups_max_age could be used. |
-| graphdb.backupRestore.restore_from_backup | string | `"03-31-2021-14-47"` | The name of the backup directory we want to restore. Must be given in format MM-DD-YY-hh-mm, where MM-DD-YY-hh-mm is your backup directory |
-| graphdb.backupRestore.trigger_restore | string | `"31.03.2021 14:50"` |  |
-| graphdb.clusterConfig.clusterSecret | string | `"s3cr37"` |  |
-| graphdb.clusterConfig.masterWorkerMapping | list | `["master-1 -> worker-1","master-1 -> worker-2","master-2 -> worker-3","master-2 -> worker-4"]` | Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology. |
-| graphdb.clusterConfig.mastersCount | int | `2` |  |
+| graphdb.backupRestore.auto_backup | string | `"*/5 * * * *"` | Cron Schedule for auto backup. Creates an automatic backup, stored in the graphdb-backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm in UTC! |
+| graphdb.backupRestore.backup_max_age | string | `"2"` | Max number of days for backups. |
+| graphdb.backupRestore.backups_count | string | `"2"` | Max number of backup dirs saved. |
+| graphdb.backupRestore.cleanup_cron | string | `"*/2 * * * *"` | Cleans up the backups directory. Makes sure that there is a limit of the stored backups. Each or both of backups_count and backups_max_age could be used. |
+| graphdb.backupRestore.enable_automatic_backups_cleanup | bool | `false` | Enables cleanup of the backups directory. WARNING!!! This can be used only by storage classes that have access mode ReadWriteMany because the backups PVC must be attached to a second pod. |
+| graphdb.backupRestore.enable_backups | bool | `false` | Enable auto/manual backups. |
+| graphdb.backupRestore.enable_restore | bool | `true` | Trigger restore at a given time from a given file. |
+| graphdb.backupRestore.persistence.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| graphdb.backupRestore.persistence.volumeClaimTemplateSpec.resources.requests.storage | string | `"10Gi"` |  |
+| graphdb.backupRestore.persistence.volumeClaimTemplateSpec.storageClassName | string | `"standard"` |  |
+| graphdb.backupRestore.repositories[0] | string | `"default"` |  |
+| graphdb.backupRestore.restore_from_backup | string | `"2021-06-24-12-59"` | The name of the backup directory we want to restore. Must be given in format YYYY-DD-MM-hh-mm, where YYYY-DD-MM-hh-mm is your backup directory. The backup directory name contains the repository name too, but it must be omitted here. |
+| graphdb.backupRestore.restore_repository | string | `"default"` | The name of the repository we want to restore. |
+| graphdb.backupRestore.trigger_backup | string | `""` | A future date at which we want to trigger a backup. Must be given in format YYYY-DD-MM hh:mm NOTE: UTC TIME IS USED! |
+| graphdb.backupRestore.trigger_restore | string | `"2021-06-24 13:28"` | A future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format YYYY-DD-MM hh:mm NOTE: UTC TIME IS USED! |
+| graphdb.clusterConfig.clusterSecret | string | `"s3cr37"` | A secret used for secure communication amongst the nodes in the cluster. |
+| graphdb.clusterConfig.masterWorkerMapping | list | `["master-1 -> worker-1","master-1 -> worker-2","master-2 -> worker-3"]` | Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology. |
+| graphdb.clusterConfig.mastersCount | int | `1` |  |
 | graphdb.clusterConfig.mutedMasters | list | `["master-2"]` | Describes which masters will be set as muted. Required only for 2m3w_muted topology. |
 | graphdb.clusterConfig.readOnlyMasters | list | `["master-2"]` | Describes which masters will be set as read only. Required only for 2m3w_rw_ro topology. |
 | graphdb.clusterConfig.syncPeersMapping | list | `["master-1 <-> master-2"]` | Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology. |
-| graphdb.clusterConfig.workersCount | int | `4` |  |
-| graphdb.masters.java_args | string | `" -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"` | Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
+| graphdb.clusterConfig.workersCount | int | `2` |  |
+| graphdb.masters.java_args | string | `"-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m -Dgraphdb.home.work=/mnt/graphdb"` | Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
 | graphdb.masters.license | string | `"graphdb-license"` | Reference to a secret containing 'graphdb.license' file to be used by master nodes. This is a required secret without which GraphDB won't operate if you use SE/EE editions. Important: Must be created beforehand |
-| graphdb.masters.nodeSelector | object | `{}` | Schedule and assign on specific node for ALL masters. By default, no restrictions are applied. This can be specified per instance in the nodes section. See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
-| graphdb.masters.nodes | list | `[{"java_args":" -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport","license":"graphdb-license","name":"master-1","nodeSelector":{}}]` | Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties |
-| graphdb.masters.persistence | object | `{"storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-master-default"}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
+| graphdb.masters.nodes[0].java_args | string | `"-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"` |  |
+| graphdb.masters.nodes[0].license | string | `"graphdb-license"` |  |
+| graphdb.masters.nodes[0].name | string | `"master-1"` |  |
+| graphdb.masters.persistence | object | `{"storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-default-master"}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
 | graphdb.masters.persistence.storage | string | `"10G"` | Storage size request for each master. The persistent volume has to be able to satisfy the size. |
-| graphdb.masters.persistence.volumeNamePrefix | string | `"graphdb-master-default"` | Name reference of a persistent volume to which the claim will try to attach. Example result: graphdb-master-default-worker-1-pv |
-| graphdb.masters.repository | string | `"test"` | The repository name to be created for all masters. This repository will be initialized during of Helm's post install hooks. |
-| graphdb.masters.repositoryConfigmap | string | `"graphdb-repo-default-configmap"` | Reference to a configuration map containing a repository 'config.ttl' file used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
-| graphdb.masters.resources | object | `{"limits":{"memory":"4Gi"},"requests":{"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html |
-| graphdb.topology | string | `"2m3w_rw_ro"` | Cluster topology to be used. Possible values: standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted. standalone - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties 1m_3w - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created! |
+| graphdb.masters.persistence.volumeNamePrefix | string | `"graphdb-default-master"` | Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used. Example result: graphdb-default-master-1-pv |
+| graphdb.masters.repositoryConfigmap | string | `"graphdb-repo-default-configmap"` | Reference to a configuration map containing one or more .ttl files used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
+| graphdb.masters.resources | object | `{"limits":{"memory":"1Gi"},"requests":{"memory":"1Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html |
+| graphdb.masters.settingsConfigmap | string | `"graphdb-settings-default-configmap"` | Reference to a configuration map containing settings.js and graphdb.properties(optional) files used for security and properties provisioning in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html |
+| graphdb.security.enabled | bool | `false` |  |
+| graphdb.security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
+| graphdb.security.provisioningUsername | string | `"provisioner"` |  |
+| graphdb.tools | object | `{"loadrdf":{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false},"persistence":{"storage":"10G","storageClassName":"standard"},"preload":{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false},"resources":{"limits":{"memory":"10G"},"requests":{"memory":"10G"}},"storage_tool":{"command":"scan","options":"","repository":"repo-test-1","trigger":false}}` | Tools for loading, scanning and repairing data in repos |
+| graphdb.tools.loadrdf | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html |
+| graphdb.tools.loadrdf.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p If you use the "-f" option, the tool will override the repository and could lose some data. |
+| graphdb.tools.loadrdf.trigger | bool | `false` | If trigger is set to true, then the loadrdf tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
+| graphdb.tools.persistence.storage | string | `"10G"` | Storage size request for the preload/loadrdf pv. The persistent volume has to be able to satisfy the size. |
+| graphdb.tools.preload | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html |
+| graphdb.tools.preload.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p, -r If you use the "-f" option, the tool will override the repository and could lose some data. |
+| graphdb.tools.preload.trigger | bool | `false` | If trigger is set to true, then the preload tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
+| graphdb.tools.storage_tool | object | `{"command":"scan","options":"","repository":"repo-test-1","trigger":false}` | Tool for scanning and repairing data See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html |
+| graphdb.tools.storage_tool.command | string | `"scan"` | commands to run the storage-tool with |
+| graphdb.tools.storage_tool.options | string | `""` | additional options to run the storage-tool with |
+| graphdb.tools.storage_tool.repository | string | `"repo-test-1"` | repo to run command on |
+| graphdb.tools.storage_tool.trigger | bool | `false` | If trigger is set to true, then the storage tool will be run while initializing the deployment |
+| graphdb.topology | string | `"1m_3w"` | Cluster topology to be used. Possible values: standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted. standalone - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties 1m_3w - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created! |
 | graphdb.workbench.subpath | string | `"/graphdb"` | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front) |
-| graphdb.workers.java_args | string | `" -Xmx2G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"` | Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
+| graphdb.workers.java_args | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` | Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
 | graphdb.workers.license | string | `"graphdb-license"` | Reference to a secret containing 'graphdb.license' file to be used by worker nodes. This is a required secret without which GraphDB won't operate if you use SE/EE editions. Important: Must be created beforehand |
-| graphdb.workers.nodeSelector | object | `{}` | Schedule and assign on specific node for ALL workers. By default, no restrictions are applied. This can be specified per instance in the nodes section. See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
-| graphdb.workers.nodes | list | `[{"license":"graphdb-license","name":"worker-1"},{"java_args":" -Xmx1G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport","name":"worker-2","nodeSelector":{}}]` | Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties |
-| graphdb.workers.persistence | object | `{"repositoryConfigmap":"graphdb-worker-repo-default-configmap","storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-worker-default"}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.workers.persistence.repositoryConfigmap | string | `"graphdb-worker-repo-default-configmap"` | Reference to a configuration map containing a worker node repository 'config.ttl' file used for initialization in the post install hook. |
+| graphdb.workers.nodes | list | `[{"license":"graphdb-license","name":"worker-1"},{"java_args":"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport ","name":"worker-2"}]` | Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties |
+| graphdb.workers.persistence | object | `{"storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-default-worker"}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
 | graphdb.workers.persistence.storage | string | `"10G"` | Storage size request for each worker. The persistent volume has to be able to satisfy the size. |
-| graphdb.workers.persistence.volumeNamePrefix | string | `"graphdb-worker-default"` | Name reference prefix of a persistent volume to which the claim will try to attach. Example result: graphdb-worker-default-worker-1-pv |
-| graphdb.workers.repository | string | `"test"` | The repository name to be created for all workers. This repository will be initialized during of Helm's post install hooks. |
-| graphdb.workers.repositoryConfigmap | string | `"graphdb-worker-repo-default-configmap"` | Reference to a configuration map containing a repository 'config.ttl' file used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
-| graphdb.workers.resources | object | `{"limits":{"memory":"4Gi"},"requests":{"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html Note: Same as for the master node |
-| images.alpine | string | `"docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR3-adoptopenjdk11"` |  |
+| graphdb.workers.persistence.volumeNamePrefix | string | `"graphdb-default-worker"` | Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used. Example result: graphdb-default-worker-1-pv |
+| graphdb.workers.repositoryConfigmap | string | `"graphdb-worker-repo-default-configmap"` | Reference to a configuration map containing one or more .ttl files used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
+| graphdb.workers.resources | object | `{"limits":{"memory":"1Gi"},"requests":{"memory":"1Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html Note: Same as for the master node |
+| graphdb.workers.topologySpreadConstraints | string | `nil` |  |
+| images.alpine | string | `"docker-registry.ontotext.com/graphdb-ee:9.9-SNAPSHOT-adoptopenjdk11"` |  |
 | images.busybox | string | `"busybox:1.31"` |  |
-| images.graphdb | string | `"docker-registry.ontotext.com/graphdb-ee:9.8.0-HOSTS-TR3-adoptopenjdk11"` |  |
+| images.graphdb | string | `"docker-registry.ontotext.com/graphdb-ee:9.9-SNAPSHOT-adoptopenjdk11"` |  |
 | images.kong | string | `"kong:2.1-alpine"` |  |
+| ingress.enabled | bool | `true` |  |
 | kong.configmap | string | `"kong-configmap"` | Reference to a configuration map with Kong configurations as environment variables. Override if you need to further configure Kong's system. See https://docs.konghq.com/2.0.x/configuration/ |
+| kong.enabled | bool | `true` |  |
 | kong.memCacheSize | string | `"64m"` | Memory cache size configuration for Kong in DB-less mode. Tune according to the given resource limits. See https://docs.konghq.com/2.0.x/configuration/#mem_cache_size |
 | kong.nodeSelector | object | `{}` |  |
 | kong.port | object | `{"nodePort":31122}` | Overwrite if you want to deploy Kong on a non-standard port, such as instances where you want to have two different installations on the same hardware. |
@@ -490,12 +510,13 @@ about defining resource limits.
 | versions.configmap | string | `"v1"` |  |
 | versions.daemon | string | `"apps/v1"` |  |
 | versions.deployment | string | `"apps/v1"` |  |
-| versions.ingress | string | `"extensions/v1beta1"` |  |
+| versions.ingress | string | `"networking.k8s.io/v1"` |  |
 | versions.job | string | `"batch/v1"` |  |
 | versions.pv | string | `"v1"` |  |
 | versions.pvc | string | `"v1"` |  |
 | versions.secret | string | `"v1"` |  |
 | versions.service | string | `"v1"` |  |
+| versions.statefulset | string | `"apps/v1"` |  |
 | versions.volume | string | `"v1"` |  |
 
 ----------------------------------------------
@@ -528,3 +549,9 @@ If connections time out or the pods cannot resolve each other, it is likely that
 DNS is broken. This is a common issue with Minikube between system restarts or when inappropriate 
 Minikube driver is used. Please refer to 
 https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/.
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| Ontotext GraphDB team | graphdb-support@ontotext.com |  |

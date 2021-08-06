@@ -91,18 +91,21 @@ spec:
               path: /protocol
               port: graphdb-m-{{ $worker_index }}
             failureThreshold: 30
+            timeoutSeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /protocol
               port: graphdb-m-{{ $worker_index }}
             initialDelaySeconds: 5
+            timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /protocol
               port: graphdb-m-{{ $worker_index }}
             initialDelaySeconds: 10
+            timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
         # LICENSE PROVISION
@@ -212,14 +215,16 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
             - name: graphdb-worker-preload-data
               mountPath: /tmp/graphdb/
+            {{- end }}
           command: ['sh', '-c']
           args:
             - |
               cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
               echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
-              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
+              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
               echo "preload with loadrdf tool is done"
               {{- end }}
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.preload.trigger }}

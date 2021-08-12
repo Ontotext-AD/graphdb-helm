@@ -173,18 +173,18 @@ graphdb:
     persistence:
       # -- Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
       # Example result: graphdb-default-master-1-pv
-      volumeNamePrefix: graphdb-default-master
-      storageClassName: standard
-      # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
-      storage: 10G
+#      volumeNamePrefix: graphdb-default-master
+#      storageClassName: standard
+#      # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
+#      storage: 10G
       # use dynamic volume provisioning
-      # volumeClaimTemplateSpec:
-      #   accessModes:
-      #     - "ReadWriteOnce"
-      #   resources:
-      #     requests:
-      #       storage: "10Gi"
-      #   storageClassName: standard
+       volumeClaimTemplateSpec:
+         accessModes:
+           - "ReadWriteOnce"
+         resources:
+           requests:
+             storage: "5Gi"
+         storageClassName: standard
 
   workers:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
@@ -212,18 +212,18 @@ graphdb:
     persistence:
       # -- Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
       # Example result: graphdb-default-worker-1-pv
-      volumeNamePrefix: graphdb-default-worker
-      storageClassName: standard
-      # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
-      storage: 10G
+#      volumeNamePrefix: graphdb-default-worker
+#      storageClassName: standard
+#      # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
+#      storage: 10G
       # use dynamic volume provisioning
-      # volumeClaimTemplateSpec:
-      #   accessModes:
-      #     - "ReadWriteOnce"
-      #   resources:
-      #     requests:
-      #       storage: "10Gi"
-      #   storageClassName: standard
+       volumeClaimTemplateSpec:
+         accessModes:
+           - "ReadWriteOnce"
+         resources:
+           requests:
+             storage: "5Gi"
+         storageClassName: standard
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
@@ -330,9 +330,17 @@ graphdb:
       flags: "-f"
       rdfDataFile: "geonames_europe.ttl"
     persistence:
-      storageClassName: standard
+      #storageClassName: standard
       # -- Storage size request for the preload/loadrdf pv. The persistent volume has to be able to satisfy the size.
-      storage: 10G
+      #storage: 10G
+      volumeClaimTemplateSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "10Gi"
+        storageClassName: standard
+
     # -- Tool for scanning and repairing data
     # See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
     storage_tool:

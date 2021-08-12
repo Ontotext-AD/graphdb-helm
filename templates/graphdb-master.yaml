@@ -200,6 +200,7 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
+              mkdir /opt/graphdb/home/jdbc-driver
               echo 'Done'
         {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
         - name: restore-standalone
@@ -223,6 +224,108 @@ spec:
                 echo "Successfully restored!"
               else
                 echo "Nothing to restore."
+              fi
+        {{- end }}
+        # LOADRDF TOOL
+          {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        - name: loadrdf-tool
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+          volumeMounts:
+                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-storage
+                    {{- end }}
+              mountPath: /opt/graphdb/home
+                    {{- if and (eq $master_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
+                  {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-preload-data
+                    {{- end }}
+              mountPath: /tmp/graphdb/
+                {{- end }}
+          command: ['sh', '-c']
+          args:
+            - |
+              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
+              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
+              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
+              echo "preload with loadrdf tool is done"
+          {{- end }}
+          {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        # PRELOAD TOOL
+        - name: preload-tool
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+          volumeMounts:
+                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-storage
+                    {{- end }}
+              mountPath: /opt/graphdb/home
+                  {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-preload-data
+                {{- end }}
+          command: ['sh', '-c']
+          args:
+            - |
+              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
+              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
+              /opt/graphdb/dist/bin/preload {{ $.Values.graphdb.tools.preload.flags }} -c /tmp/graphdb/config.ttl /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
+              echo "preload with preload tool is done"
+        {{- end }}
+        # STORAGE TOOL
+        {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        - name: storage-tool
+          image: {{ $.Values.images.graphdb }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+          volumeMounts:
+                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-storage
+                    {{- end }}
+              mountPath: /opt/graphdb/home
+          command: ['sh', '-c']
+          args:
+            - |
+              cdate=$(date +'%Y-%m-%d')
+              if [ -d /opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage ]; then
+                result=$(/opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage {{$.Values.graphdb.tools.storage_tool.options}})
+                echo -e "${result}" >> /opt/graphdb/home/data/storage-tool-${cdate}.log
+                echo -e "${result}"
+                if echo -e "${result}" | grep -qi "inconsistent"
+                then
+                  exit 1
+                fi
+              else
+                echo "The wanted repository does not exist"
               fi
         {{- end }}
 

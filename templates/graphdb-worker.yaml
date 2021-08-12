@@ -190,6 +190,7 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
+              mkdir /opt/graphdb/home/jdbc-driver
               echo 'Done'
         # LOADRDF TOOL
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.loadrdf.trigger }}
@@ -211,7 +212,11 @@ spec:
             {{- end }}
               mountPath: /opt/graphdb/home
             {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
+              {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+              {{- else }}
             - name: graphdb-worker-preload-data
+              {{- end }}
               mountPath: /tmp/graphdb/
             {{- end }}
           command: ['sh', '-c']
@@ -241,8 +246,11 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-preload-data
-              mountPath: /tmp/graphdb/
+            {{- end }}
           command: ['sh', '-c']
           args:
             - |

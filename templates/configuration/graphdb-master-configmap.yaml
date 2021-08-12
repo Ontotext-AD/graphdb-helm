@@ -17,6 +17,7 @@ data:
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     -Dgraphdb.home.conf=/opt/graphdb/home/conf
+    -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
     {{ if eq ($master_index | int64) 1 }}-Dgraphdb.backup.base.folder=/opt/graphdb/backups{{ end }}
 {{- if ne $.Values.graphdb.topology "standalone" }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}

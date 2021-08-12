@@ -222,6 +222,12 @@ kubectl create configmap graphdb-repo-configmap --from-file=config.ttl
 After that, update the property `graphdb.masters.repositoryConfigmap` / `graphdb.workers.repositoryConfigmap` from
 [values.yaml](values.yaml) to refer to the new configuration map.
 
+#### Ontop repositories
+
+Ontop repositories require a jdbc driver. To use this type of repository, you have to provide a jdbc driver named `jdbc-driver.jar`.
+It must be located in each GraphDB instance in which you wish to use with Ontop repository, in the folder `/opt/graphdb/home/jdbc-driver`.
+The directory is part of the GraphDB home directory which is persistent, so the driver will persist after a restart or reschedule of a GraphDB pod.
+
 ### Customizing GraphDB cluster and GraphDB specific properties
 
 GraphDB's Helm chart is made to be highly customizable regarding GraphDB's specific options and properties. 

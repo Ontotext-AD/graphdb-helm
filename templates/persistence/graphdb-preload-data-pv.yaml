@@ -16,7 +16,7 @@ spec:
   claimRef:
     name: graphdb-worker-preload-data-pvc
     namespace: {{ $.Release.Namespace }}
-  storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName }}
+  storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName | default $.Values.global.storageClass }}
   accessModes:
     - ReadWriteOnce
   capacity:

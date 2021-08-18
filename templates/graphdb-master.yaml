@@ -25,17 +25,20 @@ spec:
     {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
     - metadata:
         name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
-      spec: {{ toYaml $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
     - metadata:
         name: graphdb-backup-pvc
-      spec: {{ toYaml $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
     - metadata:
         name: graphdb-server-import-dir
-      spec: {{ toYaml $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   template:
     metadata:
@@ -58,10 +61,8 @@ spec:
         - name: graphdb-master-settings-config
           configMap:
             name: {{ required "Config map with settings.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
-      {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
-        - name: {{ $.Values.deployment.imagePullSecret }}
-      {{ end }}
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
         {{- default "{}" (default ($.Values.graphdb.masters.nodeSelector | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "nodeSelector" "master_index" $master_index))) | nindent 8  }}
       affinity:

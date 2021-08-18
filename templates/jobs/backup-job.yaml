@@ -14,10 +14,8 @@ spec:
     spec:
       template:
         spec:
-          {{- if hasKey $.Values.deployment "imagePullSecret" }}
           imagePullSecrets:
-            - name: {{ $.Values.deployment.imagePullSecret }}
-          {{- end }}
+            {{- include "combinedImagePullSecrets" $ | nindent 12 }}
           containers:
             - name: backup
               image: {{ .Values.images.graphdb }}

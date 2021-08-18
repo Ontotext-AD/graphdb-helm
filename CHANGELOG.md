@@ -4,7 +4,7 @@
 
 ### New
 
-- Added global variables support (global.deployment.host)
+- Added global variables support (global.deployment.host/global.ingressHost, global.storageClass, global.imagePullSecrets)
 - Fixed loadrdf tool path
 - Moved to dynamic volume provisioning by default (volumeClaimTemplates), old default pvc/pv's are still available
 - Added JDBC driver support for Ontop functionality

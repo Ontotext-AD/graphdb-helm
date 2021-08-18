@@ -24,7 +24,8 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
-      spec: {{ toYaml $.Values.graphdb.workers.persistence.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.workers.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
   {{- end }}
   template:
     metadata:
@@ -55,10 +56,8 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-worker-preload-data-pvc
         {{- end }}
-      {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
-        - name: {{ $.Values.deployment.imagePullSecret }}
-      {{ end }}
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
         {{- default "{}" (default ($.Values.graphdb.workers.nodeSelector | toYaml ) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "nodeSelector" "worker_index" $worker_index))) | nindent 8  }}
       affinity:

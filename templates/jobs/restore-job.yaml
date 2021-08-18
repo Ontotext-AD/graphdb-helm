@@ -7,10 +7,8 @@ spec:
   backoffLimit: 3
   template:
     spec:
-      {{- if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
-        - name: {{ $.Values.deployment.imagePullSecret }}
-      {{- end }}
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: run-script-restore-from-backup
           image: {{ .Values.images.graphdb }}

@@ -1,5 +1,6 @@
 {{- if not (hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec") }}
-{{- if or (ne $.Values.graphdb.workers.persistence.storageClassName "standard") (ne $.Values.graphdb.workers.persistence.storageClassName "") }}
+{{- $storageClassName := $.Values.graphdb.workers.persistence.storageClassName | default $.Values.global.storageClass }}
+{{- if or (ne $storageClassName "standard") (ne $storageClassName "") }}
 {{- if ne .Values.graphdb.topology "standalone" }}
 {{- if eq .Values.graphdb.workers.persistence.volumeNamePrefix "graphdb-default-worker" }}
 {{- range $i, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
@@ -20,7 +21,7 @@ spec:
   claimRef:
     name: graphdb-worker-{{ $worker_index }}-data-pvc
     namespace: {{ $.Release.Namespace }}
-  storageClassName: {{ $.Values.graphdb.workers.persistence.storageClassName }}
+  storageClassName: {{ $storageClassName }}
   accessModes:
     - ReadWriteOnce
   capacity:

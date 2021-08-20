@@ -88,6 +88,34 @@ spec:
                 >> /proc/1/fd/1
               done
         {{- end }}
+        {{- if gt (len $.Values.graphdb.masters.additionalJmxArrtibutes) 0 }}
+        - name: set-jmx-attributes
+          image: {{ $.Values.images.graphdb }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+            - name: graphdb-master-repo-config
+              mountPath: /tmp/master-repos
+          command: ['sh','-c']
+          args:
+            - |
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh
+              chmod +x /usr/local/bin/graphdb.sh
+
+              for filename in /tmp/master-repos/*.ttl; do
+                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
+
+                /usr/local/bin/graphdb.sh waitMasters {{ .Values.graphdb.clusterConfig.mastersCount }} "$repositoryName"
+                for i in `seq 1 {{ .Values.graphdb.clusterConfig.mastersCount }}`; do
+                  {{- range $name, $value := $.Values.graphdb.masters.additionalJmxArrtibutes }}
+                    /usr/local/bin/graphdb.sh setJmxAttribute "graphdb-master-$i" "$repositoryName" "{{ $authToken }}" "{{ $name }}" "{{ $value }}"
+                  {{- end }}
+                done
+              done
+        {{- end }}
       restartPolicy: Never
       volumes:
         - name: graphdb-utils

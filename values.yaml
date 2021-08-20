@@ -188,7 +188,8 @@ graphdb:
          resources:
            requests:
              storage: "5Gi"
-
+    # additional JMX attributes to be set after the cluster is initialized
+    additionalJmxArrtibutes: {}
   workers:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html

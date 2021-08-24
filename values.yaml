@@ -9,6 +9,7 @@
 global:
   imagePullSecrets: []
   storageClass: "standard"
+  imageRegistry: docker.io
 
 # K8S API versions differ on Kubernetes and local Minikube installation.
 # Please, refer to: https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/
@@ -28,9 +29,15 @@ versions:
 
 # Top lvl flat for easier maintenance
 images:
-  kong: kong:2.1-alpine
-  graphdb: ontotext/graphdb:9.9.0-ee
-  busybox: busybox:1.31
+  kong:
+    repository: kong
+    tag: "2.1-alpine"
+  graphdb:
+    repository: ontotext/graphdb
+    tag: "9.9.0-ee"
+  busybox:
+    repository: busybox
+    tag: "1.31"
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:

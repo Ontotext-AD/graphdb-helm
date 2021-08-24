@@ -26,19 +26,19 @@ spec:
     - metadata:
         name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
     - metadata:
         name: graphdb-backup-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
     - metadata:
         name: graphdb-server-import-dir
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClameTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   template:
     metadata:
@@ -73,7 +73,7 @@ spec:
         {{- default "{}" (default ($.Values.graphdb.masters.topologySpreadConstraints | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "topologySpreadConstraints" "master_index" $master_index))) | nindent 8  }}
       containers:
         - name: graphdb-master-{{ $master_index }}
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
             - name: graphdb-m-{{ $master_index }}
@@ -122,7 +122,7 @@ spec:
       initContainers:
         # LICENSE PROVISION
         - name: provision-license
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -145,7 +145,7 @@ spec:
                 echo 'Done'
         # REPO PROVISION
         - name: provision-repository
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -176,7 +176,7 @@ spec:
               done
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -205,7 +205,7 @@ spec:
               echo 'Done'
         {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
         - name: restore-standalone
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             - name: graphdb-master-storage
@@ -230,7 +230,7 @@ spec:
         # LOADRDF TOOL
           {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         - name: loadrdf-tool
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
@@ -265,7 +265,7 @@ spec:
           {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         # PRELOAD TOOL
         - name: preload-tool
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
@@ -297,7 +297,7 @@ spec:
         # STORAGE TOOL
         {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         - name: storage-tool
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:

@@ -201,6 +201,11 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb/logback.xml ]]; then
+                echo "Provisioning logging config file..."
+                mkdir -p /opt/graphdb/home/conf ;
+                cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
+              fi
               mkdir /opt/graphdb/home/jdbc-driver
               echo 'Done'
         {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}

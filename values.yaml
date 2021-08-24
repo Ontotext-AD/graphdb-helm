@@ -76,6 +76,8 @@ deployment:
       connect: 5
       read: 60
       send: 60
+  # Override default logback configuration
+  # logbackConfigFile: files/config/logback.xml
 
 # KONG API gateway configurations.
 # This gateway sits behind the ingress and exposes the rest of the components.

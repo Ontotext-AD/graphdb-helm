@@ -16,7 +16,7 @@ spec:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: link-graphdb-cluster
-          image: {{ .Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0
@@ -90,7 +90,7 @@ spec:
         {{- end }}
         {{- if gt (len $.Values.graphdb.masters.additionalJmxArrtibutes) 0 }}
         - name: set-jmx-attributes
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0

@@ -80,7 +80,7 @@ Rendenders a volumeClaimTemplate as yaml.
 If the storage class name is not specified - 'global.storageClass' is checked and if set it is used as the storageClassName for the template.
 Otherwise it is left blank and cluster default will be used.
 */}}
-{{- define "renderVolumeClameTemplateSpec" }}
+{{- define "renderVolumeClaimTemplateSpec" }}
   {{- if and .globalStorageClassName (not .spec.storageClassName) }}
     {{- $spec := set .spec "storageClassName" .globalStorageClassName }}
     {{- $spec | toYaml }}
@@ -88,3 +88,20 @@ Otherwise it is left blank and cluster default will be used.
     {{- .spec | toYaml }}
   {{- end }}
 {{- end }}
+
+{{/*
+Renders full name of the graphdb pod
+*/}}
+{{- define "renderFullImageName" -}}
+  {{- $fullImageName := .image.repository -}}
+
+  {{- if or .globalRegistry .image.registry -}}
+    {{- $fullImageName = printf "%s/%s" (.globalRegistry | default .image.registry) .image.repository -}}
+  {{- end -}}
+
+  {{- if .image.tag -}}
+    {{- printf "%s:%s" $fullImageName .image.tag -}}
+  {{- else -}}
+    {{- print $fullImageName -}}
+  {{- end -}}
+{{- end -}}

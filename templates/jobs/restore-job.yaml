@@ -11,7 +11,7 @@ spec:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: run-script-restore-from-backup
-          image: {{ .Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils

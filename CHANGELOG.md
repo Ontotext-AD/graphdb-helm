@@ -2,9 +2,14 @@
 
 ## Version 9.9.0
 
+### Breaking
+
+- `images.graphdb`, `images.kong` and `images.busybox` are now maps which can specify `registry`, `repository` and `tag`
+
 ### New
 
-- Added global variables support (global.deployment.host/global.ingressHost, global.storageClass, global.imagePullSecrets)
+- Added global variables support (global.deployment.host/global.ingressHost, global.storageClass, global.imagePullSecrets and global.imageRegistry)
+- Add ability to override logback.xml by setting `deplyment.logbackConfigFile` to the location of the file to use
 - Fixed loadrdf tool path
 - Moved to dynamic volume provisioning by default (volumeClaimTemplates), old default pvc/pv's are still available
 - Added JDBC driver support for Ontop functionality

@@ -18,7 +18,7 @@ spec:
             {{- include "combinedImagePullSecrets" $ | nindent 12 }}
           containers:
             - name: backup-del
-              image: {{ .Values.images.graphdb }}
+              image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
               volumeMounts:
                 - name: graphdb-utils
                   mountPath: /tmp/utils

@@ -12,7 +12,7 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($master_index | int64) 1 }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}/{{ end }},http://graphdb-master-{{ $master_index }}:7200/
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($master_index | int64) 1 }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $master_index }}/{{ end }},{{ $.Values.deployment.protocol }}://graphdb-master-{{ $master_index }}:7200/
     -Dgraphdb.external-url={{ $.Values.deployment.protocol }}://graphdb-master-{{ $master_index }}:7200/
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import

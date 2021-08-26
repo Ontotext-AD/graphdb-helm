@@ -69,6 +69,8 @@ deployment:
   ingress:
     enabled: true
     class: nginx
+    # -- Sets extra ingress annotations
+    annotations: {}
     # -- Sets the maximum size for all requests to the underlying Nginx
     maxRequestSize: 512M
     # -- Default timeouts in seconds for the underlying Nginx.

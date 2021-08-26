@@ -131,7 +131,7 @@ To install the GraphDB on `graphdb.local`:
 helm install --set deployment.host=graphdb.local graphdb-ee .
 ```
 
-After a few seconds, Helm will print out the result from installing GraphDB. 
+After a few seconds, Helm will print out the result from installing GraphDB.
 You should see the following output:
 
 ```
@@ -159,7 +159,7 @@ Endpoints:
 ## Persistence
 
 By default, the Helm chart is deploying persistent volumes that stores data on the host path.
-This is useful for local Minikube deployments. However, in a cloud environment with multiple node 
+This is useful for local Minikube deployments. However, in a cloud environment with multiple node
 cluster this would lead to rescheduling and **data loss**.
 
 See https://kubernetes.io/docs/concepts/storage/volumes/.
@@ -171,8 +171,8 @@ Local persistent volumes are configured with `deployment.storage` from [values.y
 ### Cloud deployment
 
 For cloud deployment, you have to prepare persistent disks, storage class (or classes) and finally
-persistent volumes manifests. Once this is done, every component must be reconfigured in 
-[values.yaml](values.yaml) to point to the new persistent volume and not the default one. Each 
+persistent volumes manifests. Once this is done, every component must be reconfigured in
+[values.yaml](values.yaml) to point to the new persistent volume and not the default one. Each
 component has a section `persistence` that has to be updated.
 
 ## API Gateway
@@ -198,7 +198,7 @@ The properties are used across configuration maps and secrets and most of the co
 the overriding of their configuration maps and secrets from [values.yaml](values.yaml).
 See `<component>.configmap` and `<component>.secret`.
 
-**Note**: If you are familiar with Kubernetes, you could modify the components configuration 
+**Note**: If you are familiar with Kubernetes, you could modify the components configuration
 templates directly.
 
 
@@ -230,7 +230,7 @@ The directory is part of the GraphDB home directory which is persistent, so the 
 
 ### Customizing GraphDB cluster and GraphDB specific properties
 
-GraphDB's Helm chart is made to be highly customizable regarding GraphDB's specific options and properties. 
+GraphDB's Helm chart is made to be highly customizable regarding GraphDB's specific options and properties.
 There are 3 important configuration sections:
 - GraphDB cluster configuration
 - Cluster instances (masters/workers) configuration
@@ -241,7 +241,7 @@ There are 3 important configuration sections:
 By default the Helm chart supports the 3 topologies that we recommend in our documentation. This is configured by settings `graphdb.topology`
 Possible values: `standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted`. Masters and workers count in cluster modes are controlled by mastersCount and workersCount properties
 
-**standalone** - Launches single instance of GraphDB with a preconfigured worker repository. 
+**standalone** - Launches single instance of GraphDB with a preconfigured worker repository.
 
 **1m_3w** - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
 
@@ -263,7 +263,7 @@ See more about the cluster topologies here: https://graphdb.ontotext.com/documen
 #### Cluster instances (masters/workers) configuration
 
 GraphDB's Helm chart allows some configurations to be set for all masters or all workers instances. It also allows overrides of some configurations for each worker instance or each master instance.
-The global configurations for all masters/workers instances are placed in the section `graphdb.masters.*` and `graphdb.workers.*`. 
+The global configurations for all masters/workers instances are placed in the section `graphdb.masters.*` and `graphdb.workers.*`.
 
 Each configuration can be overridden for each master/worker node. The overrides are described in `graphdb.masters.nodes.*` and `graphdb.workers.nodes.*`. In those subsections specific configurations for each cluster node can be specified in the format:
 
@@ -279,11 +279,25 @@ For now the supported configurations are `java_args`, `nodeSelector`, `license`,
 
 For more information about node scheduling options see https://kubernetes.io/docs/concepts/scheduling-eviction
 
+It is also possible to set additional JMX attributes after the cluster is initialized. This applies only to the master nodes and is configured using the `graphdb.masters.additionalJmxArrtibutes`.
+This is a map in which the key is the attribute name and the value - the attribute value.
+
+For example if you wish to set the maximum transaction log size, you can do so by setting the following in `values.yaml`:
+
+```yaml
+graphdb:
+  masters:
+    additionalJmxArrtibutes:
+      LogMaxSize: 10
+```
+
+A list of available JMX attributes can be found [here](https://graphdb.ontotext.com/documentation/enterprise/ee/attributes.html)
+
 #### Deploying GraphDB with security
 
 GraphDB's Helm chart supports deploying GraphDB with or without security. This can be toggled through `graphdb.security.enabled`.
 If it is deployed with security enabled, a special provisioning user is used for repository provisioning, cluster linking, health checks and so on.
-Additional users can be added through the settings file: `files/config/settings.js`. The users are described with their roles, username and a bcrypt64 password. 
+Additional users can be added through the settings file: `files/config/settings.js`. The users are described with their roles, username and a bcrypt64 password.
 
 The file is provisioned before GraphDB's startup with the configmap `graphdb.masters.settingsConfigmap`.
 It can be overridden with other configmap containing the `settings.js` file. The same configmap is used for the `graphdb.properties` file as well.
@@ -320,7 +334,7 @@ Those options are described in the subsection `graphdb.backupRestore.*` and they
 - restore_repository - the name of the repository that we want to restore.
 
 #### Importing data from existing persistent volume
-GraphDB supports attaching a folder as an import directory. The directory's content s visible in the Workbench and can be imported. 
+GraphDB supports attaching a folder as an import directory. The directory's content s visible in the Workbench and can be imported.
 In the Helm chart you can use existing PV as an import directory. This is done through `graphdb.import_directory_mount` using a `volumeClaimTemplateSpec`.
 This way a dynamic PV/PVC can be provisioned, or you can use an existing PV. If an existing PV is used, have in mind that the dynamically provisioned PVC name is `graphdb-server-import-dir-graphdb-master-1-0`, so an appropriate `claimRef` must be added to the existing PV.
 
@@ -329,7 +343,7 @@ GraphDB's Helm chart supports preload and LoadRDF tools for preloading data. It 
 
 Those options are described in the subsection `graphdb.tools.*` and they are:
 
-- resources - to set the needed resources in order to run the tools. Bear in mind that if you don't give the init containers enough resources, the tools might fail. 
+- resources - to set the needed resources in order to run the tools. Bear in mind that if you don't give the init containers enough resources, the tools might fail.
 ```bash
 resources:
   limits:
@@ -348,7 +362,7 @@ For more information about the Preload tool see: https://graphdb.ontotext.com/do
 
 - loadrdf - tool to preload data in a chosen repository.
   - trigger - if trigger is set to true, then the loadrdf tool will be run while initializing the deployment.
-  - flags - options to add to the command. The possible options are "-f", "-p". If you use the "-f" option, the tool will override the repository and could lose some data. 
+  - flags - options to add to the command. The possible options are "-f", "-p". If you use the "-f" option, the tool will override the repository and could lose some data.
   - rdfDataFile - the file that is added in the mounted directory.
 
 For more information about the LoadRDF tool see: https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
@@ -357,7 +371,7 @@ For more information about the LoadRDF tool see: https://graphdb.ontotext.com/do
   - trigger - if trigger is set to true, then the storage tool will be run while initializing the deployment.
   - command - the command to run the storage-tool with.
   - repository - repo to run command on.
-  - options - additional options to run the storage-tool with. 
+  - options - additional options to run the storage-tool with.
 
 For more information about the Storage tool see https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
 
@@ -416,15 +430,22 @@ and use it with small sets of data. However, for production deployments it is ob
 these resource limits and tune them for your environment. You should consider common requirements
 like amount of data, users, expected traffic.
 
-Look for `<component>.resources` blocks in [values.yaml](values.yaml). During Helm's template 
-rendering, these YAML blocks are inserted in the Kubernetes pod configurations as pod resource 
+Look for `<component>.resources` blocks in [values.yaml](values.yaml). During Helm's template
+rendering, these YAML blocks are inserted in the Kubernetes pod configurations as pod resource
 limits. Most resource configuration blocks are referring to official documentations.
 
-See the Kubernetes documentation 
+See the Kubernetes documentation
 https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
 about defining resource limits.
 
 ## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.imagePullSecrets | list | [] | List of additional image pull secrets. This will be concatenated with anything at a lower level |
+| global.imageRegistry | string | docker.io | This is used as a global override for the image registry. If defined it takes precedence over `images.XYZ.registry` |
+| global.storageClass | string | standard | Used as a default storage class when one is not provided explicitly at a lower level |
+| global.deployment.host / global.ingressHost | string | Overrides the hostname at which graphdb will be exposed. The order of precedence is global.deplyment.host -> global.ingressHost -> deployment.host |  
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -497,10 +518,9 @@ about defining resource limits.
 | graphdb.workers.repositoryConfigmap | string | `"graphdb-worker-repo-default-configmap"` | Reference to a configuration map containing one or more .ttl files used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
 | graphdb.workers.resources | object | `{"limits":{"memory":"1Gi"},"requests":{"memory":"1Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html Note: Same as for the master node |
 | graphdb.workers.topologySpreadConstraints | string | `nil` |  |
-| images.alpine | string | `"docker-registry.ontotext.com/graphdb-ee:9.9-SNAPSHOT-adoptopenjdk11"` |  |
-| images.busybox | string | `"busybox:1.31"` |  |
-| images.graphdb | string | `"docker-registry.ontotext.com/graphdb-ee:9.9-SNAPSHOT-adoptopenjdk11"` |  |
-| images.kong | string | `"kong:2.1-alpine"` |  |
+| images.busybox | map | `{repository: busybox, tag: "1.31"}` |  |
+| images.graphdb | map | `{repository: ontotext/graphdb, tag: "9.9.0-ee"}` |  |
+| images.kong | map | `{repository: kong, tag: "2.1-alpine"}` |  |
 | ingress.enabled | bool | `true` |  |
 | kong.configmap | string | `"kong-configmap"` | Reference to a configuration map with Kong configurations as environment variables. Override if you need to further configure Kong's system. See https://docs.konghq.com/2.0.x/configuration/ |
 | kong.enabled | bool | `true` |  |
@@ -536,7 +556,7 @@ To remove the deployed GraphDB, use:
 helm uninstall graphdb-ee
 ```
 
-**Note**: It is important to note that this will not remove any data, so the next time it 
+**Note**: It is important to note that this will not remove any data, so the next time it
 is installed, the data will be loaded by its components.
 
 Provisioning will be skipped also.
@@ -551,8 +571,8 @@ Check the logs with `kubectl logs`.
 **Connection issues**
 
 If connections time out or the pods cannot resolve each other, it is likely that the Kubernetes
-DNS is broken. This is a common issue with Minikube between system restarts or when inappropriate 
-Minikube driver is used. Please refer to 
+DNS is broken. This is a common issue with Minikube between system restarts or when inappropriate
+Minikube driver is used. Please refer to
 https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/.
 
 ## Maintainers

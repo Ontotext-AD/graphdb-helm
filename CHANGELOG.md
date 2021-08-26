@@ -10,6 +10,7 @@
 
 - Added global variables support (global.deployment.host/global.ingressHost, global.storageClass, global.imagePullSecrets and global.imageRegistry)
 - Add ability to override logback.xml by setting `deplyment.logbackConfigFile` to the location of the file to use
+- Set additional JMX attributes using `graphdb.masters.additionalJmxArrtibutes`. This is a map of attr_name=attr_value pairs
 - Fixed loadrdf tool path
 - Moved to dynamic volume provisioning by default (volumeClaimTemplates), old default pvc/pv's are still available
 - Added JDBC driver support for Ontop functionality

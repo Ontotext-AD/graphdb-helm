@@ -16,4 +16,4 @@ GDB cluster: {{ ne .Values.graphdb.topology "standalone" }}
 You can check their status with kubectl get pods
 
 Endpoints:
-* GraphDB workbench: {{ .Values.deployment.protocol }}://{{ .Values.deployment.host }}{{ .Values.graphdb.workbench.subpath }}
+* GraphDB workbench: {{ .Values.deployment.protocol }}://{{ include "resolveDeploymentHost" . }}{{ .Values.graphdb.workbench.subpath }}

@@ -262,4 +262,26 @@ function setNodeID {
   fi
 }
 
+function setJmxAttribute {
+  local instance_address=http://$1:7200
+  local instance_repository=$2
+  local token=$3
+  local attrName=$4
+  local attrValue=$5
+
+  echo "Setting JMX attribute $attrName to $attrValue for $instance_address and repository $instance_repository"
+  curl -o response.json -sSL -m 5 \
+    -H 'content-type: application/json' \
+    -H "Authorization: Basic $token" \
+    -d "{\"type\":\"write\",\"mbean\":\"ReplicationCluster:name=ClusterInfo\/$instance_repository\",\"attribute\":\"$attrName\",\"value\":\"$attrValue\"}" $instance_address/jolokia/
+
+    if grep -q '"status":200' "response.json"; then
+        echo "Successfully set JMX attribute $attrName to $attrValue"
+    else
+        echo "Failed setting JMX attribute $attrName to $attrValue"
+        cat response.json
+        exit 1
+    fi
+}
+
 "$@"

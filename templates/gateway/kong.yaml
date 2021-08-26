@@ -30,7 +30,7 @@ spec:
       {{ end }}
       containers:
         - name: kong
-          image: {{ .Values.images.kong }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" .Values.global.imageRegistry "image" .Values.images.kong) }}
           imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
           envFrom:
             - configMapRef:

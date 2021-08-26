@@ -15,7 +15,7 @@ spec:
   volumeName:  {{ $.Values.graphdb.masters.persistence.volumeNamePrefix }}-{{$master_index}}-pv
     {{- end }}
   {{- end }}
-  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
+  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName | default $.Values.global.storageClass }}
   accessModes:
     - ReadWriteOnce
   resources:

@@ -1,5 +1,6 @@
 {{- if not (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") }}
-{{- if or (ne $.Values.graphdb.masters.persistence.storageClassName "standard") (ne $.Values.graphdb.masters.persistence.storageClassName "") }}
+{{- $storageClassName := $.Values.graphdb.masters.persistence.storageClassName | default $.Values.global.storageClass }}
+{{- if or (ne $storageClassName "standard") (ne $storageClassName "") }}
 {{- if eq .Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-default-master" }}
 {{- range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
 #
@@ -19,7 +20,7 @@ spec:
   claimRef:
     name: graphdb-master-{{ $master_index }}-data-pvc
     namespace: {{ $.Release.Namespace }}
-  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName }}
+  storageClassName: {{ $storageClassName }}
   accessModes:
     - ReadWriteOnce
   capacity:
@@ -30,4 +31,4 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- end}}
+{{- end }}

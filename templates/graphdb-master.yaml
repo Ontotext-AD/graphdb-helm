@@ -25,17 +25,20 @@ spec:
     {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
     - metadata:
         name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
-      spec: {{ toYaml $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
     - metadata:
         name: graphdb-backup-pvc
-      spec: {{ toYaml $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
     - metadata:
         name: graphdb-server-import-dir
-      spec: {{ toYaml $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   template:
     metadata:
@@ -58,10 +61,8 @@ spec:
         - name: graphdb-master-settings-config
           configMap:
             name: {{ required "Config map with settings.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
-      {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
-        - name: {{ $.Values.deployment.imagePullSecret }}
-      {{ end }}
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
         {{- default "{}" (default ($.Values.graphdb.masters.nodeSelector | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "nodeSelector" "master_index" $master_index))) | nindent 8  }}
       affinity:
@@ -72,7 +73,7 @@ spec:
         {{- default "{}" (default ($.Values.graphdb.masters.topologySpreadConstraints | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "topologySpreadConstraints" "master_index" $master_index))) | nindent 8  }}
       containers:
         - name: graphdb-master-{{ $master_index }}
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
             - name: graphdb-m-{{ $master_index }}
@@ -121,7 +122,7 @@ spec:
       initContainers:
         # LICENSE PROVISION
         - name: provision-license
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -144,7 +145,7 @@ spec:
                 echo 'Done'
         # REPO PROVISION
         - name: provision-repository
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -175,7 +176,7 @@ spec:
               done
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
@@ -200,10 +201,16 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb/logback.xml ]]; then
+                echo "Provisioning logging config file..."
+                mkdir -p /opt/graphdb/home/conf ;
+                cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
+              fi
+              mkdir /opt/graphdb/home/jdbc-driver
               echo 'Done'
         {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
         - name: restore-standalone
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             - name: graphdb-master-storage
@@ -223,6 +230,108 @@ spec:
                 echo "Successfully restored!"
               else
                 echo "Nothing to restore."
+              fi
+        {{- end }}
+        # LOADRDF TOOL
+          {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        - name: loadrdf-tool
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+          volumeMounts:
+                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-storage
+                    {{- end }}
+              mountPath: /opt/graphdb/home
+                    {{- if and (eq $master_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
+                  {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-preload-data
+                    {{- end }}
+              mountPath: /tmp/graphdb/
+                {{- end }}
+          command: ['sh', '-c']
+          args:
+            - |
+              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
+              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
+              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
+              echo "preload with loadrdf tool is done"
+          {{- end }}
+          {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        # PRELOAD TOOL
+        - name: preload-tool
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+          volumeMounts:
+                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-storage
+                    {{- end }}
+              mountPath: /opt/graphdb/home
+                  {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-preload-data
+                {{- end }}
+          command: ['sh', '-c']
+          args:
+            - |
+              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
+              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
+              /opt/graphdb/dist/bin/preload {{ $.Values.graphdb.tools.preload.flags }} -c /tmp/graphdb/config.ttl /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
+              echo "preload with preload tool is done"
+        {{- end }}
+        # STORAGE TOOL
+        {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        - name: storage-tool
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          resources:
+            limits:
+              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
+            requests:
+              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+          volumeMounts:
+                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+                  {{- else }}
+            - name: graphdb-worker-storage
+                    {{- end }}
+              mountPath: /opt/graphdb/home
+          command: ['sh', '-c']
+          args:
+            - |
+              cdate=$(date +'%Y-%m-%d')
+              if [ -d /opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage ]; then
+                result=$(/opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage {{$.Values.graphdb.tools.storage_tool.options}})
+                echo -e "${result}" >> /opt/graphdb/home/data/storage-tool-${cdate}.log
+                echo -e "${result}"
+                if echo -e "${result}" | grep -qi "inconsistent"
+                then
+                  exit 1
+                fi
+              else
+                echo "The wanted repository does not exist"
               fi
         {{- end }}
 

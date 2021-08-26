@@ -24,7 +24,8 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
-      spec: {{ toYaml $.Values.graphdb.workers.persistence.volumeClaimTemplateSpec | nindent 8 }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.workers.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
   {{- end }}
   template:
     metadata:
@@ -55,10 +56,8 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-worker-preload-data-pvc
         {{- end }}
-      {{ if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
-        - name: {{ $.Values.deployment.imagePullSecret }}
-      {{ end }}
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
         {{- default "{}" (default ($.Values.graphdb.workers.nodeSelector | toYaml ) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "nodeSelector" "worker_index" $worker_index))) | nindent 8  }}
       affinity:
@@ -69,7 +68,7 @@ spec:
         {{- default "" (default ($.Values.graphdb.workers.topologySpreadConstraints | toYaml) (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "topologySpreadConstraints" "worker_index" $worker_index))) | nindent 8 }}
       containers:
         - name: graphdb-worker-{{ $worker_index }}
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
             - name: graphdb-m-{{ $worker_index }}
@@ -110,7 +109,7 @@ spec:
       initContainers:
         # LICENSE PROVISION
         - name: provision-license
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
@@ -133,7 +132,7 @@ spec:
                 echo 'Done'
         # REPO PROVISION
         - name: provision-worker-repository
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
@@ -165,7 +164,7 @@ spec:
 
           # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
-          image: {{ $.Values.images.busybox }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
@@ -190,11 +189,17 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb/logback.xml ]]; then
+                echo "Provisioning logging config file..."
+                mkdir -p /opt/graphdb/home/conf ;
+                cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
+              fi
+              mkdir /opt/graphdb/home/jdbc-driver
               echo 'Done'
         # LOADRDF TOOL
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.loadrdf.trigger }}
         - name: loadrdf-tool
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
@@ -211,7 +216,11 @@ spec:
             {{- end }}
               mountPath: /opt/graphdb/home
             {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
+              {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+              {{- else }}
             - name: graphdb-worker-preload-data
+              {{- end }}
               mountPath: /tmp/graphdb/
             {{- end }}
           command: ['sh', '-c']
@@ -225,7 +234,7 @@ spec:
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.preload.trigger }}
         # PRELOAD TOOL
         - name: preload-tool
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:
@@ -241,8 +250,11 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-worker-preload-dynamic-pvc
+            {{- else }}
             - name: graphdb-worker-preload-data
-              mountPath: /tmp/graphdb/
+            {{- end }}
           command: ['sh', '-c']
           args:
             - |
@@ -254,7 +266,7 @@ spec:
         # STORAGE TOOL
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.storage_tool.trigger }}
         - name: storage-tool
-          image: {{ $.Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           resources:
             limits:

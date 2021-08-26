@@ -171,10 +171,10 @@ graphdb:
     # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction
     # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
-    nodes:
-      - name: master-1
-        java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-        license: graphdb-license
+#    nodes:
+#      - name: master-1
+#        java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
+#        license: graphdb-license
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
@@ -217,11 +217,11 @@ graphdb:
 
     topologySpreadConstraints:
     # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
-    nodes:
-      - name: worker-1
-        license: graphdb-license
-      - name: worker-2
-        java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport "
+#    nodes:
+#      - name: worker-1
+#        license: graphdb-license
+#      - name: worker-2
+#        java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport "
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:

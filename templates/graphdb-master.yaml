@@ -206,7 +206,7 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
               fi
-              mkdir /opt/graphdb/home/jdbc-driver
+              mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
         {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
         - name: restore-standalone

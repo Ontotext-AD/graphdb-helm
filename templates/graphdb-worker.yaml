@@ -194,7 +194,7 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
               fi
-              mkdir /opt/graphdb/home/jdbc-driver
+              mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
         # LOADRDF TOOL
         {{- if and (eq $worker_index 1) $.Values.graphdb.tools.loadrdf.trigger }}

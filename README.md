@@ -481,7 +481,7 @@ about defining resource limits.
 | graphdb.clusterConfig.syncPeersMapping | list | `["master-1 <-> master-2"]` | Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology. |
 | graphdb.clusterConfig.workersCount | int | `2` |  |
 | graphdb.masters.java_args | string | `"-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m -Dgraphdb.home.work=/mnt/graphdb"` | Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.masters.license | string | `"graphdb-license"` | Reference to a secret containing 'graphdb.license' file to be used by master nodes. This is a required secret without which GraphDB won't operate if you use SE/EE editions. Important: Must be created beforehand |
+| graphdb.masters.license | string | `"graphdb-license"` | Reference to a secret containing 'graphdb.license' file to be used by master nodes. Can be set to "" (no license) if this GraphDB instance is used only with a "master" repository! Important: Must be created beforehand |
 | graphdb.masters.nodes[0].java_args | string | `"-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"` |  |
 | graphdb.masters.nodes[0].license | string | `"graphdb-license"` |  |
 | graphdb.masters.nodes[0].name | string | `"master-1"` |  |

@@ -163,6 +163,7 @@ graphdb:
     settingsConfigmap: graphdb-settings-default-configmap
     # -- Reference to a secret containing 'graphdb.license' file to be used by master nodes.
     # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
+    # Can be set to "" if you want to use this instance only with master repositories, which does not require a license!
     # Important: Must be created beforehand
     license: graphdb-license
     # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value

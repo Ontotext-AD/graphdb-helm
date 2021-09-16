@@ -19,9 +19,9 @@ metadata:
 spec:
   {{ if .Values.deployment.tls.enabled }}
   tls:
-    - secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
-      hosts:
-      - {{ include "resolveDeploymentHost" . | quote }}
+    - hosts:
+        - {{ include "resolveDeploymentHost" . | quote }}
+      secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
   {{ end }}
   rules:
     - host: {{ include "resolveDeploymentHost" . | quote }}

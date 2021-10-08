@@ -63,6 +63,11 @@ spec:
         - name: graphdb-master-settings-config
           configMap:
             name: {{ required "Config map with settings.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
+        {{- if $.Values.deployment.logbackConfigMap }}
+        - name: graphdb-logback-config
+          configMap:
+            name: {{ $.Values.deployment.logbackConfigMap }}
+        {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
@@ -191,6 +196,10 @@ spec:
               mountPath: /opt/graphdb/home
             - name: graphdb-master-settings-config
               mountPath: /tmp/graphdb
+            {{- if $.Values.deployment.logbackConfigMap }}
+            - name: graphdb-logback-config
+              mountPath: /tmp/graphdb-configmap
+            {{- end }}
           command: ['sh', '-c']
           args:
             - |
@@ -205,10 +214,10 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
-              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb/logback.xml ]]; then
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-configmap/logback.xml ]]; then
                 echo "Provisioning logging config file..."
                 mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
+                cp /tmp/graphdb-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'

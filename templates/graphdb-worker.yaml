@@ -51,6 +51,11 @@ spec:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
+        {{- if $.Values.deployment.logbackConfigMap }}
+        - name: graphdb-logback-config
+          configMap:
+            name: {{ $.Values.deployment.logbackConfigMap }}
+        {{- end }}
         {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
         - name: graphdb-worker-preload-data
           persistentVolumeClaim:
@@ -175,6 +180,10 @@ spec:
               mountPath: /opt/graphdb/home
             - name: graphdb-master-settings-config
               mountPath: /tmp/graphdb
+            {{- if $.Values.deployment.logbackConfigMap }}
+            - name: graphdb-logback-config
+              mountPath: /tmp/graphdb-configmap
+            {{- end }}
           command: ['sh', '-c']
           args:
             - |
@@ -189,10 +198,10 @@ spec:
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
-              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb/logback.xml ]]; then
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-configmap/logback.xml ]]; then
                 echo "Provisioning logging config file..."
                 mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb/logback.xml /opt/graphdb/home/conf/logback.xml
+                cp /tmp/graphdb-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'

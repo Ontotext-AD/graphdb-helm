@@ -12,13 +12,11 @@ spec:
   ttlSecondsAfterFinished: 300
   template:
     spec:
-      {{- if hasKey $.Values.deployment "imagePullSecret" }}
       imagePullSecrets:
-        - name: {{ $.Values.deployment.imagePullSecret }}
-      {{- end }}
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: link-graphdb-cluster
-          image: {{ .Values.images.graphdb }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0
@@ -88,6 +86,34 @@ spec:
                     /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._1 }} "$repositoryName" graphdb-{{ trim $split._0 }} "$repositoryName" "{{ $authToken }}";
                   {{- end }}
                 >> /proc/1/fd/1
+              done
+        {{- end }}
+        {{- if gt (len $.Values.graphdb.masters.additionalJmxArrtibutes) 0 }}
+        - name: set-jmx-attributes
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+            - name: graphdb-master-repo-config
+              mountPath: /tmp/master-repos
+          command: ['sh','-c']
+          args:
+            - |
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh
+              chmod +x /usr/local/bin/graphdb.sh
+
+              for filename in /tmp/master-repos/*.ttl; do
+                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
+
+                /usr/local/bin/graphdb.sh waitMasters {{ .Values.graphdb.clusterConfig.mastersCount }} "$repositoryName"
+                for i in `seq 1 {{ .Values.graphdb.clusterConfig.mastersCount }}`; do
+                  {{- range $name, $value := $.Values.graphdb.masters.additionalJmxArrtibutes }}
+                    /usr/local/bin/graphdb.sh setJmxAttribute "graphdb-master-$i" "$repositoryName" "{{ $authToken }}" "{{ $name }}" "{{ $value }}"
+                  {{- end }}
+                done
               done
         {{- end }}
       restartPolicy: Never

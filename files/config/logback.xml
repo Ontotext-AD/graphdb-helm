@@ -30,10 +30,20 @@
     <property name="defaultPattern" value="[%-5p] %d{ISO8601} [%t | %c{5}]%X{headers} %m%n%ex" />
     <property name="encoding" value="UTF-8" />
 
+    <!-- Properties for log keeping based on age and size. By default logs will be kept for 30 days with no size limit-->
+    <!-- Sets the maximum age of kept logs in days. Set to 0 for no limit -->
+    <property name="keepLogDays" value="30" />
+    <!-- Sets the maximum size of every log kept. Accepts values like 500KB, 200MB, 1GB etc. Set to 0 for no limit
+     NOTE: This sets the size limit per each different log type. If you want more control change the totalSizeCap of each log separately-->
+    <property name="logMaxSize" value="0" />
+
     <!-- Audit log. Contains security related things -->
     <appender name="AuditLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/audit-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>
@@ -44,6 +54,9 @@
     <appender name="MainLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/main-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>
@@ -54,6 +67,9 @@
     <appender name="ErrorLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/error-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>
@@ -68,6 +84,9 @@
     <appender name="EnterpriseLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/enterprise-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>
@@ -78,6 +97,9 @@
     <appender name="HttpLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/http-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>
@@ -88,6 +110,9 @@
     <appender name="QueryLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/query-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>
@@ -98,6 +123,9 @@
     <appender name="SlowQueryLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logDestinationDirectory}/slow-query-log-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${keepLogDays}</maxHistory>
+            <totalSizeCap>${logMaxSize}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
         <encoder>
             <pattern>${defaultPattern}</pattern>

@@ -12,19 +12,19 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
     nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
-    {{- range $key, $value := .Values.deployment.ingress.annotations }}
-      {{ $key }}: {{ $value | quote }}
+    {{- with .Values.deployment.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
     {{- end }}
 
 spec:
   {{ if .Values.deployment.tls.enabled }}
   tls:
-    - secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
-      hosts:
-      - {{ .Values.deployment.host | quote }}
+    - hosts:
+        - {{ include "resolveDeploymentHost" . | quote }}
+      secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
   {{ end }}
   rules:
-    - host: {{ .Values.deployment.host | quote }}
+    - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
           - path: /

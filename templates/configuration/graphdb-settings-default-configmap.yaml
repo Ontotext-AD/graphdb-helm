@@ -7,6 +7,8 @@ metadata:
   labels:
     name: graphdb-settings-default-configmap
 data:
+  users.js: |-
+{{ tpl (.Files.Get "files/config/users.js" | indent 4) . }}
   settings.js: |-
 {{ tpl (.Files.Get "files/config/settings.js" | indent 4) . }}
   graphdb.properties: |-

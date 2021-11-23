@@ -47,7 +47,7 @@ spec:
             name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.workers.repositoryConfigmap }}
         - name: graphdb-master-settings-config
           configMap:
-            name: {{ required "Config map with settings.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
+            name: {{ required "Config map with settings.js, users.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
@@ -188,8 +188,13 @@ spec:
           args:
             - |
               set -eu
+              if [[ ! -f /opt/graphdb/home/work/workbench/users.js && -f /tmp/graphdb/users.js ]]; then
+                echo "Provisioning users settings with users.js file..."
+                mkdir -p /opt/graphdb/home/work/workbench ;
+                cp /tmp/graphdb/users.js /opt/graphdb/home/work/workbench/users.js
+              fi
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && -f /tmp/graphdb/settings.js ]]; then
-                echo "Provisioning users settings with settings.js file..."
+                echo "Provisioning settings with settings.js file..."
                 mkdir -p /opt/graphdb/home/work/workbench ;
                 cp /tmp/graphdb/settings.js /opt/graphdb/home/work/workbench/settings.js
               fi

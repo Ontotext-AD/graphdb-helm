@@ -238,7 +238,7 @@ There are 3 important configuration sections:
 
 #### GraphDB cluster configuration
 
-By default the Helm chart supports the 3 topologies that we recommend in our documentation. This is configured by settings `graphdb.topology`
+By default the Helm chart supports the 3 topologies that we recommend in our documentation. This is configured by setting `graphdb.topology`
 Possible values: `standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted`. Masters and workers count in cluster modes are controlled by mastersCount and workersCount properties
 
 **standalone** - Launches single instance of GraphDB with a preconfigured worker repository.
@@ -297,10 +297,10 @@ A list of available JMX attributes can be found [here](https://graphdb.ontotext.
 
 GraphDB's Helm chart supports deploying GraphDB with or without security. This can be toggled through `graphdb.security.enabled`.
 If it is deployed with security enabled, a special provisioning user is used for repository provisioning, cluster linking, health checks and so on.
-Additional users can be added through the settings file: `files/config/settings.js`. The users are described with their roles, username and a bcrypt64 password.
+Additional users can be added through the users file: `files/config/users.js`. The users are described with their roles, username and a bcrypt64 password.
 
 The file is provisioned before GraphDB's startup with the configmap `graphdb.masters.settingsConfigmap`.
-It can be overridden with other configmap containing the `settings.js` file. The same configmap is used for the `graphdb.properties` file as well.
+It can be overridden with other configmap containing the `users.js` file. The same configmap is used for the `settings.js` and `graphdb.properties` files as well.
 Note that the `provisioning` user is required when security is turned on!
 
 By default if the security is turned on, GraphDB's basic security method is used. More complicated security configurations
@@ -312,7 +312,7 @@ See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
 
 Most of GraphDB's properties can be passed through `java_args`. Another option is to supply a `graphdb.properties` file.
 This file is provisioned on all GraphDB instances during GraphDB's startup using configmap `graphdb.masters.settingsConfigmap`.
-It can be overridden with other configmap containing the `graphdb.properties` file. The same configmap is used for the `settings.js` file as well.
+It can be overridden with other configmap containing the `graphdb.properties` file. The same configmap is used for the `settings.js` and `users.js` files as well.
 
 The `graphdb.properties` file is also used for more complex security configurations such as LDAP, Oauth, Kerberos.
 
@@ -490,7 +490,7 @@ about defining resource limits.
 | graphdb.masters.persistence.volumeNamePrefix | string | `"graphdb-default-master"` | Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used. Example result: graphdb-default-master-1-pv |
 | graphdb.masters.repositoryConfigmap | string | `"graphdb-repo-default-configmap"` | Reference to a configuration map containing one or more .ttl files used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
 | graphdb.masters.resources | object | `{"limits":{"memory":"1Gi"},"requests":{"memory":"1Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html |
-| graphdb.masters.settingsConfigmap | string | `"graphdb-settings-default-configmap"` | Reference to a configuration map containing settings.js and graphdb.properties(optional) files used for security and properties provisioning in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html |
+| graphdb.masters.settingsConfigmap | string | `"graphdb-settings-default-configmap"` | Reference to a configuration map containing settings.js, users.js and graphdb.properties(optional) files used for security and properties provisioning in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html |
 | graphdb.security.enabled | bool | `false` |  |
 | graphdb.security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
 | graphdb.security.provisioningUsername | string | `"provisioner"` |  |

@@ -206,7 +206,7 @@ templates directly.
 
 By default, the provisioning creates a default repository in GraphDB. This repo is provided by
 `graphdb-master-repo-default-configmap` for master instances and `graphdb-worker-repo-default-configmap` for worker instances.
-The repositories are created using .ttl repository configuration files, by default those are [worker.default.ttl](files/config/worker.default.ttl) and [master.default.ttl](files/config/master.default.ttl).
+The repositories are created using .ttl repository configuration files, by default those are [worker.default.ttl](files/config/graphdb-repo.default.ttl) and [master.default.ttl](files/config/master.default.ttl).
 
 Provisioning of multiple repositories is also supported. If the configmaps contain more than one .ttl file, the provisioning will create the repositories from all .ttl files contained in the configmap.
 Note that `master` and `worker` repositories are different and must be supplied correctly in a cluster environment.

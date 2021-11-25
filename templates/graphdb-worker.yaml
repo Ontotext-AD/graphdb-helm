@@ -217,7 +217,7 @@ spec:
                 cp /tmp/graphdb-settigns-configmap/settings.js /opt/graphdb/home/work/workbench/settings.js
               fi
               if [[ ! -f /opt/graphdb/home/work/workbench/users.js && -f /tmp/graphdb-users-configmap/users.js ]]; then
-                echo "Provisioning users settings with users.js file..."
+                echo "Provisioning users with users.js file..."
                 mkdir -p /opt/graphdb/home/work/workbench ;
                 cp /tmp/graphdb-users-configmap/users.js /opt/graphdb/home/work/workbench/users.js
               fi

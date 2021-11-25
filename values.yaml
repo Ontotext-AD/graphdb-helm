@@ -54,7 +54,7 @@ deployment:
   # Needed to configure ingress as well as some components require it to properly render their UIs
   protocol: http
   # Important: This should be a resolvable hostname, not an IP address!
-  host: graphdb.local
+  host: localhost
 
   # Configures SSL termination on ingress level.
   # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/

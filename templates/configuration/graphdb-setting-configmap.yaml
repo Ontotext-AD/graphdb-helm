@@ -1,0 +1,15 @@
+# Default configuration map for provisioning GraphDB repository.
+# To change it, prepare another configuration map and update "graphdb.repositoryConfigmap"
+{{- $configs := (.Values.graphdb.configs | default dict) }}
+{{- $settingsConfigMap := $configs.settingsConfigMap | default "null"}}
+{{- if or (eq $settingsConfigMap "graphdb-settings-configmap") (and (eq $settingsConfigMap "null") (.Values.graphdb.security.enabled)) }}
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-settings-configmap
+  labels:
+    name: graphdb-settings-configmap
+data:
+  settings.js: |-
+{{ tpl (.Files.Get "files/config/settings.js" | indent 4) . }}
+{{- end }}

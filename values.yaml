@@ -34,7 +34,7 @@ images:
     tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.0-free"
+    tag: "10.0.0"
   busybox:
     repository: busybox
     tag: "1.31"
@@ -78,8 +78,6 @@ deployment:
       connect: 5
       read: 60
       send: 60
-  # Override default logback configuration
-  # logbackConfigMap: graphdb-logback-configmap
 
 # KONG API gateway configurations.
 # This gateway sits behind the ingress and exposes the rest of the components.
@@ -126,7 +124,7 @@ graphdb:
   # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
   # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
   # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
-  topology: "1m_3w"
+  topology: "standalone"
   clusterConfig:
     # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
     masterWorkerMapping:
@@ -147,9 +145,21 @@ graphdb:
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
 
+  # -- References to configuration maps containing settings.js, users.js, graphdb.properties and logback.xml files to overwrite
+  # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
+  configs:
+    # Override default settings configuration
+    #settingsConfigMap: graphdb-settings-configmap
+    # Override default users configuration
+    #usersConfigMap: graphdb-users-configmap
+    # Override default properties configuration
+    #propertiesConfigMap: graphdb-properties-configmap
+    # Override default logback configuration
+    #logbackConfigMap: graphdb-logback-configmap
+
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the healthchecks and cluster linking can work properly
-    enabled: true
+    enabled: false
     provisioningUsername: provisioner
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
@@ -158,9 +168,6 @@ graphdb:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
     repositoryConfigmap: graphdb-repo-default-configmap
-    # -- Reference to a configuration map containing settings.js, users.js and graphdb.properties(optional) files used for security
-    # and properties provisioning in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
-    settingsConfigmap: graphdb-settings-default-configmap
     # -- Reference to a secret containing 'graphdb.license' file to be used by master nodes.
     # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
     # Can be set to "" if you want to use this instance only with master repositories, which does not require a license!

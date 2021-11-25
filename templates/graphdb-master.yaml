@@ -3,6 +3,7 @@
 
 {{ $worker_endpoint := printf "http://graphdb-master-%d:7200" $master_index }}
 {{- $authToken := ((printf "%s:%s" $.Values.graphdb.security.provisioningUsername $.Values.graphdb.security.provisioningPassword) | b64enc) }}
+{{- $configs := ($.Values.graphdb.configs | default dict) }}
 
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
@@ -60,13 +61,25 @@ spec:
         - name: graphdb-master-repo-config
           configMap:
             name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.masters.repositoryConfigmap }}
-        - name: graphdb-master-settings-config
+        {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
+        - name: graphdb-settings-config
           configMap:
-            name: {{ required "Config map with settings.js, users.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
-        {{- if $.Values.deployment.logbackConfigMap }}
+            name: {{ $configs.settingsConfigMap | default "graphdb-settings-configmap" }}
+        {{- end }}
+        {{- if or $configs.usersConfigMap $.Values.graphdb.security.enabled }}
+        - name: graphdb-users-config
+          configMap:
+            name: {{ $configs.usersConfigMap | default "graphdb-users-configmap" }}
+        {{- end }}
+        {{- if $configs.propertiesConfigMap }}
+        - name: graphdb-properties-config
+          configMap:
+            name: {{ $configs.propertiesConfigMap }}
+        {{- end }}
+        {{- if $configs.logbackConfigMap }}
         - name: graphdb-logback-config
           configMap:
-            name: {{ $.Values.deployment.logbackConfigMap }}
+            name: {{ $configs.logbackConfigMap }}
         {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
@@ -194,35 +207,45 @@ spec:
             - name: graphdb-master-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-            - name: graphdb-master-settings-config
-              mountPath: /tmp/graphdb
-            {{- if $.Values.deployment.logbackConfigMap }}
+            {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
+            - name: graphdb-settings-config
+              mountPath: /tmp/graphdb-settigns-configmap
+            {{- end }}
+            {{- if or $configs.usersConfigMap $.Values.graphdb.security.enabled }}
+            - name: graphdb-users-config
+              mountPath: /tmp/graphdb-users-configmap
+            {{- end }}
+            {{- if $configs.propertiesConfigMap }}
+            - name: graphdb-properties-config
+              mountPath: /tmp/graphdb-properties-configmap
+            {{- end }}
+            {{- if $configs.logbackConfigMap }}
             - name: graphdb-logback-config
-              mountPath: /tmp/graphdb-configmap
+              mountPath: /tmp/graphdb-logback-configmap
             {{- end }}
           command: ['sh', '-c']
           args:
             - |
               set -eu
-              if [[ ! -f /opt/graphdb/home/work/workbench/users.js && -f /tmp/graphdb/users.js ]]; then
-                echo "Provisioning users settings with users.js file..."
-                mkdir -p /opt/graphdb/home/work/workbench ;
-                cp /tmp/graphdb/users.js /opt/graphdb/home/work/workbench/users.js
-              fi
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && -f /tmp/graphdb/settings.js ]]; then
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && -f /tmp/graphdb-settigns-configmap/settings.js ]]; then
                 echo "Provisioning settings with settings.js file..."
                 mkdir -p /opt/graphdb/home/work/workbench ;
-                cp /tmp/graphdb/settings.js /opt/graphdb/home/work/workbench/settings.js
+                cp /tmp/graphdb-settigns-configmap/settings.js /opt/graphdb/home/work/workbench/settings.js
               fi
-              if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb/graphdb.properties ]]; then
+              if [[ ! -f /opt/graphdb/home/work/workbench/users.js && -f /tmp/graphdb-users-configmap/users.js ]]; then
+                echo "Provisioning users with users.js file..."
+                mkdir -p /opt/graphdb/home/work/workbench ;
+                cp /tmp/graphdb-users-configmap/users.js /opt/graphdb/home/work/workbench/users.js
+              fi
+              if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb-properties-configmap/graphdb.properties ]]; then
                 echo "Provisioning graphdb properties file..."
                 mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
+                cp /tmp/graphdb-properties-configmap/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
-              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-configmap/logback.xml ]]; then
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-logback-configmap/logback.xml ]]; then
                 echo "Provisioning logging config file..."
                 mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
+                cp /tmp/graphdb-logback-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'

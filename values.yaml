@@ -145,7 +145,7 @@ graphdb:
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
 
-  # -- References to configuration maps containing settings.js, users.js, graphdb.properties and logback.xml files to overwrite
+  # -- References to configuration maps containing settings.js, users.js, graphdb.properties, logback.xml and jolokia-access.xml files to overwrite
   # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
   configs:
     # Override default settings configuration
@@ -156,6 +156,8 @@ graphdb:
     #propertiesConfigMap: graphdb-properties-configmap
     # Override default logback configuration
     #logbackConfigMap: graphdb-logback-configmap
+    # Override default jolokia access configuration
+    #jolokiaAccessConfigMap: graphdb-jolokia-access-configmap
 
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the healthchecks and cluster linking can work properly

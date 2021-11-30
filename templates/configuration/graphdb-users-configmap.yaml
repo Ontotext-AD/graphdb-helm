@@ -1,5 +1,5 @@
-# Default configuration map for provisioning GraphDB repository.
-# To change it, prepare another configuration map and update "graphdb.repositoryConfigmap"
+# Default configuration map for provisioning GraphDB users.js file.
+# To change it, prepare another configuration map and update "graphdb.configs.usersConfigMap"
 {{- $configs := (.Values.graphdb.configs | default dict) }}
 {{- $usersConfigMap := $configs.usersConfigMap | default "null"}}
 {{- if or (eq $usersConfigMap "graphdb-users-configmap") (and (eq $usersConfigMap "null") (.Values.graphdb.security.enabled)) }}

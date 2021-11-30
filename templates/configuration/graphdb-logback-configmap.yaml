@@ -1,5 +1,5 @@
-# Default configuration map for provisioning GraphDB repository.
-# To change it, prepare another configuration map and update "graphdb.repositoryConfigmap"
+# Default configuration map for provisioning GraphDB logback settings.
+# To change it, prepare another configuration map and update "graphdb.configs.logbackConfigMap"
 {{- $configs := (.Values.graphdb.configs | default dict) }}
 {{- if $configs.logbackConfigMap }}
 {{- if eq $configs.logbackConfigMap "graphdb-logback-configmap" }}

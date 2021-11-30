@@ -1,5 +1,5 @@
-# Default configuration map for provisioning GraphDB repository.
-# To change it, prepare another configuration map and update "graphdb.repositoryConfigmap"
+# Default configuration map for provisioning the GraphDB jolokia access settings.
+# To change it, prepare another configuration map and update "graphdb.configs.jolokiaAccessConfigMap"
 {{- $configs := (.Values.graphdb.configs | default dict) }}
 {{- if $configs.jolokiaAccessConfigMap }}
 {{- if eq $configs.jolokiaAccessConfigMap "graphdb-jolokia-access-configmap" }}

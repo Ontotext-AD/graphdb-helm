@@ -299,7 +299,7 @@ GraphDB's Helm chart supports deploying GraphDB with or without security. This c
 If it is deployed with security enabled, a special provisioning user is used for repository provisioning, cluster linking, health checks and so on.
 Additional users can be added through the users file: `files/config/users.js`. The users are described with their roles, username and a bcrypt64 password.
 
-The file is provisioned before GraphDB's startup with the configmap `usersConfigMap`.
+The file can be provisioned before GraphDB's startup with the `usersConfigMap` configmap or left to default.
 It can be overridden with other configmap containing the `users.js` file.
 Note that the `provisioning` user is required when security is turned on!
 
@@ -308,13 +308,28 @@ can be configured using additional configurations in `graphdb.properties`.
 
 See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
 
-#### Provisioning additional properties
+Prior to GraphDB 10.0.0 the users and their settings were saved in the `settings.js` file.
+
+#### Provisioning additional properties and settings
 
 Most of GraphDB's properties can be passed through `java_args`. Another option is to supply a `graphdb.properties` file.
-This file is provisioned on all GraphDB instances during GraphDB's startup using configmap `propertiesConfigMap`.
+This file can be provisioned on during GraphDB's startup using `propertiesConfigMap`configmap or left to default.
 It can be overridden with other configmap containing the `graphdb.properties` file.
 
 The `graphdb.properties` file is also used for more complex security configurations such as LDAP, Oauth, Kerberos.
+
+Some additional settings are kept in the `settings.js` file. Most of those settings are internal for GraphDB and better left managed by the client.
+The file can be provisioned before GraphDB's startup with the `settingsConfigMap` configmap or left to default.
+It can be overridden with other configmap containing the `settings.js` file.
+Note the `settings.js` must contain `security.enabled" : true` property when security is turned on!
+
+GraphDB uses logback to configure logging using the `logback.xml` file.
+The file can be provisioned before GraphDB's startup with the `logbackConfigMap` configmap or left to default.
+It can be overridden with other configmap containing the `logback.xml` file.
+
+Since GraphDB 9.10.1 the Jolokia access is managed using the `jolokia-access.xml` file.
+The file can be provisioned before GraphDB's startup with the `jolokiaAccessConfigmap` configmap or left to default.
+It can be overridden with other configmap containing the `jolokia-access.xml` file.
 
 See https://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html?highlight=properties
 See https://graphdb.ontotext.com/documentation/enterprise/access-control.html

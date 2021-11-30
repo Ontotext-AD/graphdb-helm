@@ -1,8 +1,8 @@
 # Default configuration map for provisioning GraphDB settings.js file.
 # To change it, prepare another configuration map and update "graphdb.configs.settingsConfigMap"
 {{- $configs := (.Values.graphdb.configs | default dict) }}
-{{- $settingsConfigMap := $configs.settingsConfigMap | default "null"}}
-{{- if or (eq $settingsConfigMap "graphdb-settings-configmap") (and (eq $settingsConfigMap "null") (.Values.graphdb.security.enabled)) }}
+{{- $settingsConfigMap := $configs.settingsConfigMap | default "" }}
+{{- if or (eq $settingsConfigMap "graphdb-settings-configmap") (and (not $settingsConfigMap ) (.Values.graphdb.security.enabled)) }}
 apiVersion: {{ .Values.versions.configmap }}
 kind: ConfigMap
 metadata:

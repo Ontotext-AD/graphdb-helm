@@ -121,6 +121,19 @@ kubectl create secret generic graphdb-license --from-file graphdb.license
 **Note**: Secret names can differ from the given examples in the [values.yaml](values.yaml), but their configurations should be updated
 to refer to the correct ones. Note that the licenses can be set for all masters/workers instances and also per instance. Please setup correctly according to the licensing agreements.
 
+#### Updating an expired GraphDB license
+
+When the helm chart is installed the license will be provisioned through the `graphdb-license`.
+When a license expires you'll have to update the secret, so each new GraphDB instance can be provisioned with the new license.
+In order NOT to restart your current GraphDB instances, you can copy your new license named `graphdb.license` in your GraphDB pods in folder `/opt/graphdb/home/conf`.
+It's important to name your file exactly `graphdb.license`!
+
+```bash
+kubectl delete secret graphdb-license
+kubectl create secret generic graphdb-license --from-file graphdb.license
+kubectl cp graphdb.license graphdb-master-1-0:/opt/graphdb/home/conf
+```
+
 ### Quick Start
 
 The Helm chart includes an example repository configuration TTLs.

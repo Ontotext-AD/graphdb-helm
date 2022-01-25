@@ -45,7 +45,7 @@ spec:
       labels:
         app: graphdb-master-{{ $master_index }}
     spec:
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 120
       volumes:
         {{- if ne (default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $master_index))) "" }}
         - name: graphdb-master-license

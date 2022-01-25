@@ -34,7 +34,7 @@ images:
     tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
-    tag: "9.10.1-ee"
+    tag: "9.10.2-ee"
   busybox:
     repository: busybox
     tag: "1.31"
@@ -109,7 +109,7 @@ kong:
   memCacheSize: "64m"
   # -- Amount of Nginx worker processes. This affects how much memory will be consumed.
   # The auto value will determine the workers based on the available CPUs
-  workers: auto
+  workers: 3
   # Default resource limitations.
   resources:
     limits:

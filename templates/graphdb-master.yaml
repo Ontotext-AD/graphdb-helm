@@ -37,7 +37,7 @@ spec:
     {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
     - metadata:
         name: graphdb-server-import-dir
-      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.persistence.volumeClaimTemplateSpec }}
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   template:
@@ -45,7 +45,7 @@ spec:
       labels:
         app: graphdb-master-{{ $master_index }}
     spec:
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 120
       volumes:
         {{- if ne (default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $master_index))) "" }}
         - name: graphdb-master-license

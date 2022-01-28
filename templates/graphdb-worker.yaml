@@ -32,7 +32,7 @@ spec:
       labels:
         app: graphdb-worker-{{ $worker_index }}
     spec:
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 120
       volumes:
         - name: graphdb-license
           secret:

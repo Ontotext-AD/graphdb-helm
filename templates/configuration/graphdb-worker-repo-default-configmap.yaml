@@ -9,5 +9,5 @@ metadata:
     name: graphdb-worker-repo-default-configmap
 data:
   config.ttl: |-
-{{ tpl (.Files.Get "files/config/worker.default.ttl" | indent 4) . }}
+{{ tpl (.Files.Get "files/config/graphdb-repo.default.ttl" | indent 4) . }}
 {{ end }}

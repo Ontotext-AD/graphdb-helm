@@ -34,7 +34,7 @@ images:
     tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
-    tag: "9.10.1-ee"
+    tag: "10.0"
   busybox:
     repository: busybox
     tag: "1.31"

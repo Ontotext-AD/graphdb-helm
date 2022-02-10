@@ -12,6 +12,8 @@ metadata:
   name: graphdb-worker-{{ $worker_index }}
   labels:
     app: graphdb-worker-{{ $worker_index }}
+    app-release: {{ .Release.Name }}
+    app-type: worker
 spec:
   replicas: 1
   serviceName: graphdb-worker-{{ $worker_index }}

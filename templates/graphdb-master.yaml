@@ -177,7 +177,7 @@ spec:
                 cd /opt/graphdb/home/data/repositories/$repositoryName ;
 
                 # If the repo configuration exists -> skip provisioning
-                [ -f config.ttl ] && echo "Repository $repositoryName exists, exiting..." && exit 0
+                [ -f config.ttl ] && echo "Repository $repositoryName exists, skipping it..." && continue
 
                 echo "Provisioning GraphDB $repositoryName repository with file $filename" ;
                 cp $filename ./config.ttl ;

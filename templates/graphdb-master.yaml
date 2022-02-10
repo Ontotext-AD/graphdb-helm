@@ -11,8 +11,6 @@ metadata:
   name: graphdb-master-{{ $master_index }}
   labels:
     app: graphdb-master-{{ $master_index }}
-    app-release: {{ $.Release.Name }}
-    app-type: master
 spec:
   replicas: 1
   serviceName: graphdb-master-{{ $master_index }}
@@ -46,6 +44,8 @@ spec:
     metadata:
       labels:
         app: graphdb-master-{{ $master_index }}
+        app-release: {{ $.Release.Name }}
+        app-type: master
     spec:
       terminationGracePeriodSeconds: 60
       volumes:

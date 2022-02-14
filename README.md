@@ -121,6 +121,19 @@ kubectl create secret generic graphdb-license --from-file graphdb.license
 **Note**: Secret names can differ from the given examples in the [values.yaml](values.yaml), but their configurations should be updated
 to refer to the correct ones. Note that the licenses can be set for all masters/workers instances and also per instance. Please setup correctly according to the licensing agreements.
 
+#### Updating an expired GraphDB license
+
+When the helm chart is installed the license will be provisioned through the `graphdb-license`.
+When a license expires you'll have to update the secret, so each new GraphDB instance can be provisioned with the new license.
+In order NOT to restart your current GraphDB instances, you can copy your new license named `graphdb.license` in your GraphDB pods in folder `/opt/graphdb/home/conf`.
+It's important to name your file exactly `graphdb.license`!
+
+```bash
+kubectl delete secret graphdb-license
+kubectl create secret generic graphdb-license --from-file graphdb.license
+kubectl cp graphdb.license graphdb-master-1-0:/opt/graphdb/home/conf
+```
+
 ### Quick Start
 
 The Helm chart includes an example repository configuration TTLs.
@@ -206,7 +219,7 @@ templates directly.
 
 By default, the provisioning creates a default repository in GraphDB. This repo is provided by
 `graphdb-master-repo-default-configmap` for master instances and `graphdb-worker-repo-default-configmap` for worker instances.
-The repositories are created using .ttl repository configuration files, by default those are [worker.default.ttl](files/config/worker.default.ttl) and [master.default.ttl](files/config/master.default.ttl).
+The repositories are created using .ttl repository configuration files, by default those are [worker.default.ttl](files/config/graphdb-repo.default.ttl) and [master.default.ttl](files/config/master.default.ttl).
 
 Provisioning of multiple repositories is also supported. If the configmaps contain more than one .ttl file, the provisioning will create the repositories from all .ttl files contained in the configmap.
 Note that `master` and `worker` repositories are different and must be supplied correctly in a cluster environment.

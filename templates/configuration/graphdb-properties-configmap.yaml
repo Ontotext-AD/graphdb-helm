@@ -1,0 +1,16 @@
+# Default configuration map for provisioning GraphDB properties.
+# To change it, prepare another configuration map and update "graphdb.configs.propertiesConfigMap"
+{{- $configs := (.Values.graphdb.configs | default dict) }}
+{{- if $configs.propertiesConfigMap}}
+{{- if eq $configs.propertiesConfigMap "graphdb-properties-configmap" }}
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-properties-configmap
+  labels:
+    name: graphdb-properties-configmap
+data:
+  graphdb.properties: |-
+{{ tpl (.Files.Get "files/config/graphdb.properties" | indent 4) . }}
+{{- end }}
+{{- end }}

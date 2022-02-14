@@ -5,6 +5,7 @@
 
 {{ $worker_endpoint := printf "http://graphdb-worker-%d:7200" $worker_index }}
 {{ $authToken := ((printf "%s:%s" $.Values.graphdb.security.provisioningUsername $.Values.graphdb.security.provisioningPassword) | b64enc) }}
+{{- $configs := ($.Values.graphdb.configs | default dict) }}
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
@@ -45,16 +46,33 @@ spec:
         - name: graphdb-worker-repo-config
           configMap:
             name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.workers.repositoryConfigmap }}
-        - name: graphdb-master-settings-config
+        {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
+        - name: graphdb-settings-config
           configMap:
-            name: {{ required "Config map with settings.js (and graphdb.properties(optional) ) for security/settings provisioning is required!" $.Values.graphdb.masters.settingsConfigmap }}
+            name: {{ $configs.settingsConfigMap | default "graphdb-settings-configmap" }}
+        {{- end }}
+        {{- if or $configs.usersConfigMap $.Values.graphdb.security.enabled }}
+        - name: graphdb-users-config
+          configMap:
+            name: {{ $configs.usersConfigMap | default "graphdb-users-configmap" }}
+        {{- end }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-        {{- if $.Values.deployment.logbackConfigMap }}
+        {{- if $configs.propertieConfigMap }}
+        - name: graphdb-properties-config
+          configMap:
+            name: {{ $configs.propertieConfigMap }}
+        {{- end}}
+        {{- if $configs.logbackConfigMap }}
         - name: graphdb-logback-config
           configMap:
-            name: {{ $.Values.deployment.logbackConfigMap }}
+            name: {{ $configs.logbackConfigMap }}
+        {{- end }}
+        {{- if $configs.jolokiaAccessConfigMap }}
+        - name: graphdb-jolokia-access-config
+          configMap:
+            name: {{ $configs.jolokiaAccessConfigMap }}
         {{- end }}
         {{- if and (eq $worker_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
         - name: graphdb-worker-preload-data
@@ -178,30 +196,54 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-            - name: graphdb-master-settings-config
-              mountPath: /tmp/graphdb
-            {{- if $.Values.deployment.logbackConfigMap }}
+            {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
+            - name: graphdb-settings-config
+              mountPath: /tmp/graphdb-settigns-configmap
+            {{- end }}
+            {{- if or $configs.usersConfigMap $.Values.graphdb.security.enabled }}
+            - name: graphdb-users-config
+              mountPath: /tmp/graphdb-users-configmap
+            {{- end }}
+            {{- if $configs.propertieConfigMap }}
+            - name: graphdb-properties-config
+              mountPath: /tmp/graphdb-properties-configmap
+            {{- end }}
+            {{- if $configs.logbackConfigMap }}
             - name: graphdb-logback-config
-              mountPath: /tmp/graphdb-configmap
+              mountPath: /tmp/graphdb-logback-configmap
+            {{- end }}
+            {{- if $configs.jolokiaAccessConfigMap }}
+            - name: graphdb-jolokia-access-config
+              mountPath: /tmp/graphdb-jolokia-access-configmap
             {{- end }}
           command: ['sh', '-c']
           args:
             - |
               set -eu
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && -f /tmp/graphdb/settings.js ]]; then
-                echo "Provisioning users settings with settings.js file..."
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/work/workbench/users.js && -f /tmp/graphdb-users-configmap/users.js ]]; then
+                echo "Provisioning users with users.js file..."
                 mkdir -p /opt/graphdb/home/work/workbench ;
-                cp /tmp/graphdb/settings.js /opt/graphdb/home/work/workbench/settings.js
+                cp /tmp/graphdb-users-configmap/users.js /opt/graphdb/home/work/workbench/users.js
               fi
-              if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb/graphdb.properties ]]; then
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && -f /tmp/graphdb-settigns-configmap/settings.js ]]; then
+                echo "Provisioning settings with settings.js file..."
+                mkdir -p /opt/graphdb/home/work/workbench ;
+                cp /tmp/graphdb-settigns-configmap/settings.js /opt/graphdb/home/work/workbench/settings.js
+              fi
+              if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb-properties-configmap/graphdb.properties ]]; then
                 echo "Provisioning graphdb properties file..."
                 mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
+                cp /tmp/graphdb-properties-configmap/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
-              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-configmap/logback.xml ]]; then
+              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-logback-configmap/logback.xml ]]; then
                 echo "Provisioning logging config file..."
                 mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
+                cp /tmp/graphdb-logback-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
+              fi
+              if [[ ! -f /opt/graphdb/home/conf/jolokia-access.xml && -f /tmp/graphdb-jolokia-access-configmap/jolokia-access.xml ]]; then
+                echo "Provisioning jolokia access config file..."
+                mkdir -p /opt/graphdb/home/conf ;
+                cp /tmp/graphdb-jolokia-access-configmap/jolokia-access.xml /opt/graphdb/home/conf/jolokia-access.xml
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'

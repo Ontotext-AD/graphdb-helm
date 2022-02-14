@@ -1,0 +1,15 @@
+# Default configuration map for provisioning GraphDB users.js file.
+# To change it, prepare another configuration map and update "graphdb.configs.usersConfigMap"
+{{- $configs := (.Values.graphdb.configs | default dict) }}
+{{- $usersConfigMap := $configs.usersConfigMap | default ""}}
+{{- if or (eq $usersConfigMap "graphdb-users-configmap") (and (not $usersConfigMap) (.Values.graphdb.security.enabled)) }}
+apiVersion: {{ .Values.versions.configmap }}
+kind: ConfigMap
+metadata:
+  name: graphdb-users-configmap
+  labels:
+    name: graphdb-users-configmap
+data:
+  users.js: |-
+{{ tpl (.Files.Get "files/config/users.js" | indent 4) . }}
+{{- end }}

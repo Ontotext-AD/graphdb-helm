@@ -12,7 +12,7 @@ data:
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($node_index | int64) 1 }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}-master-{{ $node_index }}/{{ end }},http://graphdb-master-{{ $node_index }}:7200/
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($node_index | int64) 1 }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}-node-{{ $node_index }}/{{ end }},http://graphdb-node-{{ $node_index }}:7200/
     -Dgraphdb.external-url=http://graphdb-node-{{ $node_index }}:7200/
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
@@ -22,5 +22,5 @@ data:
 {{- if ne $.Values.graphdb.topology "standalone" }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
 {{- end }}
-    {{ default $.Values.graphdb.masters.java_args (include "resolveNodeValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "java_args" "node_index" $node_index )) }}
+    {{ default $.Values.graphdb.node.java_args (include "resolveNodeValue" (dict "nodes" $.Values.graphdb.node.nodes "value_name" "java_args" "node_index" $node_index )) }}
 {{ end }}

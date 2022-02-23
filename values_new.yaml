@@ -34,7 +34,7 @@ images:
     tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.0.0"
+    tag: "10.0-ultra-shano"
   busybox:
     repository: busybox
     tag: "1.31"
@@ -153,7 +153,7 @@ graphdb:
   node:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
-    repositoryConfigmap: graphdb-node-repo-default-configmap
+    repositoryConfigmap: graphdb-repo-default-configmap
     # -- Reference to a secret containing 'graphdb.license' file to be used by worker nodes.
     # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
     # Important: Must be created beforehand

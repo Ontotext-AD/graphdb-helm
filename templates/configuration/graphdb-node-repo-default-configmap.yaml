@@ -8,8 +8,4 @@ metadata:
     name: graphdb-repo-default-configmap
 data:
   config.ttl: |-
-{{ if ne .Values.graphdb.topology "standalone" }}
-{{ tpl (.Files.Get "files/config/master.default.ttl" | indent 4) . }}
-{{ else }}
 {{ tpl (.Files.Get "files/config/graphdb-repo.default.ttl" | indent 4) . }}
-{{ end }}

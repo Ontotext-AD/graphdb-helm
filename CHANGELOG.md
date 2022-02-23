@@ -1,4 +1,8 @@
 # GraphDB Helm chart release notes
+## Version 10.0
+<!-- 
+TODO: A lot 
+-->
 
 ## Version 9.9.0
 

@@ -1,4 +1,4 @@
-{{/*
+{{/*TODO: GUTTING REQUIRED
     A welcome screen showing useful information after installing/upgrading the chart.
 */}}
 --------------------------------------------------------------------------------------------

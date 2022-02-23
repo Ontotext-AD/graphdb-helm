@@ -1,3 +1,4 @@
+#TODO: MAJOR GUTTING REQUIRED
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
 {{- if ne (lower .Values.graphdb.topology) "standalone" }}

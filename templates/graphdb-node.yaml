@@ -1,3 +1,4 @@
+#TODO: More gutting and editing required
 # Loop over the replica count
 {{ range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int ) 1 }}
 

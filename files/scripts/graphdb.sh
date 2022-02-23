@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+#TODO: heavy rework required
 set -eu
 
 function waitService {

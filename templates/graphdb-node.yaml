@@ -1,41 +1,39 @@
 # Loop over the replica count
-{{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
+{{ range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int ) 1 }}
 
-{{ $worker_endpoint := printf "http://graphdb-master-%d:7200" $master_index }}
-{{- $authToken := ((printf "%s:%s" $.Values.graphdb.security.provisioningUsername $.Values.graphdb.security.provisioningPassword) | b64enc) }}
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
 
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
 metadata:
-  name: graphdb-master-{{ $master_index }}
+  name: graphdb-node-{{ $node_index }}
   labels:
-    app: graphdb-master-{{ $master_index }}
+    app: graphdb-node-{{ $node_index }}
 spec:
   replicas: 1
-  serviceName: graphdb-master-{{ $master_index }}
+  serviceName: graphdb-node-{{ $node_index }}
   updateStrategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: graphdb-master-{{ $master_index }}
-  {{- if or (or (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index))) (and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1)) }}
+      app: graphdb-node-{{ $node_index }}
+  {{- if or (or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $node_index))) (and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1)) }}
   volumeClaimTemplates:
   {{- end }}
-    {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+    {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
     - metadata:
-        name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+        name: graphdb-master-{{ $node_index }}-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.masters.persistence.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
-    {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+    {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $node_index)) }}
     - metadata:
         name: graphdb-backup-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
-    {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
+    {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1) }}
     - metadata:
         name: graphdb-server-import-dir
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
@@ -44,19 +42,19 @@ spec:
   template:
     metadata:
       labels:
-        app: graphdb-master-{{ $master_index }}
+        app: graphdb-master-{{ $node_index }}
     spec:
       terminationGracePeriodSeconds: 60
       volumes:
-        {{- if ne (default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $master_index))) "" }}
+        {{- if ne (default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $node_index))) "" }}
         - name: graphdb-master-license
           secret:
-            secretName: {{ default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $master_index)) }}
+            secretName: {{ default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $node_index)) }}
         {{- end }}
         {{- if not (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") }}
         - name: graphdb-master-storage
           persistentVolumeClaim:
-            claimName: graphdb-master-{{ $master_index }}-data-pvc
+            claimName: graphdb-master-{{ $node_index }}-data-pvc
         {{- end }}
         - name: graphdb-master-repo-config
           configMap:
@@ -89,35 +87,35 @@ spec:
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
-        {{- default "{}" (default ($.Values.graphdb.masters.nodeSelector | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "nodeSelector" "master_index" $master_index))) | nindent 8  }}
+        {{- default "{}" (default ($.Values.graphdb.masters.nodeSelector | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "nodeSelector" "master_index" $node_index))) | nindent 8  }}
       affinity:
-        {{- default "{}" (default ($.Values.graphdb.masters.affinity | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "affinity" "master_index" $master_index))) | nindent 8  }}
+        {{- default "{}" (default ($.Values.graphdb.masters.affinity | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "affinity" "master_index" $node_index))) | nindent 8  }}
       tolerations:
-        {{- default "{}" (default ($.Values.graphdb.masters.tolerations | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "tolerations" "master_index" $master_index))) | nindent 8  }}
+        {{- default "{}" (default ($.Values.graphdb.masters.tolerations | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "tolerations" "master_index" $node_index))) | nindent 8  }}
       topologySpreadConstraints:
-        {{- default "{}" (default ($.Values.graphdb.masters.topologySpreadConstraints | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "topologySpreadConstraints" "master_index" $master_index))) | nindent 8  }}
+        {{- default "{}" (default ($.Values.graphdb.masters.topologySpreadConstraints | toYaml) (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "topologySpreadConstraints" "master_index" $node_index))) | nindent 8  }}
       containers:
-        - name: graphdb-master-{{ $master_index }}
+        - name: graphdb-master-{{ $node_index }}
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
-            - name: graphdb-m-{{ $master_index }}
+            - name: graphdb-m-{{ $node_index }}
               containerPort: 7200
           envFrom:
             - configMapRef:
-                name: graphdb-master-{{ $master_index }}-configmap
+                name: graphdb-master-{{ $node_index }}-configmap
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-master-{{ $node_index }}-data-dynamic-pvc
             {{- else }}
             - name: graphdb-master-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-            {{- if and (eq ($master_index | int64) 1) (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+            {{- if and (eq ($node_index | int64) 1) (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $node_index)) }}
             - name: graphdb-backup-pvc
               mountPath: /opt/graphdb/backups
             {{- end }}
-            {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $master_index 1) }}
+            {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1) }}
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
@@ -126,33 +124,33 @@ spec:
           startupProbe:
             httpGet:
               path: /protocol
-              port: graphdb-m-{{ $master_index }}
+              port: graphdb-m-{{ $node_index }}
             failureThreshold: 30
             timeoutSeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /protocol
-              port: graphdb-m-{{ $master_index }}
+              port: graphdb-m-{{ $node_index }}
             initialDelaySeconds: 5
             timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /protocol
-              port: graphdb-m-{{ $master_index }}
+              port: graphdb-m-{{ $node_index }}
             initialDelaySeconds: 60
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
-        {{- if ne (default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $master_index))) "" }}
+        {{- if ne (default $.Values.graphdb.masters.license (include "resolveMasterValue" (dict "nodes" $.Values.graphdb.masters.nodes "value_name" "license" "master_index" $node_index))) "" }}
         # LICENSE PROVISION
         - name: provision-license
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-master-{{ $node_index }}-data-dynamic-pvc
             {{- else }}
             - name: graphdb-master-storage
             {{- end }}
@@ -162,13 +160,13 @@ spec:
           command: ['sh', '-c']
           args:
             - |
-                mkdir -p /opt/graphdb/home/conf/
-                cd /opt/graphdb/home/conf/
-                [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
+              mkdir -p /opt/graphdb/home/conf/
+              cd /opt/graphdb/home/conf/
+              [ -f graphdb.license ] && echo "License present, exiting..." && exit 0
 
-                echo 'Provisioning GraphDB master {{ $master_index }} license'
-                cp /tmp/license/*.license ./graphdb.license
-                echo 'Done'
+              echo 'Provisioning GraphDB master {{ $node_index }} license'
+              cp /tmp/license/*.license ./graphdb.license
+              echo 'Done'
         {{- end }}
         # REPO PROVISION
         - name: provision-repository
@@ -176,7 +174,7 @@ spec:
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-master-{{ $node_index }}-data-dynamic-pvc
             {{- else }}
             - name: graphdb-master-storage
             {{- end }}
@@ -207,7 +205,7 @@ spec:
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-master-{{ $node_index }}-data-dynamic-pvc
             {{- else }}
             - name: graphdb-master-storage
             {{- end }}
@@ -263,7 +261,7 @@ spec:
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
-        {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $master_index)) }}
+        {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "master_index" $node_index)) }}
         - name: restore-standalone
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
@@ -287,8 +285,8 @@ spec:
                 echo "Nothing to restore."
               fi
         {{- end }}
-        # LOADRDF TOOL
-          {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+          # LOADRDF TOOL
+          {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         - name: loadrdf-tool
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
@@ -301,12 +299,12 @@ spec:
               memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
                   {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-worker-{{ $node_index }}-data-dynamic-pvc
                   {{- else }}
             - name: graphdb-worker-storage
                     {{- end }}
               mountPath: /opt/graphdb/home
-                    {{- if and (eq $master_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
+                    {{- if and (eq $node_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
                   {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-worker-preload-dynamic-pvc
                   {{- else }}
@@ -322,7 +320,7 @@ spec:
               /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
               echo "preload with loadrdf tool is done"
           {{- end }}
-          {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+          {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         # PRELOAD TOOL
         - name: preload-tool
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
@@ -336,7 +334,7 @@ spec:
               memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
                   {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-worker-{{ $node_index }}-data-dynamic-pvc
                   {{- else }}
             - name: graphdb-worker-storage
                     {{- end }}
@@ -355,7 +353,7 @@ spec:
               echo "preload with preload tool is done"
         {{- end }}
         # STORAGE TOOL
-        {{- if and (and (eq $master_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         - name: storage-tool
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
@@ -368,7 +366,7 @@ spec:
               memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
                   {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-{{ $master_index }}-data-dynamic-pvc
+            - name: graphdb-worker-{{ $node_index }}-data-dynamic-pvc
                   {{- else }}
             - name: graphdb-worker-storage
                     {{- end }}
@@ -394,14 +392,14 @@ spec:
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
 metadata:
-  name: graphdb-master-{{ $master_index }}
+  name: graphdb-master-{{ $node_index }}
   labels:
-    app: graphdb-master-{{ $master_index }}
+    app: graphdb-master-{{ $node_index }}
 spec:
   selector:
-    app: graphdb-master-{{ $master_index }}
+    app: graphdb-master-{{ $node_index }}
   ports:
-    - name: graphdb-master-{{ $master_index }}
+    - name: graphdb-master-{{ $node_index }}
       port: 7200
       targetPort: 7200
       protocol: TCP

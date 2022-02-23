@@ -7,11 +7,3 @@ metadata:
 data:
   graphdb.sh: |-
 {{ tpl (.Files.Get "files/scripts/graphdb.sh" | indent 4) . }}
-  backup.sh: |-
-{{ tpl (.Files.Get "files/scripts/backup.sh" | indent 4) . }}
-  deleteBackup.sh: |-
-{{ tpl (.Files.Get "files/scripts/deleteBackup.sh" | indent 4) . }}
-  runManualBackup.sh: |-
-{{ tpl (.Files.Get "files/scripts/runManualBackup.sh" | indent 4) . }}
-  runRestoreBackup.sh: |-
-{{ tpl (.Files.Get "files/scripts/runRestoreBackup.sh" | indent 4) . }}

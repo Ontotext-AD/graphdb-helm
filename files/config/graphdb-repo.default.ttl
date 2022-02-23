@@ -10,7 +10,7 @@
 
 [] a rep:Repository ;
     rep:repositoryID "default" ;
-    rdfs:label "GraphDB worker for default" ;
+    rdfs:label "GraphDB default repository" ;
     rep:repositoryImpl [
         rep:repositoryType "graphdb:SailRepository" ;
         sr:sailImpl [

@@ -1,6 +1,7 @@
 #TODO: MAJOR GUTTING REQUIRED
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
+{{- if false }}
 {{- if ne (lower .Values.graphdb.topology) "standalone" }}
 apiVersion: batch/v1
 kind: Job
@@ -126,4 +127,5 @@ spec:
           configMap:
             name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.masters.repositoryConfigmap }}
   backoffLimit: 4
+{{- end }}
 {{- end }}

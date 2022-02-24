@@ -124,25 +124,9 @@ graphdb:
   # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
   # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
   # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
-  topology: "1m_3w"
+  topology: "standalone"
   clusterConfig:
-    # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
-    masterWorkerMapping:
-      - master-1 -> worker-1
-      - master-1 -> worker-2
-      - master-2 -> worker-3
-    # -- Describes which masters will be set as read only. Required only for 2m3w_rw_ro topology.
-    readOnlyMasters:
-      - master-2
-    # -- Describes which masters will be set as muted. Required only for 2m3w_muted topology.
-    mutedMasters:
-      - master-2
-    # -- Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology.
-    syncPeersMapping:
-      - master-1 <-> master-2
-    workersCount: 3
-    mastersCount: 1
-    # -- A secret used for secure communication amongst the nodes in the cluster.
+    nodesCount: 3
     clusterSecret: s3cr37
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, logback.xml and jolokia-access.xml files to overwrite
@@ -161,60 +145,15 @@ graphdb:
 
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the healthchecks and cluster linking can work properly
-    enabled: true
+    enabled: false
     provisioningUsername: provisioner
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
-  masters:
+  node:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
     repositoryConfigmap: graphdb-repo-default-configmap
-    # -- Reference to a secret containing 'graphdb.license' file to be used by master nodes.
-    # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
-    # Can be set to "" if you want to use this instance only with master repositories, which does not require a license!
-    # Important: Must be created beforehand
-    license: graphdb-license
-    # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
-    # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction
-    # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
-#    nodes:
-#      - name: master-1
-#        java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-#        license: graphdb-license
-    # -- Below are minimum requirements for data sets of up to 50 million RDF triples
-    # For resizing, refer according to your GraphDB version documentation
-    # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
-    resources:
-      limits:
-        memory: 2Gi
-      requests:
-        memory: 2Gi
-    # -- Persistence configurations.
-    # By default, Helm will use a PV that reads and writes to the host file system.
-    persistence:
-      # -- Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
-      # Example result: graphdb-default-master-1-pv
-#      volumeNamePrefix: graphdb-default-master
-#      storageClassName: standard
-#      # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
-#      storage: 10G
-      # use dynamic volume provisioning
-       volumeClaimTemplateSpec:
-         accessModes:
-           - "ReadWriteOnce"
-         resources:
-           requests:
-             storage: "5Gi"
-    # additional JMX attributes to be set after the cluster is initialized
-    additionalJmxArrtibutes: {}
-  workers:
-    # -- Reference to a configuration map containing one or more .ttl files used for repository
-    # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
-    repositoryConfigmap: graphdb-worker-repo-default-configmap
     # -- Reference to a secret containing 'graphdb.license' file to be used by worker nodes.
     # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
     # Important: Must be created beforehand
@@ -242,12 +181,12 @@ graphdb:
 #      # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
 #      storage: 10G
       # use dynamic volume provisioning
-       volumeClaimTemplateSpec:
-         accessModes:
-           - "ReadWriteOnce"
-         resources:
-           requests:
-             storage: "5Gi"
+      volumeClaimTemplateSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to your GraphDB version documentation
     # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
@@ -271,54 +210,11 @@ graphdb:
   import_directory_mount:
     enabled: false
     volumeClaimTemplateSpec:
-     accessModes:
-       - "ReadWriteOnce"
-     resources:
-       requests:
-         storage: "10Gi"
-
-  backupRestore:
-    # -- Enable auto/manual backups.
-    enable_backups: false
-    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the graphdb-backup-pv
-    # (default folder - /data/graphdb-backups).
-    # The backups are saved in format MM-DD-YYYY-hh-mm in UTC!
-    auto_backup: "0 0 23 ? * MON *"
-    repositories:
-      - default
-    # -- Enables cleanup of the backups directory.
-    # WARNING!!! This can be used only by storage classes that have access mode ReadWriteMany because the backups PVC must be attached to a second pod.
-    enable_automatic_backups_cleanup: false
-    # -- Cleans up the backups directory.
-    # Makes sure that there is a limit of the stored backups.
-    # Each or both of backups_count and backups_max_age could be used.
-    cleanup_cron: "*/2 * * * *"
-    # -- Max number of backup dirs saved.
-    backups_count: "2"
-    # -- Max number of days for backups.
-    backup_max_age: "2"
-    # -- A future date at which we want to trigger a backup. Must be given in format YYYY-DD-MM hh:mm
-    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
-    trigger_backup: ""
-
-    # -- Trigger restore at a given time from a given file.
-    enable_restore: false
-    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
-    # For a standalone the restore is called from an init container. Must be given in format YYYY-DD-MM hh:mm
-    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
-    trigger_restore: "2021-06-24 13:28"
-    # -- The name of the backup directory we want to restore.
-    # Must be given in format YYYY-DD-MM-hh-mm, where YYYY-DD-MM-hh-mm is your backup directory. The backup directory name contains the repository name too, but it must be omitted here.
-    restore_from_backup: "2021-06-24-12-59"
-    # -- The name of the repository we want to restore.
-    restore_repository: default
-    persistence:
-     volumeClaimTemplateSpec:
-       accessModes:
-         - "ReadWriteOnce"
-       resources:
-         requests:
-           storage: "10Gi"
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "10Gi"
 
   # -- Tools for loading, scanning and repairing data in repos
   tools:

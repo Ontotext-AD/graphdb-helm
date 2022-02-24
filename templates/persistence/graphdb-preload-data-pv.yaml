@@ -14,13 +14,13 @@ metadata:
     name: {{ $.Release.Namespace }}-graphdb-preload-data-pv
 spec:
   claimRef:
-    name: graphdb-worker-preload-data-pvc
+    name: graphdb-node-preload-data-pvc
     namespace: {{ $.Release.Namespace }}
   storageClassName: {{ $.Values.graphdb.tools.persistence.storageClassName | default $.Values.global.storageClass }}
   accessModes:
     - ReadWriteOnce
   capacity:
-    storage: {{ $.Values.graphdb.workers.persistence.storage }}
+    storage: {{ $.Values.graphdb.node.persistence.storage }}
   hostPath:
     path: {{ $.Values.deployment.storage }}/graphdb-worker-preload-data
 {{- end }}

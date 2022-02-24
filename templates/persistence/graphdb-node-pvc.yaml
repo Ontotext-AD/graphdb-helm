@@ -1,25 +1,25 @@
-{{- if not (hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec") }}
-{{- range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
+{{- if not (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") }}
+{{- range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int ) 1 }}
 ---
 apiVersion: {{ $.Values.versions.pvc }}
 kind: PersistentVolumeClaim
 metadata:
-  name: graphdb-master-{{ $master_index }}-data-pvc
+  name: graphdb-node-{{ $node_index }}-data-pvc
   labels:
-    name: graphdb-master-{{ $master_index }}-data-pvc
+    name: graphdb-node-{{ $node_index }}-data-pvc
 spec:
-  {{- if $.Values.graphdb.masters.persistence.volumeNamePrefix }}
-    {{- if eq $.Values.graphdb.masters.persistence.volumeNamePrefix "graphdb-default-master" }}
-  volumeName:  {{ $.Release.Namespace }}-{{ $.Values.graphdb.masters.persistence.volumeNamePrefix }}-{{$master_index}}-pv
+  {{- if $.Values.graphdb.node.persistence.volumeNamePrefix }}
+    {{- if eq $.Values.graphdb.node.persistence.volumeNamePrefix "graphdb-default-node" }}
+  volumeName:  {{ $.Release.Namespace }}-{{ $.Values.graphdb.node.persistence.volumeNamePrefix }}-{{$node_index}}-pv
     {{- else }}
-  volumeName:  {{ $.Values.graphdb.masters.persistence.volumeNamePrefix }}-{{$master_index}}-pv
+  volumeName:  {{ $.Values.graphdb.node.persistence.volumeNamePrefix }}-{{$node_index}}-pv
     {{- end }}
   {{- end }}
-  storageClassName: {{ $.Values.graphdb.masters.persistence.storageClassName | default $.Values.global.storageClass }}
+  storageClassName: {{ $.Values.graphdb.node.persistence.storageClassName | default $.Values.global.storageClass }}
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ $.Values.graphdb.masters.persistence.storage }}
+      storage: {{ $.Values.graphdb.node.persistence.storage }}
 {{- end }}
 {{- end }}

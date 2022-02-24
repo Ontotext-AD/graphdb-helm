@@ -19,19 +19,13 @@ spec:
   selector:
     matchLabels:
       app: graphdb-node-{{ $node_index }}
-  {{- if or (or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "node_index" $node_index))) (and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1)) }}
+  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") (and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1)) }}
   volumeClaimTemplates:
   {{- end }}
     {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
     - metadata:
         name: graphdb-node-{{ $node_index }}-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
-    {{- end }}
-    {{- if (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "node_index" $node_index)) }}
-    - metadata:
-        name: graphdb-backup-pvc
-      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.backupRestore.persistence.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1) }}
@@ -112,10 +106,6 @@ spec:
             - name: graphdb-node-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-            {{- if and (eq ($node_index | int64) 1) (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "node_index" $node_index)) }}
-            - name: graphdb-backup-pvc
-              mountPath: /opt/graphdb/backups
-            {{- end }}
             {{- if and $.Values.graphdb.import_directory_mount.enabled (eq $node_index 1) }}
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
@@ -262,30 +252,6 @@ spec:
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
-        {{- if and (eq $.Values.graphdb.topology "standalone") (include "shouldRenderBackupVolumeClaimTemplate" (dict "backupRestore" $.Values.graphdb.backupRestore "node_index" $node_index)) }}
-        - name: restore-standalone
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          volumeMounts:
-            - name: graphdb-node-storage
-              mountPath: /opt/graphdb/
-            - name: graphdb-backup-pvc
-              mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/
-          command: ['sh', '-c']
-          args:
-            - |
-              {{ $repo := $.Values.graphdb.backupRestore.restore_repository -}}
-              mkdir -p /opt/graphdb/home/data/repositories/{{ $repo }} ;
-              cd /opt/graphdb/home/data/repositories/ ;
-              echo "Backup to restore: {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $repo }}-{{ $.Values.graphdb.backupRestore.restore_from_backup }}/"
-              if [ -d {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $repo }}-{{ $.Values.graphdb.backupRestore.restore_from_backup }}/ ]; then
-                rm -rf {{ $repo }}
-                unzip {{ $.Values.deployment.storage }}/graphdb-backups/backup/{{ $repo }}-{{ $.Values.graphdb.backupRestore.restore_from_backup }}/*
-                echo "Successfully restored!"
-              else
-                echo "Nothing to restore."
-              fi
-        {{- end }}
           # LOADRDF TOOL
           {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
         - name: loadrdf-tool

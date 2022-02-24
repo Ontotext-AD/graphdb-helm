@@ -1,8 +1,8 @@
-# Default configuration map for provisioning GraphDB properties.
-# To change it, prepare another configuration map and update "graphdb.configs.propertiesConfigMap"
 {{- $configs := (.Values.graphdb.configs | default dict) }}
 {{- if $configs.propertiesConfigMap}}
 {{- if eq $configs.propertiesConfigMap "graphdb-properties-configmap" }}
+# Default configuration map for provisioning GraphDB properties.
+# To change it, prepare another configuration map and update "graphdb.configs.propertiesConfigMap"
 apiVersion: {{ .Values.versions.configmap }}
 kind: ConfigMap
 metadata:

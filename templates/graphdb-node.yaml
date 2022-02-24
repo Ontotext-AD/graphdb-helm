@@ -100,7 +100,7 @@ spec:
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
-            - name: graphdb-m-{{ $node_index }}
+            - name: graphdb-n-{{ $node_index }}
               containerPort: 7200
           envFrom:
             - configMapRef:
@@ -125,21 +125,21 @@ spec:
           startupProbe:
             httpGet:
               path: /protocol
-              port: graphdb-m-{{ $node_index }}
+              port: graphdb-n-{{ $node_index }}
             failureThreshold: 30
             timeoutSeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /protocol
-              port: graphdb-m-{{ $node_index }}
+              port: graphdb-n-{{ $node_index }}
             initialDelaySeconds: 5
             timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /protocol
-              port: graphdb-m-{{ $node_index }}
+              port: graphdb-n-{{ $node_index }}
             initialDelaySeconds: 60
             timeoutSeconds: 5
             periodSeconds: 10

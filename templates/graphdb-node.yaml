@@ -96,6 +96,8 @@ spec:
           ports:
             - name: graphdb-n-{{ $node_index }}
               containerPort: 7200
+            - name: graphdb-rpc-n-{{ $node_index }}
+              containerPort: 7210
           envFrom:
             - configMapRef:
                 name: graphdb-node-{{ $node_index }}-configmap
@@ -253,7 +255,7 @@ spec:
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
           # LOADRDF TOOL
-          {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+          {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.clusterConfig.nodesCount 1.0) }}
         - name: loadrdf-tool
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
@@ -287,7 +289,7 @@ spec:
               /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
               echo "preload with loadrdf tool is done"
           {{- end }}
-          {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+          {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.clusterConfig.nodesCount 1.0) }}
         # PRELOAD TOOL
         - name: preload-tool
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
@@ -320,7 +322,7 @@ spec:
               echo "preload with preload tool is done"
         {{- end }}
         # STORAGE TOOL
-        {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.topology "standalone") }}
+        {{- if and (and (eq $node_index 1) $.Values.graphdb.tools.loadrdf.trigger) (eq $.Values.graphdb.clusterConfig.nodesCount 1.0) }}
         - name: storage-tool
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
@@ -370,4 +372,22 @@ spec:
       port: 7200
       targetPort: 7200
       protocol: TCP
+
+{{- if ne $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-node-{{ $node_index }}-rpc
+  labels:
+    app: graphdb-node-{{ $node_index }}
+spec:
+  selector:
+    app: graphdb-node-{{ $node_index }}
+  ports:
+    - name: graphdb-node-{{ $node_index }}-rpc
+      port: 7210
+      targetPort: 7210
+      protocol: TCP
+{{ end }}
 {{ end }}

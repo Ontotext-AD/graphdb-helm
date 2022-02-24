@@ -1,4 +1,4 @@
-{{/*TODO: GUTTING REQUIRED
+{{/*
     A welcome screen showing useful information after installing/upgrading the chart.
 */}}
 --------------------------------------------------------------------------------------------
@@ -10,7 +10,7 @@
                  |_|
 --------------------------------------------------------------------------------------------
 version: {{ .Chart.AppVersion }}
-GDB cluster: {{ ne .Values.graphdb.topology "standalone" }}
+GDB cluster: {{ ne .Values.graphdb.clusterConfig.nodesCount 1.0 }}
 
 ** Please be patient while the chart is being deployed and services are available **
 You can check their status with kubectl get pods

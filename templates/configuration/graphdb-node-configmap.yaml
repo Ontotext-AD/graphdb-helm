@@ -19,7 +19,7 @@ data:
     -Dgraphdb.home.conf=/opt/graphdb/home/conf
     -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
     {{ if eq ($node_index | int64) 1 }}-Dgraphdb.backup.base.folder=/opt/graphdb/backups{{ end }}
-{{- if ne $.Values.graphdb.topology "standalone" }}
+{{- if ne $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
 {{- end }}
     {{ default $.Values.graphdb.node.java_args (include "resolveNodeValue" (dict "nodes" $.Values.graphdb.node.nodes "value_name" "java_args" "node_index" $node_index )) }}

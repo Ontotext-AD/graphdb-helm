@@ -15,7 +15,9 @@ Resolves specific node value
     {{- end }}
   {{- end }}
 {{- end }}
-
+{{/*
+Doesn't seem to be in use, delete?
+*/}}
 {{- define "shouldRenderToolsVolumeClaimTemplate" -}}
   {{- if or .tools.preload.trigger .tools.loadrdf.trigger }}
     {{- if and .tools.persistence.volumeClaimTemplateSpec (eq .master_index 1)}}

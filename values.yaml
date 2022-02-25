@@ -119,7 +119,7 @@ kong:
 # GraphDB database configurations
 graphdb:
   clusterConfig:
-    nodesCount: 1
+    nodesCount: 3
     clusterSecret: s3cr37
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, logback.xml and jolokia-access.xml files to overwrite
@@ -210,6 +210,7 @@ graphdb:
           storage: "10Gi"
 
   # -- Tools for loading, scanning and repairing data in repos
+  # TODO: UPDATE THIS WHEN THE REDESIGN OF ImportRDF and Storage are final
   tools:
     resources:
       limits:

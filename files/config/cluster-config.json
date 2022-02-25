@@ -1,0 +1,8 @@
+{
+  "electionMinTimeout": 500,
+  "electionRangeTimeout": 2000,
+  "heartbeatInterval": 500,
+  "messageSize": 64,
+  "verificationMs": 1500,
+  "nodes": []
+}

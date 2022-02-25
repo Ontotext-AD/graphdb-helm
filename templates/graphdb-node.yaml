@@ -96,8 +96,10 @@ spec:
           ports:
             - name: graphdb-n-{{ $node_index }}
               containerPort: 7200
-            - name: graphdb-rpc-n-{{ $node_index }}
-              containerPort: 7210
+              {{- if ne $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
+            - name: graphdb-n-{{ $node_index }}-rpc
+              containerPort: 7300
+              {{ end }}
           envFrom:
             - configMapRef:
                 name: graphdb-node-{{ $node_index }}-configmap
@@ -264,20 +266,20 @@ spec:
               cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
               memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
             requests:
-              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
-              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+              cpu: {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
-                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-{{ $node_index }}-data-dynamic-pvc
+                  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-node-{{ $node_index }}-data-dynamic-pvc
                   {{- else }}
-            - name: graphdb-worker-storage
+            - name: graphdb-node-storage
                     {{- end }}
               mountPath: /opt/graphdb/home
                     {{- if and (eq $node_index 1) (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
                   {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-preload-dynamic-pvc
+            - name: graphdb-node-preload-dynamic-pvc
                   {{- else }}
-            - name: graphdb-worker-preload-data
+            - name: graphdb-node-preload-data
                     {{- end }}
               mountPath: /tmp/graphdb/
                 {{- end }}
@@ -299,19 +301,19 @@ spec:
               cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
               memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
             requests:
-              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
-              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+              cpu: {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
-                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-{{ $node_index }}-data-dynamic-pvc
+                  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-node-{{ $node_index }}-data-dynamic-pvc
                   {{- else }}
-            - name: graphdb-worker-storage
+            - name: graphdb-node-storage
                     {{- end }}
               mountPath: /opt/graphdb/home
                   {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-preload-dynamic-pvc
+            - name: graphdb-node-preload-dynamic-pvc
                   {{- else }}
-            - name: graphdb-worker-preload-data
+            - name: graphdb-node-preload-data
                 {{- end }}
           command: ['sh', '-c']
           args:
@@ -331,13 +333,13 @@ spec:
               cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
               memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
             requests:
-              cpu:  {{ $.Values.graphdb.tools.resources.requests.cpu }}
-              memory:  {{ $.Values.graphdb.tools.resources.requests.memory }}
+              cpu: {{ $.Values.graphdb.tools.resources.requests.cpu }}
+              memory: {{ $.Values.graphdb.tools.resources.requests.memory }}
           volumeMounts:
-                  {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-worker-{{ $node_index }}-data-dynamic-pvc
+                  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-node-{{ $node_index }}-data-dynamic-pvc
                   {{- else }}
-            - name: graphdb-worker-storage
+            - name: graphdb-node-storage
                     {{- end }}
               mountPath: /opt/graphdb/home
           command: ['sh', '-c']
@@ -386,8 +388,8 @@ spec:
     app: graphdb-node-{{ $node_index }}
   ports:
     - name: graphdb-node-{{ $node_index }}-rpc
-      port: 7210
-      targetPort: 7210
+      port: 7300
+      targetPort: 7300
       protocol: TCP
 {{ end }}
 {{ end }}

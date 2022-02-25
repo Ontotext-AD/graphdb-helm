@@ -2,6 +2,13 @@
 #TODO: heavy rework required
 set -eu
 
+function connectNodesInCluster {
+  local node_count=$1
+  for i in 1 .. node_count
+  do
+
+}
+
 function waitService {
   local address=$1
   local token=$2

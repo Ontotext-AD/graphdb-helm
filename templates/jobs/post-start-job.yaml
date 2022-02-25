@@ -1,8 +1,7 @@
+{{- if ne .Values.graphdb.clusterConfig.nodesCount 1.0 }}
 #TODO: MAJOR GUTTING REQUIRED
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
-{{- if false }}
-{{- if ne (lower .Values.graphdb.topology) "standalone" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -17,7 +16,7 @@ spec:
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
-        - name: link-graphdb-cluster
+        - name: create-graphdb-cluster
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           securityContext:
             allowPrivilegeEscalation: false
@@ -25,71 +24,19 @@ spec:
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
-            - name: graphdb-master-repo-config
-              mountPath: /tmp/master-repos
+            - name: graphdb-node-repo-config
+              mountPath: /tmp/node-repos
+            - name: cluster-config
+              mountPath: /tmp/cluster-config
           command: ['sh','-c']
-          {{- if eq (lower .Values.graphdb.topology) "1m_3w" }}
           args:
             - |
+              cp /tmp/cluster-config/cluster-config.json /usr/local/bin/cluster-config.json
               for filename in /tmp/master-repos/*.ttl; do
                 repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
-                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh link_1m_3w {{ .Values.graphdb.clusterConfig.mastersCount }} "$repositoryName" {{ .Values.graphdb.clusterConfig.workersCount }} "$repositoryName" "{{ $authToken }}" >> /proc/1/fd/1
+                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh makeCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "$repositoryName" "{{ $authToken }}" >> /proc/1/fd/1
               done
-          {{- else if eq (lower .Values.graphdb.topology) "2m3w_rw_ro" }}
-          args:
-            - |
-              for filename in /tmp/master-repos/*.ttl; do
-                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
-                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ;
-                /usr/local/bin/graphdb.sh waitAllInstances {{ .Values.graphdb.clusterConfig.mastersCount }} "$repositoryName" {{ .Values.graphdb.clusterConfig.workersCount }} "$repositoryName" "{{ $authToken }}";
-
-                {{- range .Values.graphdb.clusterConfig.readOnlyMasters }}
-                  /usr/local/bin/graphdb.sh setInstanceReadOnly graphdb-{{ . }} "$repositoryName" "{{ $authToken }}";
-                {{- end }}
-
-                {{ range $i, $master_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.mastersCount | int ) 1 }}
-                  {{ range $j, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
-                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-master-{{ $master_index }} "$repositoryName" graphdb-worker-{{ $worker_index }} "$repositoryName" "{{ $authToken }}";
-                  {{- end }}
-                {{- end }}
-
-                {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}
-                  {{- $split := split "<->" . }}
-                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._0 }} "$repositoryName" graphdb-{{ trim $split._1 }} "$repositoryName" "{{ $authToken }}";
-                  /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._1 }} "$repositoryName" graphdb-{{ trim $split._0 }} "$repositoryName" "{{ $authToken }}";
-                {{- end }}
-                >> /proc/1/fd/1
-              done
-            {{- else if eq (lower .Values.graphdb.topology) "2m3w_muted" }}
-          args:
-            - |
-              for filename in /tmp/master-repos/*.ttl; do
-                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
-                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ;
-                /usr/local/bin/graphdb.sh waitAllInstances {{ .Values.graphdb.clusterConfig.mastersCount }} "$repositoryName" {{ .Values.graphdb.clusterConfig.workersCount }} "$repositoryName" "{{ $authToken }}";
-
-                  {{- range .Values.graphdb.clusterConfig.masterWorkerMapping }}
-                    {{- $split := split "->" . }}
-                    /usr/local/bin/graphdb.sh linkWorkerToMaster graphdb-{{ trim $split._0 }} "$repositoryName" graphdb-{{ trim $split._1 }} "$repositoryName" "{{ $authToken }}";
-                  {{- end }}
-
-                  {{ range $j, $worker_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.workersCount | int ) 1 }}
-                  {{/* Set all workers as a remote location for  master 1 */}}
-                    /usr/local/bin/graphdb.sh addInstanceAsRemoteLocation graphdb-master-1 graphdb-worker-{{ $worker_index }} "{{ $authToken }}";
-                  {{- end }}
-
-                  {{- range .Values.graphdb.clusterConfig.mutedMasters }}
-                    /usr/local/bin/graphdb.sh setInstanceMuted graphdb-{{ . }} "$repositoryName" "{{ $authToken }}";
-                  {{- end }}
-
-                  {{- range .Values.graphdb.clusterConfig.syncPeersMapping }}
-                    {{- $split := split "<->" . }}
-                    /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._0 }} "$repositoryName" graphdb-{{ trim $split._1 }} "$repositoryName" "{{ $authToken }}";
-                    /usr/local/bin/graphdb.sh setSyncPeer graphdb-{{ trim $split._1 }} "$repositoryName" graphdb-{{ trim $split._0 }} "$repositoryName" "{{ $authToken }}";
-                  {{- end }}
-                >> /proc/1/fd/1
-              done
-        {{- end }}
+        {{- if false}}
         {{- if gt (len $.Values.graphdb.masters.additionalJmxArrtibutes) 0 }}
         - name: set-jmx-attributes
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
@@ -118,14 +65,18 @@ spec:
                 done
               done
         {{- end }}
+        {{- end }}
       restartPolicy: Never
       volumes:
+        - name: cluster-config
+          configMap:
+            name: {{ required "Config map for the cluster config is required!" $.Values.graphdb.clusterConfig.clusterConfigConfigMap }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-        - name: graphdb-master-repo-config
+        - name: graphdb-node-repo-config
           configMap:
-            name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.masters.repositoryConfigmap }}
+            name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.node.repositoryConfigmap }}
   backoffLimit: 4
 {{- end }}
-{{- end }}
+

@@ -121,6 +121,8 @@ graphdb:
   clusterConfig:
     nodesCount: 3
     clusterSecret: s3cr37
+    # Set cluster config
+    clusterConfigConfigMap: graphdb-cluster-config-configmap
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, logback.xml and jolokia-access.xml files to overwrite
   # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html

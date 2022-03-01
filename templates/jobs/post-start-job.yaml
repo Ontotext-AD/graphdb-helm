@@ -1,11 +1,11 @@
 {{- if ne .Values.graphdb.clusterConfig.nodesCount 1.0 }}
-#TODO: MAJOR GUTTING REQUIRED
+#TODO: More work required, tasks for update cluster and delete cluster too
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: link-graphdb-cluster-job
+  name: create-graphdb-cluster-job
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
@@ -24,18 +24,14 @@ spec:
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
-            - name: graphdb-node-repo-config
-              mountPath: /tmp/node-repos
             - name: cluster-config
               mountPath: /tmp/cluster-config
           command: ['sh','-c']
           args:
             - |
               cp /tmp/cluster-config/cluster-config.json /usr/local/bin/cluster-config.json
-              for filename in /tmp/master-repos/*.ttl; do
-                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
-                cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh ; /usr/local/bin/graphdb.sh makeCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "$repositoryName" "{{ $authToken }}" >> /proc/1/fd/1
-              done
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
+              /usr/local/bin/graphdb.sh makeCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "/usr/local/bin/cluster-config.json" "{{ $authToken }}" >> /proc/1/fd/1
         {{- if false}}
         {{- if gt (len $.Values.graphdb.masters.additionalJmxArrtibutes) 0 }}
         - name: set-jmx-attributes
@@ -74,9 +70,6 @@ spec:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-        - name: graphdb-node-repo-config
-          configMap:
-            name: {{ required "Config map for config.ttl is required!" $.Values.graphdb.node.repositoryConfigmap }}
   backoffLimit: 4
 {{- end }}
 

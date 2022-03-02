@@ -4,7 +4,7 @@
 # To override single property use --set
 # To override multiple, provide another values-override.yaml with the -f flag
 # See https://helm.sh/docs/chart_template_guide/values_files/
-#
+#TODO: fix descriptions, also while at it the readme needs quite the rework
 
 global:
   imagePullSecrets: []

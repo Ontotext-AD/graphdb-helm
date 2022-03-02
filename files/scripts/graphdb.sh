@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#TODO: heavy rework required
+#TODO: Update and Delete cluster + maybe something more?
 set -eu
 
 function makeCluster {

@@ -1,4 +1,4 @@
-#TODO: More gutting and editing required
+#TODO: Change RPC port to whatever it is (prob from 7300 to 7210 if the api documentation is to be believed), check affinity and what not, tools
 # Loop over the replica count
 {{ range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int ) 1 }}
 

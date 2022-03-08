@@ -149,8 +149,7 @@ graphdb:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
     repositoryConfigmap: graphdb-repo-default-configmap
-    # -- Reference to a secret containing 'graphdb.license' file to be used by worker nodes.
-    # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
+    # -- Reference to a secret containing 'graphdb.license' file to be used ny the nodes.
     # Important: Must be created beforehand
     license: graphdb-license
     # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value

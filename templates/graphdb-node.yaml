@@ -138,6 +138,7 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
+      {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
@@ -161,6 +162,7 @@ spec:
               echo 'Provisioning GraphDB node {{ $node_index }} license'
               cp /tmp/license/*.license ./graphdb.license
               echo 'Done'
+        {{- end }}
         # REPO PROVISION
         - name: provision-repository
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}

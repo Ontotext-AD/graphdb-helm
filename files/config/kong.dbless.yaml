@@ -23,8 +23,8 @@ plugins:
       echo_downstream: true
 
 services:
-  - name: graphdb-node-1
-    url: http://graphdb-node-1:7200
+  - name: graphdb-node
+    url: http://graphdb-node:7200
     connect_timeout: {{ .Values.kong.timeout.connect }}
     read_timeout: {{ .Values.kong.timeout.read }}
     write_timeout: {{ .Values.kong.timeout.write }}
@@ -34,17 +34,3 @@ services:
         methods: ["GET", "POST", "PUT", "DELETE"]
         strip_path: true
         preserve_host: false
-
-  # {{ range $i, $node_index := untilStep 2 (add1 $.Values.graphdb.clusterConfig.nodesCount | int) 1 }}
-  - name: graphdb-node-{{ $node_index }}
-    url: http://graphdb-node-{{ $node_index }}:7200
-    connect_timeout: {{ $.Values.kong.timeout.connect }}
-    read_timeout: {{ $.Values.kong.timeout.read }}
-    write_timeout: {{ $.Values.kong.timeout.write }}
-    routes:
-      - name: graphdb-node-{{ $node_index }}
-        paths: ["/graphdb-node-{{ $node_index }}"]
-        methods: ["GET", "POST", "PUT", "DELETE"]
-        strip_path: true
-        preserve_host: false
-  # {{ end }} cluster

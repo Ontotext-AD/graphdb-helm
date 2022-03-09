@@ -3,10 +3,13 @@
 set -eu
 
 function makeCluster {
+  echo "THERE IS NO API"
+  sleep 20
+  exit 0
   waitAllNodes $1 $3
   local configLocation=$2
   echo "Creating cluster!"
-  curl -o response.json -sSL -m 30 -X POST --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" 'http://graphdb-node-1:7200/rest/cluster/config'
+  curl -o response.json -sSL -m 30 -X POST --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" 'http://graphdb-node:7200/rest/cluster/config'
      if grep -q '"status":200' "response.json"; then
         echo "Cluster creation successful!"
     else
@@ -52,7 +55,7 @@ function waitAllNodes {
 
   for (( c=1; c<=$node_count; c++ ))
   do
-    local node_address=http://graphdb-node-$c:7200
+    local node_address=http://graphdb-node:7200
     waitService "${node_address}/rest/repositories" "$token"
   done
 }

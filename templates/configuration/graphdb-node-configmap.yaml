@@ -1,26 +1,22 @@
-{{ range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int) 1 }}
----
 apiVersion: {{ $.Values.versions.configmap }}
 kind: ConfigMap
 metadata:
-  name: graphdb-node-{{ $node_index }}-configmap
+  name: graphdb-node-configmap
   labels:
-    name: graphdb-node-{{ $node_index }}-configmap
+    name: graphdb-node-configmap
 data:
   # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ if eq ($node_index | int64) 1 }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}{{ else }}{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}-node-{{ $node_index }}/{{ end }},http://graphdb-node-{{ $node_index }}:7200/
-    -Dgraphdb.external-url=http://graphdb-node-{{ $node_index }}:7200/
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }},http://graphdb-node:7200/
+    -Dgraphdb.external-url=http://graphdb-node:7200/
     -Dgraphdb.append.request.id.headers=true
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     -Dgraphdb.home.conf=/opt/graphdb/home/conf
     -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
-    {{ if eq ($node_index | int64) 1 }}-Dgraphdb.backup.base.folder=/opt/graphdb/backups{{ end }}
 {{- if ne $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
 {{- end }}
-    {{ default $.Values.graphdb.node.java_args (include "resolveNodeValue" (dict "nodes" $.Values.graphdb.node.nodes "value_name" "java_args" "node_index" $node_index )) }}
-{{ end }}
+    {{ default $.Values.graphdb.node.java_args}}

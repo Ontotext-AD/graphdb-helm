@@ -34,7 +34,7 @@ images:
     tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.0-ultra-shano"
+    tag: "10.0-Tomas-branch"
   busybox:
     repository: busybox
     tag: "1.31"

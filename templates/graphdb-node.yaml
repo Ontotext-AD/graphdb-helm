@@ -407,3 +407,19 @@ spec:
   selector:
     app: graphdb-node
 {{ end }}
+{{- if ne $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-wb-headless
+  labels:
+    app: graphdb-node
+spec:
+  ports:
+    - name: graphdb
+      port: 7200
+  clusterIP: None
+  selector:
+    app: graphdb-node
+{{ end }}

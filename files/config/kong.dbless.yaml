@@ -37,7 +37,7 @@ services:
   {{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
   {{- range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int ) 1 }}
   - name: graphdb-node-{{ $node_index }}
-    url: http://graphdb-node-{{ $node_index }}.graphdb-node:7200
+    url: http://graphdb-node-{{ sub $node_index 1 }}.graphdb-node:7200
     connect_timeout: {{ $.Values.kong.timeout.connect }}
     read_timeout: {{ $.Values.kong.timeout.read }}
     write_timeout: {{ $.Values.kong.timeout.write }}

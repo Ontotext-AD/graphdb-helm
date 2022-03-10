@@ -77,11 +77,6 @@ spec:
           configMap:
             name: {{ $configs.logbackConfigMap }}
         {{- end }}
-        {{- if $configs.jolokiaAccessConfigMap }}
-        - name: graphdb-jolokia-access-config
-          configMap:
-            name: {{ $configs.jolokiaAccessConfigMap }}
-        {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -237,10 +232,6 @@ spec:
             - name: graphdb-logback-config
               mountPath: /tmp/graphdb-logback-configmap
             {{- end }}
-            {{- if $configs.jolokiaAccessConfigMap }}
-            - name: graphdb-jolokia-access-config
-              mountPath: /tmp/graphdb-jolokia-access-configmap
-            {{- end }}
           command: ['sh', '-c']
           args:
             - |
@@ -264,11 +255,6 @@ spec:
                 echo "Provisioning logging config file..."
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb-logback-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
-              fi
-              if [[ ! -f /opt/graphdb/home/conf/jolokia-access.xml && -f /tmp/graphdb-jolokia-access-configmap/jolokia-access.xml ]]; then
-                echo "Provisioning jolokia access config file..."
-                mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb-jolokia-access-configmap/jolokia-access.xml /opt/graphdb/home/conf/jolokia-access.xml
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'

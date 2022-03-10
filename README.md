@@ -340,10 +340,6 @@ GraphDB uses logback to configure logging using the `logback.xml` file.
 The file can be provisioned before GraphDB's startup with the `logbackConfigMap` configmap or left to default.
 It can be overridden with other configmap containing the `logback.xml` file.
 
-Since GraphDB 9.10.1 the Jolokia access is managed using the `jolokia-access.xml` file.
-The file can be provisioned before GraphDB's startup with the `jolokiaAccessConfigmap` configmap or left to default.
-It can be overridden with other configmap containing the `jolokia-access.xml` file.
-
 See https://graphdb.ontotext.com/documentation/enterprise/configuring-graphdb.html?highlight=properties
 See https://graphdb.ontotext.com/documentation/enterprise/access-control.html
 

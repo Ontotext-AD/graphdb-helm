@@ -122,6 +122,11 @@ graphdb:
     nodesCount: 3
     clusterSecret: s3cr37
     # Set cluster config
+    electionMinTimeout: 500
+    electionRangeTimeout: 2000
+    heartbeatInterval: 500
+    messageSize: 64
+    verificationMs: 1500
     clusterConfigConfigMap: graphdb-cluster-config-configmap
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, logback.xml and jolokia-access.xml files to overwrite

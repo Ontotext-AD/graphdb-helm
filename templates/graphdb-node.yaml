@@ -37,6 +37,8 @@ spec:
     metadata:
       labels:
         app: graphdb-node
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 120
       volumes:

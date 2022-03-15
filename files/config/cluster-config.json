@@ -6,7 +6,7 @@
   "verificationMs": {{ $.Values.graphdb.clusterConfig.verificationMs }},
   "nodes": [
     {{- range $i, $node_index := until ( $.Values.graphdb.clusterConfig.nodesCount | int )}}
-    "graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace  }}.svc.cluster.local"{{- if gt (sub $.Values.graphdb.clusterConfig.nodesCount 1 | int) $node_index }},
+    "graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace  }}.svc.cluster.local:7300"{{- if gt (sub $.Values.graphdb.clusterConfig.nodesCount 1 | int) $node_index }},
     {{- end}}
     {{- end }}
   ]

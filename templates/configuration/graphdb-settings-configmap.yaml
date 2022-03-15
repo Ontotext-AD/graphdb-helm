@@ -8,7 +8,7 @@ kind: ConfigMap
 metadata:
   name: graphdb-settings-configmap
   labels:
-    name: graphdb-settings-configmap
+    {{- include "graphdb.labels" . | nindent 4 }}
 data:
   settings.js: |-
 {{ tpl (.Files.Get "files/config/settings.js" | indent 4) . }}

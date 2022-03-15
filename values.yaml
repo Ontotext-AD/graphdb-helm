@@ -122,7 +122,7 @@ graphdb:
     nodesCount: 3
     clusterSecret: s3cr37
     # Set cluster config
-    electionMinTimeout: 500
+    electionMinTimeout: 1500
     electionRangeTimeout: 2000
     heartbeatInterval: 500
     messageSize: 64

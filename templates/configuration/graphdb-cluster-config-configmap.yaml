@@ -5,7 +5,7 @@ kind: ConfigMap
 metadata:
   name: graphdb-cluster-config-configmap
   labels:
-    name: graphdb-cluster-config-configmap
+    {{- include "graphdb.labels" . | nindent 4 }}
 data:
   cluster-config.json: |-
 {{ tpl (.Files.Get "files/config/cluster-config.json" | indent 4) . }}

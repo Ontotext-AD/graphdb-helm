@@ -8,7 +8,7 @@ kind: ConfigMap
 metadata:
   name: graphdb-logback-configmap
   labels:
-    name: graphdb-logback-configmap
+    {{- include "graphdb.labels" . | nindent 4 }}
 data:
   logback.xml: |-
 {{ tpl (.Files.Get "files/config/logback.xml" | indent 4) . }}

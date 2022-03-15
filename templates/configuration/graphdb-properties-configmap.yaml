@@ -8,7 +8,7 @@ kind: ConfigMap
 metadata:
   name: graphdb-properties-configmap
   labels:
-    name: graphdb-properties-configmap
+    {{- include "graphdb.labels" . | nindent 4 }}
 data:
   graphdb.properties: |-
 {{ tpl (.Files.Get "files/config/graphdb.properties" | indent 4) . }}

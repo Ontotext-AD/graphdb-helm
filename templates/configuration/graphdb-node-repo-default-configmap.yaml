@@ -5,7 +5,7 @@ kind: ConfigMap
 metadata:
   name: graphdb-repo-default-configmap
   labels:
-    name: graphdb-repo-default-configmap
+    {{- include "graphdb.labels" . | nindent 4 }}
 data:
   config.ttl: |-
 {{ tpl (.Files.Get "files/config/graphdb-repo.default.ttl" | indent 4) . }}

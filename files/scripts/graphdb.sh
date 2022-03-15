@@ -4,7 +4,6 @@ set -eu
 
 function makeCluster {
   echo "THERE IS NO API"
-  sleep 20
   exit 0
   waitAllNodes $1 $3
   local configLocation=$2

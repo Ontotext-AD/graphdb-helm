@@ -40,6 +40,7 @@ spec:
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
     spec:
+      setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:
         #TODO: remove cluster-config when the api is back in town

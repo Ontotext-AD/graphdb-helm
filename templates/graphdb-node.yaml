@@ -43,10 +43,12 @@ spec:
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:
+        {{- if not $.Values.graphdb.clusterConfig.hasApi }}
         #TODO: remove cluster-config when the api is back in town
         - name: cluster-config
           configMap:
             name: {{ required "Config map for the cluster config is required!" $.Values.graphdb.clusterConfig.clusterConfigConfigMap }}
+        {{- end }}
         {{- if ne ($.Values.graphdb.node.license) "" }}
         - name: graphdb-license
           secret:
@@ -92,7 +94,7 @@ spec:
               {{- if ne $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
             - name: graphdb-rpc
               containerPort: 7300
-              {{ end }}
+              {{- end }}
           envFrom:
             - configMapRef:
                 name: graphdb-node-configmap
@@ -131,6 +133,7 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
+      {{- if not $.Values.graphdb.clusterConfig.hasApi }}
       {{- if ne ($.Values.graphdb.clusterConfig.nodesCount) 1.0 }}
         #temporary cluster config provision (used for my GDB image where there is RPC but no API)
         - name: provision-cluster-config
@@ -151,7 +154,7 @@ spec:
               mkdir -p /opt/graphdb/home/data/raft
               cp /tmp/cluster-config/cluster-config.ttl /opt/graphdb/home/data/raft
               echo 'We deposited the cluster config'
-      {{- end }}
+      {{- end }}{{- end }}
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license

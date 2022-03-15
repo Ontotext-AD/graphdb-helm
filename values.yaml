@@ -34,7 +34,7 @@ images:
     tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.0-Tomas-branch"
+    tag: "10.0-SNAPSHOT"
   busybox:
     repository: busybox
     tag: "1.31"
@@ -119,6 +119,8 @@ kong:
 # GraphDB database configurations
 graphdb:
   clusterConfig:
+    #Are you using Desi's branch?
+    hasApi: true
     nodesCount: 3
     clusterSecret: s3cr37
     # Set cluster config

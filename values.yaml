@@ -120,7 +120,7 @@ kong:
 graphdb:
   clusterConfig:
     #Are you using Desi's branch?
-    hasApi: true
+    hasApi: false
     nodesCount: 3
     clusterSecret: s3cr37
     # Set cluster config

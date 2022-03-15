@@ -1,7 +1,9 @@
 # GraphDB Helm chart release notes
 ## Version 10.0
 <!-- 
-TODO: A lot 
+Added pick of api api-less cluster image (will have to remove after with the cluster config ttl)
+Using kong to get over the annoying loadbalancer of the satefulset (remove when there is gdb loadbalancer)
+
 -->
 
 ## Version 9.9.0

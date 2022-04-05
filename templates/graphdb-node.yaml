@@ -43,12 +43,6 @@ spec:
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:
-        {{- if not $.Values.graphdb.clusterConfig.hasApi }}
-        #TODO: remove cluster-config when the api is back in town
-        - name: cluster-config
-          configMap:
-            name: {{ required "Config map for the cluster config is required!" $.Values.graphdb.clusterConfig.clusterConfigConfigMap }}
-        {{- end }}
         {{- if ne ($.Values.graphdb.node.license) "" }}
         - name: graphdb-license
           secret:
@@ -133,28 +127,6 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
-      {{- if not $.Values.graphdb.clusterConfig.hasApi }}
-      {{- if ne ($.Values.graphdb.clusterConfig.nodesCount) 1.0 }}
-        #temporary cluster config provision (used for my GDB image where there is RPC but no API)
-        - name: provision-cluster-config
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
-            {{- end }}
-              mountPath: /opt/graphdb/home
-            - name: cluster-config
-              mountPath: /tmp/cluster-config
-          command: [ 'sh', '-c' ]
-          args:
-            - |
-              mkdir -p /opt/graphdb/home/data/raft
-              cp /tmp/cluster-config/cluster-config.ttl /opt/graphdb/home/data/raft
-              echo 'We deposited the cluster config'
-      {{- end }}{{- end }}
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license

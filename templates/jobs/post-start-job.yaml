@@ -1,4 +1,4 @@
-{{- if and (ne .Values.graphdb.clusterConfig.nodesCount 1.0) .Values.graphdb.clusterConfig.hasApi}}
+{{- if ne .Values.graphdb.clusterConfig.nodesCount 1.0 }}
 #TODO: More work required, tasks for update cluster and delete cluster too
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
@@ -31,7 +31,7 @@ spec:
             - |
               cp /tmp/cluster-config/cluster-config.json /usr/local/bin/cluster-config.json
               cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
-              /usr/local/bin/graphdb.sh makeCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "/usr/local/bin/cluster-config.json" "{{ $authToken }}" >> /proc/1/fd/1
+              /usr/local/bin/graphdb.sh createCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "/usr/local/bin/cluster-config.json" "{{ $authToken }}" >> /proc/1/fd/1
         {{- if false}}
         {{- if gt (len $.Values.graphdb.masters.additionalJmxArrtibutes) 0 }}
         - name: set-jmx-attributes
@@ -66,7 +66,7 @@ spec:
       volumes:
         - name: cluster-config
           configMap:
-            name: {{ required "Config map for the cluster config is required!" $.Values.graphdb.clusterConfig.clusterConfigConfigMap }}
+            name: graphdb-cluster-config-configmap
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap

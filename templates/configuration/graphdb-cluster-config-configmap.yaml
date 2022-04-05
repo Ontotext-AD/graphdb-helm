@@ -9,5 +9,3 @@ metadata:
 data:
   cluster-config.json: |-
 {{ tpl (.Files.Get "files/config/cluster-config.json" | indent 4) . }}
-  cluster-config.ttl: |-
-{{ tpl (.Files.Get "files/config/cluster-config.ttl" | indent 4) . }}

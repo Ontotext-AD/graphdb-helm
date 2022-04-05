@@ -2,12 +2,12 @@
 #TODO: Update and Delete cluster + maybe something more?
 set -eu
 
-function makeCluster {
+function createCluster {
   waitAllNodes $1 $3
   local configLocation=$2
   echo "Creating cluster!"
-  curl -o response.json -sSL -m 30 -X POST --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" 'http://graphdb-node:7200/rest/cluster/config'
-     if grep -q '"status":200' "response.json"; then
+  curl -o response.json -isSL -m 30 -X POST --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" 'http://graphdb-node:7200/rest/cluster/config'
+     if grep -q 'HTTP/1.1 201' "response.json"; then
         echo "Cluster creation successful!"
     else
         echo "Cluster creation failed, received response:"
@@ -22,8 +22,14 @@ true
 }
 
 function deleteCluster {
-#curl to leader/loadBalancer to delete cluster
-true
+  curl -o response.json -isSL -m 15 -X DELETE --header 'Accept: */*' 'http://graphdb-node:7200/rest/cluster/config?force=false'
+  if grep -q 'HTTP/1.1 200' "response.json"; then
+    echo "Cluster deletion successful!"
+  else
+    echo "Cluster deletion failed, received response:"
+    cat response.json
+    echo
+  fi
 }
 
 function waitService {

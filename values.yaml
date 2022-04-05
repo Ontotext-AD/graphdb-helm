@@ -119,17 +119,14 @@ kong:
 # GraphDB database configurations
 graphdb:
   clusterConfig:
-    #Are you using Desi's branch?
-    hasApi: false
     nodesCount: 3
     clusterSecret: s3cr37
-    # Set cluster config
+    # Cluster configuration parameters:
     electionMinTimeout: 1500
     electionRangeTimeout: 2000
     heartbeatInterval: 500
     messageSize: 64
     verificationMs: 1500
-    clusterConfigConfigMap: graphdb-cluster-config-configmap
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
   # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html

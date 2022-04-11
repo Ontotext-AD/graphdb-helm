@@ -107,7 +107,7 @@ kong:
   memCacheSize: "64m"
   # -- Amount of Nginx worker processes. This affects how much memory will be consumed.
   # The auto value will determine the workers based on the available CPUs
-  workers: auto
+  workers: 3
   # Default resource limitations.
   resources:
     limits:
@@ -211,58 +211,3 @@ graphdb:
       resources:
         requests:
           storage: "10Gi"
-
-  # -- Tools for loading, scanning and repairing data in repos
-  # TODO: UPDATE THIS WHEN THE REDESIGN OF ImportRDF and Storage are final
-  tools:
-    resources:
-      limits:
-        memory: "10G"
-      requests:
-        memory: "10G"
-    # -- Tool to preload data in a chosen repo
-    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html
-    preload:
-      # -- If trigger is set to true, then the preload tool will be run while initializing the deployment
-      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
-      # (default pv is: /data/graphdb-worker-preload-data)
-      trigger: false
-      # -- Options to add to the command
-      # possible flags: -f, -p, -r
-      # If you use the "-f" option, the tool will override the repository and could lose some data.
-      flags: "-f"
-      rdfDataFile: "geonames_europe.ttl"
-    # -- Tool to preload data in a chosen repo
-    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
-    loadrdf:
-      # -- If trigger is set to true, then the loadrdf tool will be run while initializing the deployment
-      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
-      # (default pv is: /data/graphdb-worker-preload-data)
-      trigger: false
-      # -- Options to add to the command
-      # possible flags: -f, -p
-      # If you use the "-f" option, the tool will override the repository and could lose some data.
-      flags: "-f"
-      rdfDataFile: "geonames_europe.ttl"
-    persistence:
-      #storageClassName: standard
-      # -- Storage size request for the preload/loadrdf pv. The persistent volume has to be able to satisfy the size.
-      #storage: 10G
-      volumeClaimTemplateSpec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "10Gi"
-
-    # -- Tool for scanning and repairing data
-    # See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
-    storage_tool:
-      # -- If trigger is set to true, then the storage tool will be run while initializing the deployment
-      trigger: false
-      # -- commands to run the storage-tool with
-      command: "scan"
-      # -- repo to run command on
-      repository: "repo-test-1"
-      # -- additional options to run the storage-tool with
-      options: ""

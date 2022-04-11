@@ -1,4 +1,3 @@
-#TODO: Change RPC port to whatever it is (prob from 7300 to 7210 if the api documentation is to be believed), check affinity and what not, tools
 # Loop over the replica count
 
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
@@ -15,6 +14,7 @@ spec:
   serviceName: graphdb-node
   updateStrategy:
     type: RollingUpdate
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       app: graphdb-node
@@ -236,108 +236,6 @@ spec:
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
-          # LOADRDF TOOL
-          {{- if false }}
-        - name: loadrdf-tool
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          resources:
-            limits:
-              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
-              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
-            requests:
-              cpu: {{ $.Values.graphdb.tools.resources.requests.cpu }}
-              memory: {{ $.Values.graphdb.tools.resources.requests.memory }}
-          volumeMounts:
-                  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-                  {{- else }}
-            - name: graphdb-node-storage
-                    {{- end }}
-              mountPath: /opt/graphdb/home
-                    {{- if  (or $.Values.graphdb.tools.preload.trigger $.Values.graphdb.tools.loadrdf.trigger) }}
-                  {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-preload-dynamic-pvc
-                  {{- else }}
-            - name: graphdb-node-preload-data
-                    {{- end }}
-              mountPath: /tmp/graphdb/
-                {{- end }}
-          command: ['sh', '-c']
-          args:
-            - |
-              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
-              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
-              /opt/graphdb/dist/bin/loadrdf {{ $.Values.graphdb.tools.loadrdf.flags }} -c /tmp/graphdb/config.ttl -m parallel /tmp/graphdb/{{$.Values.graphdb.tools.loadrdf.rdfDataFile}}
-              echo "preload with loadrdf tool is done"
-          {{- end }}
-          {{- if false }}
-        # PRELOAD TOOL
-        - name: preload-tool
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          resources:
-            limits:
-              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
-              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
-            requests:
-              cpu: {{ $.Values.graphdb.tools.resources.requests.cpu }}
-              memory: {{ $.Values.graphdb.tools.resources.requests.memory }}
-          volumeMounts:
-                  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-                  {{- else }}
-            - name: graphdb-node-storage
-                    {{- end }}
-              mountPath: /opt/graphdb/home
-                  {{- if hasKey $.Values.graphdb.tools.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-preload-dynamic-pvc
-                  {{- else }}
-            - name: graphdb-node-preload-data
-                {{- end }}
-          command: ['sh', '-c']
-          args:
-            - |
-              cp /opt/graphdb/home/conf/graphdb.license /opt/graphdb/dist/conf/graphdb.license
-              echo "graphdb.home.data = /opt/graphdb/home/data/" >> /opt/graphdb/dist/conf/graphdb.properties
-              /opt/graphdb/dist/bin/preload {{ $.Values.graphdb.tools.preload.flags }} -c /tmp/graphdb/config.ttl /tmp/graphdb/{{$.Values.graphdb.tools.preload.rdfDataFile}}
-              echo "preload with preload tool is done"
-        {{- end }}
-        # STORAGE TOOL
-        {{- if false }}
-        - name: storage-tool
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          resources:
-            limits:
-              cpu: {{ $.Values.graphdb.tools.resources.limits.cpu }}
-              memory: {{ $.Values.graphdb.tools.resources.limits.memory }}
-            requests:
-              cpu: {{ $.Values.graphdb.tools.resources.requests.cpu }}
-              memory: {{ $.Values.graphdb.tools.resources.requests.memory }}
-          volumeMounts:
-                  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-                  {{- else }}
-            - name: graphdb-node-storage
-                    {{- end }}
-              mountPath: /opt/graphdb/home
-          command: ['sh', '-c']
-          args:
-            - |
-              cdate=$(date +'%Y-%m-%d')
-              if [ -d /opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage ]; then
-                result=$(/opt/graphdb/dist/bin/storage-tool -command={{ $.Values.graphdb.tools.storage_tool.command }} -storage=/opt/graphdb/home/data/repositories/{{$.Values.graphdb.tools.storage_tool.repository}}/storage {{$.Values.graphdb.tools.storage_tool.options}})
-                echo -e "${result}" >> /opt/graphdb/home/data/storage-tool-${cdate}.log
-                echo -e "${result}"
-                if echo -e "${result}" | grep -qi "inconsistent"
-                then
-                  exit 1
-                fi
-              else
-                echo "The wanted repository does not exist"
-              fi
-        {{- end }}
 
 ---
 apiVersion: {{ $.Values.versions.service }}

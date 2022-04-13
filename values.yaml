@@ -160,13 +160,6 @@ graphdb:
     # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
     # See https://kubernetes.io/docs/concepts/scheduling-eviction
 
-    topologySpreadConstraints:
-    # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
-#    nodes:
-#      - name: worker-1
-#        license: graphdb-license
-#      - name: worker-2
-#        java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport "
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -184,14 +177,15 @@ graphdb:
           requests:
             storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
-    # For resizing, refer according to your GraphDB version documentation
-    # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
-    # Note: Same as for the master node
+    # For resizing, refer according to the GraphDB documentation
+    # http://graphdb.ontotext.com/documentation/requirements.html
     resources:
       limits:
         memory: 2Gi
+        cpu: 1000m
       requests:
         memory: 2Gi
+        cpu: 1000m
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
   #configmap: graphdb-configmap
@@ -201,6 +195,7 @@ graphdb:
     # Should be configured in the API gateway (or any other proxy in front)
     subpath: /graphdb
 
+  # WARNING: Setting enabled to true in most cloud providers will result in an error
   # Attach additional PV which will be used as an import directory
   # https://graphdb.ontotext.com/documentation/standard/loading-data-using-the-workbench.html#importing-server-files
   import_directory_mount:

@@ -30,7 +30,7 @@ services:
     write_timeout: {{ .Values.kong.timeout.write }}
     routes:
       - name: graphdb-stafulset-loadbalanced
-        paths: ["/graphdb"]
+        paths: ["{{ $.Values.graphdb.workbench.subpath }}"]
         methods: ["GET", "POST", "PUT", "DELETE"]
         strip_path: true
         preserve_host: false

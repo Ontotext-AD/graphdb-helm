@@ -99,7 +99,7 @@ spec:
             - name: graphdb-node-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-            {{- if false }}
+            {{- if $.Values.graphdb.import_directory_mount.enabled }}
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}

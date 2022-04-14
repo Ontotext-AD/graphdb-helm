@@ -182,10 +182,10 @@ graphdb:
     resources:
       limits:
         memory: 2Gi
-        cpu: 1000m
+        cpu: 2000m
       requests:
         memory: 2Gi
-        cpu: 1000m
+        cpu: 2000m
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
   #configmap: graphdb-configmap

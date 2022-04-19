@@ -30,10 +30,12 @@ services:
     write_timeout: {{ .Values.kong.timeout.write }}
     routes:
       - name: graphdb-stafulset-loadbalanced
+        headers:
+          X-forwarded-port: ["80"]
         paths: ["{{ $.Values.graphdb.workbench.subpath }}"]
         methods: ["GET", "POST", "PUT", "DELETE"]
         strip_path: true
-        preserve_host: false
+        preserve_host: true
   {{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
   {{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
   - name: graphdb-node-{{ $node_index }}
@@ -43,9 +45,11 @@ services:
     write_timeout: {{ $.Values.kong.timeout.write }}
     routes:
       - name: graphdb-node-{{ $node_index }}
+        headers:
+          X-forwarded-port: [ "80" ]
         paths: ["/node-{{ $node_index }}"]
         methods: ["GET", "POST", "PUT", "DELETE"]
         strip_path: true
-        preserve_host: false
+        preserve_host: true
   {{- end }}
   {{- end }}

@@ -19,21 +19,32 @@ metadata:
     {{- end }}
 
 spec:
-  {{ if .Values.deployment.tls.enabled }}
+  {{- if .Values.deployment.tls.enabled }}
   tls:
     - hosts:
         - {{ include "resolveDeploymentHost" . | quote }}
       secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
-  {{ end }}
+  {{- end }}
   rules:
     - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
-          - path: /
+          - path: {{ $.Values.graphdb.workbench.subpath }}
             pathType: Prefix
             backend:
               service:
-                name: kong-proxy
+                name: graphdb-node
                 port:
-                  number: 8000
+                  number: 7200
+{{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
+{{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
+          - path: /node-{{ $node_index }}
+            pathType: Prefix
+            backend:
+              service:
+                name: graphdb-node-{{ $node_index }}
+                port:
+                  number: 7200
+{{- end }}
+{{- end }}
 {{- end }}

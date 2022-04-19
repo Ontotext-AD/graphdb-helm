@@ -83,7 +83,7 @@ deployment:
 # This gateway sits behind the ingress and exposes the rest of the components.
 # By default Kong is deployed without database, e.g. stateless mode.
 kong:
-  enabled: true
+  enabled: false
   # -- Reference to a configuration map with Kong configurations as environment variables.
   # Override if you need to further configure Kong's system.
   # See https://docs.konghq.com/2.0.x/configuration/

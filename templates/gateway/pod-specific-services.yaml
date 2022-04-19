@@ -1,0 +1,19 @@
+{{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
+{{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-node-{{ $node_index }}
+  labels:
+    app: graphdb-node-{{ $node_index }}
+spec:
+  selector:
+    set-component: graphdb-node-{{ $node_index }}
+  ports:
+    - name: graphdb
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+{{- end }}
+{{- end }}

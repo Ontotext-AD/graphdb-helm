@@ -79,43 +79,6 @@ deployment:
       read: 60
       send: 60
 
-# KONG API gateway configurations.
-# This gateway sits behind the ingress and exposes the rest of the components.
-# By default Kong is deployed without database, e.g. stateless mode.
-kong:
-  enabled: false
-  # -- Reference to a configuration map with Kong configurations as environment variables.
-  # Override if you need to further configure Kong's system.
-  # See https://docs.konghq.com/2.0.x/configuration/
-  configmap: kong-configmap
-  # -- Reference to a configuration map containing declarative Kong configuration for
-  # services and routes. This is the DB-less config.
-  # See https://docs.konghq.com/1.5.x/db-less-admin-api/#declarative-configuration
-  servicesConfigmap: kong-services-configmap
-  # -- Overwrite if you want to deploy Kong on a non-standard port, such as instances
-  # where you want to have two different installations on the same hardware.
-  port:
-    nodePort: 31122
-  # -- Global timeout configurations for all services. Values are in milliseconds.
-  timeout:
-    connect: 60000
-    read: 60000
-    write: 60000
-  # -- Memory cache size configuration for Kong in DB-less mode.
-  # Tune according to the given resource limits.
-  # See https://docs.konghq.com/2.0.x/configuration/#mem_cache_size
-  memCacheSize: "64m"
-  # -- Amount of Nginx worker processes. This affects how much memory will be consumed.
-  # The auto value will determine the workers based on the available CPUs
-  workers: 3
-  # Default resource limitations.
-  resources:
-    limits:
-      memory: 1024Mi
-  # Schedule and assign on specific node. By default, no restrictions are applied.
-  # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-  nodeSelector: {}
-
 # GraphDB database configurations
 graphdb:
   clusterConfig:

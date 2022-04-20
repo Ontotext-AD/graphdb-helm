@@ -12,8 +12,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
     nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
-    nginx.ingress.kubernetes.io/proxy-redirect-from: http://graphdb-node-1:7200
-    nginx.ingress.kubernetes.io/proxy-redirect-to: {{ .Values.deployment.protocol }}://{{ .Values.deployment.host }}/graphdb
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     {{- with .Values.deployment.ingress.annotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -29,7 +28,7 @@ spec:
     - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
-          - path: {{ $.Values.graphdb.workbench.subpath }}
+          - path: {{ $.Values.graphdb.workbench.subpath }}(/|$)(.*)
             pathType: Prefix
             backend:
               service:
@@ -38,7 +37,7 @@ spec:
                   number: 7200
 {{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
 {{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
-          - path: /node-{{ $node_index }}
+          - path: /node-{{ $node_index }}(/|$)(.*)
             pathType: Prefix
             backend:
               service:

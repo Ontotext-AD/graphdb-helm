@@ -128,13 +128,13 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
         # Container for TCPDumping because the Nginx Ingress controller is doing some hidden magic
-        - name: demystify-the-network-sidecar
-          image: nicolaka/netshoot
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          command: ["sh", "-c"]
-          args:
-            - |
-              tail -f /dev/null
+{{/*        - name: demystify-the-network-sidecar*/}}
+{{/*          image: nicolaka/netshoot*/}}
+{{/*          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}*/}}
+{{/*          command: ["sh", "-c"]*/}}
+{{/*          args:*/}}
+{{/*            - |*/}}
+{{/*              tail -f /dev/null*/}}
       initContainers:
         # Label set so it can be targeted by a service
         - name: label-set

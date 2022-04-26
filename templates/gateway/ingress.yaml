@@ -5,35 +5,75 @@ metadata:
   name: ingress
   annotations:
     kubernetes.io/ingress.class: {{ .Values.deployment.ingress.class }}
-    {{ if .Values.deployment.tls.enabled }}
+    {{- if .Values.deployment.tls.enabled }}
     ingress.kubernetes.io/force-ssl-redirect: "true"
-    {{ end }}
+    {{- end }}
     nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.deployment.ingress.maxRequestSize }}
     nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
     nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
-    nginx.ingress.kubernetes.io/proxy-redirect-from: http://graphdb-node-1:7200
-    nginx.ingress.kubernetes.io/proxy-redirect-to: {{ .Values.deployment.protocol }}://{{ .Values.deployment.host }}/graphdb
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/x-forwarded-prefix: {{ $.Values.graphdb.workbench.subpath | quote }}
     {{- with .Values.deployment.ingress.annotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-
 spec:
-  {{ if .Values.deployment.tls.enabled }}
+  {{- if .Values.deployment.tls.enabled }}
   tls:
     - hosts:
         - {{ include "resolveDeploymentHost" . | quote }}
       secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
-  {{ end }}
+  {{- end }}
   rules:
     - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
-          - path: /
+          - path: {{ $.Values.graphdb.workbench.subpath }}(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: kong-proxy
+                name: graphdb-node
                 port:
-                  number: 8000
+                  number: 7200
+{{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
+{{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
+---
+apiVersion: {{ $.Values.versions.ingress }}
+kind: Ingress
+metadata:
+  name: ingress-node-{{ $node_index }}
+  annotations:
+    kubernetes.io/ingress.class: {{ $.Values.deployment.ingress.class }}
+    {{- if $.Values.deployment.tls.enabled }}
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    {{- end }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ $.Values.deployment.ingress.maxRequestSize }}
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ $.Values.deployment.ingress.timeout.connect | quote }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: {{ $.Values.deployment.ingress.timeout.read | quote }}
+    nginx.ingress.kubernetes.io/proxy-send-timeout: {{ $.Values.deployment.ingress.timeout.send | quote }}
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/x-forwarded-prefix: "/node-{{ $node_index }}"
+    {{- with $.Values.deployment.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if $.Values.deployment.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ include "resolveDeploymentHost" $ | quote }}
+      secretName: {{ required "TLS secret is required!" $.Values.deployment.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ include "resolveDeploymentHost" $ | quote }}
+      http:
+        paths:
+          - path: /node-{{ $node_index }}(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: graphdb-node-{{ $node_index }}
+                port:
+                  number: 7200
+{{- end }}
+{{- end }}
 {{- end }}

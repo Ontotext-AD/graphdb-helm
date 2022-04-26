@@ -40,6 +40,7 @@ spec:
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
     spec:
+      serviceAccountName: graphdb-node-account
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:
@@ -127,6 +128,14 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
+        # Label set so it can be targeted by a service
+        - name: label-set
+          image: bitnami/kubectl:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              podName=(${HOSTNAME//./ })
+              kubectl label pods ${podName} set-component=${podName}
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license
@@ -258,7 +267,7 @@ spec:
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
 metadata:
-  name: graphdb-rpc-headless
+  name: graphdb-headless
   labels:
     app: graphdb-node
 spec:
@@ -271,3 +280,26 @@ spec:
   selector:
     app: graphdb-node
 {{ end }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: graphdb-node
+  name: graphdb-node-account
+  namespace: {{ $.Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: graphdb-node
+  labels:
+    k8s-app: graphdb-node
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: graphdb-node-account
+    namespace: {{ $.Release.Namespace }}

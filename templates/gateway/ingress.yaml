@@ -1,5 +1,4 @@
 {{- if .Values.deployment.ingress.enabled }}
-{{/*  TODO: tranlsate - proxy-add-original-uri-header: "true" to annotation*/}}
 apiVersion: {{ .Values.versions.ingress }}
 kind: Ingress
 metadata:
@@ -39,8 +38,6 @@ spec:
 {{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
 {{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
 ---
-{{/*Some genious decided to change x-forwarded-prefix from true to the prefix itself.
-And yes he was aware that that would lead to people like me HAVING to make a different ingress for every, single, path.*/}}
 apiVersion: {{ $.Values.versions.ingress }}
 kind: Ingress
 metadata:

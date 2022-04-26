@@ -29,9 +29,6 @@ versions:
 
 # Top lvl flat for easier maintenance
 images:
-  kong:
-    repository: kong
-    tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
     tag: "10.0-SNAPSHOT"
@@ -60,6 +57,7 @@ deployment:
   # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
   tls:
     # -- Feature toggle for SSL termination. Disabled by default.
+    # If TLS is enabled, the protocol should also be updated (https)
     enabled: false
     # -- Name of a Kubernetes secret object with the key and certificate.
     # If TLS is enabled, it's required to be provided, depending on the deployment.

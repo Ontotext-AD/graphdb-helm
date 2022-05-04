@@ -1,3 +1,5 @@
+#Set auth token var
+{{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
 {{- if and (hasKey .Values.graphdb.backupRestore "auto_backup") .Values.graphdb.backupRestore.enable_backups }}
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -26,7 +28,7 @@ spec:
                         '-c',
                         'cp /tmp/utils/backup.sh /usr/local/bin/backup.sh; chmod +x /usr/local/bin/backup.sh;
                         {{- range .Values.graphdb.backupRestore.repositories }}
-                        /usr/local/bin/backup.sh "{{ . }}" {{ $.Values.graphdb.topology | quote }};
+                        /usr/local/bin/backup.sh "{{ . }}" {{ $.Values.graphdb.topology | quote }} "{{ $authToken }}";
                         {{- end }}
                         >> /proc/1/fd/1']
           restartPolicy: Never

@@ -1,11 +1,5 @@
 # Helm charts for GraphDB EE
 
-## WARNING
-
-This is a basic experimental Helm chart for GraphDB. We're working on some features that are missing at the moment such as:
-
-- Autoscaling
-
 ## Install
 ### Prerequisites
 

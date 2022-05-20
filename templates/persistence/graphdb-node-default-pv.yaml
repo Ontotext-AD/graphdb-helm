@@ -2,7 +2,7 @@
 {{- $storageClassName := $.Values.graphdb.node.persistence.storageClassName | default $.Values.global.storageClass }}
 {{- if or (ne $storageClassName "standard") (ne $storageClassName "") }}
 {{- if eq .Values.graphdb.node.persistence.volumeNamePrefix "graphdb-default-node" }}
-{{- range $i, $node_index := untilStep 1 (add1 $.Values.graphdb.clusterConfig.nodesCount | int ) 1 }}
+{{- range $i, $node_index := untilStep 1 (add1 (int $.Values.graphdb.clusterConfig.nodesCount) ) 1 }}
 #
 # Default persistence volume for GraphDB workers. Data is stored on the node file system. Suitable
 # for Minikube deployments.

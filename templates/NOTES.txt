@@ -10,7 +10,7 @@
                  |_|
 --------------------------------------------------------------------------------------------
 version: {{ .Chart.AppVersion }}
-GDB cluster: {{ ne .Values.graphdb.clusterConfig.nodesCount 1.0 }}
+GDB cluster: {{ ne (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
 
 ** Please be patient while the chart is being deployed and services are available **
 You can check their status with kubectl get pods

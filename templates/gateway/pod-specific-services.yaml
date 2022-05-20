@@ -1,5 +1,5 @@
-{{- if gt $.Values.graphdb.clusterConfig.nodesCount 1.0 }}
-{{- range $i, $node_index := until ($.Values.graphdb.clusterConfig.nodesCount | int) }}
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- range $i, $node_index := until ((int $.Values.graphdb.clusterConfig.nodesCount) ) }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service

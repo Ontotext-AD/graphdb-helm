@@ -1,4 +1,4 @@
-{{- if ne .Values.graphdb.clusterConfig.nodesCount 1.0 }}
+{{- if ne (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
 #TODO: More work required, tasks for update cluster and delete cluster too
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}

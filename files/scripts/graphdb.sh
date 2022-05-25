@@ -12,6 +12,7 @@ function createCluster {
         echo "Cluster creation failed, received response:"
         cat response.json
         echo
+        exit 1
     fi
 }
 
@@ -28,6 +29,7 @@ function deleteCluster {
     echo "Cluster deletion failed, received response:"
     cat response.json
     echo
+    exit 1
   fi
 }
 

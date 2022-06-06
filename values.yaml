@@ -108,6 +108,17 @@ graphdb:
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
+  externalProxy:
+    replicas: 1
+    resources:
+      limits:
+        memory: 128Mi
+        cpu: 500m
+      requests:
+        memory: 128Mi
+        cpu: 500m
+    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+
   node:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html

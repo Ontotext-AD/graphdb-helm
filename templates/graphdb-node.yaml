@@ -1,7 +1,4 @@
-# Loop over the replica count
-
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
-
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
@@ -135,7 +132,7 @@ spec:
           args:
             - |
               podName=(${HOSTNAME//./ })
-              kubectl label pods ${podName} set-component=${podName}
+              kubectl label pods ${podName} set-component=${podName} --overwrite
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license

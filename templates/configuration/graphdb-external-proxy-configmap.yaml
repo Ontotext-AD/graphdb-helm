@@ -1,19 +1,19 @@
 apiVersion: {{ $.Values.versions.configmap }}
 kind: ConfigMap
 metadata:
-  name: graphdb-node-configmap
+  name: graphdb-external-proxy-configmap
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
 data:
   # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
-    -Denable-context-index=true
-    -Dentity-pool-implementation=transactional
-    -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.append.request.id.headers=true
+    -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     -Dgraphdb.home.conf=/opt/graphdb/home/conf
-    -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
+    -Dgraphdb.proxy.hosts={{- range $i, $node_index := until ( (int $.Values.graphdb.clusterConfig.nodesCount) )}}
+    graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace  }}.svc.cluster.local:7300{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},
+    {{- end }}
+    {{- end }}
 {{- if ne (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
 {{- end }}

@@ -1,0 +1,70 @@
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- $configs := ($.Values.graphdb.configs | default dict) }}
+---
+apiVersion: {{ $.Values.versions.statefulset }}
+kind: Deployment
+metadata:
+  name: graphdb-external-proxy
+  labels:
+    app: graphdb-external-proxy
+spec:
+  replicas: {{ $.Values.graphdb.externalProxy.replicas }}
+  template:
+    metadata:
+      labels:
+        app: graphdb-external-proxy
+    spec:
+      terminationGracePeriodSeconds: 15
+      imagePullSecrets:
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      containers:
+        - name: graphdb-external-proxy
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          envFrom:
+            - configMapRef:
+                name: graphdb-external-proxy-configmap
+          ports:
+            - name: graphdb-proxy-port
+              containerPort: 7200
+          resources: {{ $.Values.graphdb.externalProxy.resources | toYaml | nindent 12 }}
+          # TODO: Not implemented yet
+{{/*          startupProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /protocol*/}}
+{{/*              port: graphdb*/}}
+{{/*            failureThreshold: 30*/}}
+{{/*            timeoutSeconds: 5*/}}
+{{/*            periodSeconds: 10*/}}
+{{/*          readinessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /protocol*/}}
+{{/*              port: graphdb*/}}
+{{/*            initialDelaySeconds: 5*/}}
+{{/*            timeoutSeconds: 5*/}}
+{{/*            periodSeconds: 10*/}}
+{{/*          livenessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /protocol*/}}
+{{/*              port: graphdb*/}}
+{{/*            initialDelaySeconds: 60*/}}
+{{/*            timeoutSeconds: 5*/}}
+{{/*            periodSeconds: 10*/}}
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-external-proxy
+  labels:
+    app: graphdb-external-proxy
+spec:
+  type: LoadBalancer
+  selector:
+    app: graphdb-external-proxy
+  ports:
+    - name: graphdb-proxy-port
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+{{- end }}

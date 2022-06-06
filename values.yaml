@@ -83,11 +83,11 @@ graphdb:
     nodesCount: 3
     clusterSecret: s3cr37
     # Cluster configuration parameters:
-    electionMinTimeout: 1500
-    electionRangeTimeout: 2000
-    heartbeatInterval: 500
+    electionMinTimeout: 7000
+    electionRangeTimeout: 5000
+    heartbeatInterval: 2000
     messageSize: 64
-    verificationMs: 1500
+    verificationTimeout: 1500
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
   # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html

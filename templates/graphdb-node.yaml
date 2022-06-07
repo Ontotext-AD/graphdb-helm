@@ -12,6 +12,9 @@ spec:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Retain
   selector:
     matchLabels:
       app: graphdb-node
@@ -37,7 +40,6 @@ spec:
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
     spec:
-      serviceAccountName: graphdb-node-account
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:

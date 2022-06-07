@@ -9,6 +9,9 @@ metadata:
     app: graphdb-external-proxy
 spec:
   replicas: {{ $.Values.graphdb.externalProxy.replicas }}
+  selector:
+    matchLabels:
+      app: graphdb-external-proxy
   template:
     metadata:
       labels:
@@ -28,7 +31,7 @@ spec:
             - configMapRef:
                 name: graphdb-external-proxy-configmap
           ports:
-            - name: graphdb-proxy-port
+            - name: gdb-proxy-port
               containerPort: 7200
           resources: {{ $.Values.graphdb.externalProxy.resources | toYaml | nindent 12 }}
           # TODO: Not implemented yet
@@ -65,7 +68,7 @@ spec:
   selector:
     app: graphdb-external-proxy
   ports:
-    - name: graphdb-proxy-port
+    - name: gdb-proxy-port
       port: 7200
       targetPort: 7200
       protocol: TCP

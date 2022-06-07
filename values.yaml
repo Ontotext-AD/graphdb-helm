@@ -112,10 +112,10 @@ graphdb:
     replicas: 1
     resources:
       limits:
-        memory: 128Mi
+        memory: 512Mi
         cpu: 500m
       requests:
-        memory: 128Mi
+        memory: 512Mi
         cpu: 500m
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 

@@ -9,8 +9,7 @@ data:
   GDB_JAVA_OPTS: >-
     -Dgraphdb.vhosts={{ $.Values.deployment.protocol }}://{{ include "resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}
     -Dgraphdb.home.conf=/opt/graphdb/home/conf
-    -Dgraphdb.proxy.hosts={{- range $i, $node_index := until ( (int $.Values.graphdb.clusterConfig.nodesCount) )}}
-    graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace  }}.svc.cluster.local:7300{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},
+    -Dgraphdb.proxy.hosts={{- range $i, $node_index := until ( (int $.Values.graphdb.clusterConfig.nodesCount) )}}graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace  }}.svc.cluster.local:7300{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},
     {{- end }}
     {{- end }}
 {{- if ne (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}

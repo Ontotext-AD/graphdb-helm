@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: graphdb-external-proxy
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-external-proxy-configmap.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 15
       imagePullSecrets:

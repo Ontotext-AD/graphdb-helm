@@ -125,14 +125,6 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
-        # Label set so it can be targeted by a service
-        - name: label-set
-          image: bitnami/kubectl:latest
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              podName=(${HOSTNAME//./ })
-              kubectl label pods ${podName} set-component=${podName} --overwrite
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license
@@ -243,6 +235,7 @@ spec:
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
 
+{{- if eq (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
@@ -258,8 +251,7 @@ spec:
       port: 7200
       targetPort: 7200
       protocol: TCP
-
-{{- if ne (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
+{{- else }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
@@ -277,26 +269,3 @@ spec:
   selector:
     app: graphdb-node
 {{ end }}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    k8s-app: graphdb-node
-  name: graphdb-node-account
-  namespace: {{ $.Release.Namespace }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: graphdb-node
-  labels:
-    k8s-app: graphdb-node
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: graphdb-node-account
-    namespace: {{ $.Release.Namespace }}

@@ -268,4 +268,4 @@ spec:
   clusterIP: None
   selector:
     app: graphdb-node
-{{ end }}
+{{- end }}

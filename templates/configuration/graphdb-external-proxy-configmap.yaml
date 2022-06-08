@@ -8,8 +8,9 @@ metadata:
 data:
   # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
-    -Dgraphdb.proxy.hosts={{- range $i, $node_index := until ( (int $.Values.graphdb.clusterConfig.nodesCount) )}}{{ $.Values.deployment.protocol }}://graphdb-node-{{ $node_index }}.graphdb-node:7200{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},{{- end }}
+    -Dgraphdb.proxy.hosts={{- range $i, $node_index := until ( (int $.Values.graphdb.clusterConfig.nodesCount) )}}{{ $.Values.deployment.protocol }}://graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace  }}.svc.cluster.local:7200{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},{{- end }}
     {{- end }}
+    -Dgraphdb.rpc.address=graphdb-external-proxy-rpc:7300
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
     {{ default $.Values.graphdb.node.java_args}}
 {{- end }}

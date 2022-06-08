@@ -12,9 +12,6 @@ spec:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  persistentVolumeClaimRetentionPolicy:
-    whenDeleted: Delete
-    whenScaled: Retain
   selector:
     matchLabels:
       app: graphdb-node

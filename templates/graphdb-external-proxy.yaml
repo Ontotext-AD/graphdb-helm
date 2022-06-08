@@ -33,6 +33,8 @@ spec:
           ports:
             - name: gdb-proxy-port
               containerPort: 7200
+            - name: gdb-proxy-rpc
+              containerPort: 7300
           resources: {{ $.Values.graphdb.externalProxy.resources | toYaml | nindent 12 }}
           # TODO: Not implemented yet
 {{/*          startupProbe:*/}}
@@ -71,5 +73,20 @@ spec:
     - name: gdb-proxy-port
       port: 7200
       targetPort: 7200
+      protocol: TCP
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-external-proxy-rpc
+  labels:
+    app: graphdb-external-proxy
+spec:
+  selector:
+    app: graphdb-external-proxy
+  ports:
+    - name: gdb-proxy-rpc
+      port: 7300
+      targetPort: 7300
       protocol: TCP
 {{- end }}

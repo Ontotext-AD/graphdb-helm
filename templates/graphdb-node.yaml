@@ -237,7 +237,6 @@ spec:
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
 
-{{- if eq (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
@@ -253,21 +252,3 @@ spec:
       port: 7200
       targetPort: 7200
       protocol: TCP
-{{- else }}
----
-apiVersion: {{ $.Values.versions.service }}
-kind: Service
-metadata:
-  name: graphdb-headless
-  labels:
-    app: graphdb-node
-spec:
-  ports:
-    - name: graphdb
-      port: 7200
-    - name: graphdb-rpc
-      port: 7300
-  clusterIP: None
-  selector:
-    app: graphdb-node
-{{- end }}

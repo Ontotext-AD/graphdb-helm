@@ -50,9 +50,6 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-node-data-pvc
         {{- end }}
-        - name: graphdb-node-repo-config
-          configMap:
-            name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.node.repositoryConfigmap }}
         {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
         - name: graphdb-settings-config
           configMap:
@@ -149,37 +146,6 @@ spec:
               cp /tmp/license/*.license ./graphdb.license
               echo 'Done'
         {{- end }}
-        # REPO PROVISION
-        - name: provision-repository
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
-            {{- end }}
-              mountPath: /opt/graphdb/home
-            - name: graphdb-node-repo-config
-              mountPath: /tmp/graphdb
-          command: ['sh', '-c']
-          args:
-            - |
-              set -eu
-              for filename in /tmp/graphdb/*.ttl; do
-                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
-                echo "Repo name: $repositoryName"
-                echo "File name: $filename"
-                mkdir -p /opt/graphdb/home/data/repositories/$repositoryName ;
-                cd /opt/graphdb/home/data/repositories/$repositoryName ;
-
-                # If the repo configuration exists -> skip provisioning
-                [ -f config.ttl ] && echo "Repository $repositoryName exists, exiting..." && continue
-
-                echo "Provisioning GraphDB $repositoryName repository with file $filename" ;
-                cp $filename ./config.ttl ;
-                echo 'Done'
-              done
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}

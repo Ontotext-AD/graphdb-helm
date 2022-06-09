@@ -74,8 +74,8 @@ deployment:
     # -- Default timeouts in seconds for the underlying Nginx.
     timeout:
       connect: 5
-      read: 60
-      send: 60
+      read: 600
+      send: 600
 
 # GraphDB database configurations
 graphdb:

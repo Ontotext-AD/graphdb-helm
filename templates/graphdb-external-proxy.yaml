@@ -36,20 +36,20 @@ spec:
             - name: gdb-proxy-rpc
               containerPort: 7300
           resources: {{ $.Values.graphdb.externalProxy.resources | toYaml | nindent 12 }}
-{{/*          startupProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /proxy/health*/}}
-{{/*              port: gdb-proxy-port*/}}
-{{/*            failureThreshold: 30*/}}
-{{/*            timeoutSeconds: 5*/}}
-{{/*            periodSeconds: 10*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /proxy/health*/}}
-{{/*              port: gdb-proxy-port*/}}
-{{/*            initialDelaySeconds: 5*/}}
-{{/*            timeoutSeconds: 5*/}}
-{{/*            periodSeconds: 10*/}}
+          startupProbe:
+            httpGet:
+              path: /protocol
+              port: gdb-proxy-port
+            failureThreshold: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /proxy/health
+              port: gdb-proxy-port
+            initialDelaySeconds: 20
+            timeoutSeconds: 5
+            periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /proxy/health

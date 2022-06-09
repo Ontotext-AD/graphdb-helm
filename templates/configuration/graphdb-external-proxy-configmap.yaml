@@ -12,5 +12,6 @@ data:
     {{- end }}
     -Dgraphdb.rpc.address=graphdb-external-proxy-rpc:7300
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
+    -Dgraphdb.home=/opt/graphdb/home
     {{ default $.Values.graphdb.node.java_args}}
 {{- end }}

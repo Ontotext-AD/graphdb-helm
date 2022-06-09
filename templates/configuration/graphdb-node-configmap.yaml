@@ -15,7 +15,7 @@ data:
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     -Dgraphdb.home.conf=/opt/graphdb/home/conf
     -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
-{{- if ne (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
     -Dgraphdb.auth.token.secret={{ $.Values.graphdb.clusterConfig.clusterSecret | quote }}
 {{- end }}
     {{ default $.Values.graphdb.node.java_args}}

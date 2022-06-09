@@ -80,9 +80,13 @@ deployment:
 # GraphDB database configurations
 graphdb:
   clusterConfig:
+    # -- Number of GraphDB nodes to make a cluster with.
+    # It's recommended to have odd number of nodes like 3, 5 or 7
+    # Set value to 1 to run a standalone GraphDB instance.
     nodesCount: 3
+    # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
-    # Cluster configuration parameters:
+    # -- Cluster configuration parameters:
     electionMinTimeout: 7000
     electionRangeTimeout: 5000
     heartbeatInterval: 2000
@@ -102,14 +106,17 @@ graphdb:
     #logbackConfigMap: graphdb-logback-configmap
 
   security:
-    # If the security is enabled, it's mandatory to have a provisioning user, so the healthchecks and cluster linking can work properly
+    # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
     enabled: false
     provisioningUsername: provisioner
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
-  externalProxy:
+  # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
+  # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
+  clusterProxy:
     replicas: 1
+    # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
         memory: 512Mi
@@ -117,27 +124,20 @@ graphdb:
       requests:
         memory: 512Mi
         cpu: 500m
+    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 
+  # -- Settings for the GraphDB cluster nodes
   node:
-    # -- Reference to a secret containing 'graphdb.license' file to be used ny the nodes.
+    # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand
     license: graphdb-license
-    # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    # -- Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
-    # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction
 
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
-      # -- Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
-      # Example result: graphdb-default-worker-1-pv
-#      volumeNamePrefix: graphdb-default-worker
-#      storageClassName: standard
-#      # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
-#      storage: 10G
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -155,9 +155,7 @@ graphdb:
       requests:
         memory: 2Gi
         cpu: 2000m
-  # Reference to a configuration map with GraphDB specific configurations.
-  # Injected as environment variables.
-  #configmap: graphdb-configmap
+
   # GraphDB workbench configurations
   workbench:
     # -- This is the sub path at which GraphDB workbench can be opened.

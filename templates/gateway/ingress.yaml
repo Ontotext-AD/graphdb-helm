@@ -34,7 +34,7 @@ spec:
             backend:
               service:
               {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
-                name: graphdb-external-proxy
+                name: graphdb-cluster-proxy
               {{- else }}
                 name: graphdb-node
               {{- end }}

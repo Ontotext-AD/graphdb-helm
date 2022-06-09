@@ -1,4 +1,4 @@
-{{- if ne (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- if gt (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
 apiVersion: batch/v1

@@ -4,38 +4,38 @@
 apiVersion: {{ $.Values.versions.statefulset }}
 kind: Deployment
 metadata:
-  name: graphdb-external-proxy
+  name: graphdb-cluster-proxy
   labels:
-    app: graphdb-external-proxy
+    app: graphdb-cluster-proxy
 spec:
-  replicas: {{ $.Values.graphdb.externalProxy.replicas }}
+  replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
   selector:
     matchLabels:
-      app: graphdb-external-proxy
+      app: graphdb-cluster-proxy
   template:
     metadata:
       labels:
-        app: graphdb-external-proxy
+        app: graphdb-cluster-proxy
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-external-proxy-configmap.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 15
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
-        - name: graphdb-external-proxy
+        - name: graphdb-cluster-proxy
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]
           envFrom:
             - configMapRef:
-                name: graphdb-external-proxy-configmap
+                name: graphdb-cluster-proxy-configmap
           ports:
             - name: gdb-proxy-port
               containerPort: 7200
             - name: gdb-proxy-rpc
               containerPort: 7300
-          resources: {{ $.Values.graphdb.externalProxy.resources | toYaml | nindent 12 }}
+          resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
           startupProbe:
             httpGet:
               path: /protocol
@@ -61,13 +61,13 @@ spec:
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
 metadata:
-  name: graphdb-external-proxy
+  name: graphdb-cluster-proxy
   labels:
-    app: graphdb-external-proxy
+    app: graphdb-cluster-proxy
 spec:
   type: LoadBalancer
   selector:
-    app: graphdb-external-proxy
+    app: graphdb-cluster-proxy
   ports:
     - name: gdb-proxy-port
       port: 7200
@@ -77,12 +77,12 @@ spec:
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
 metadata:
-  name: graphdb-external-proxy-rpc
+  name: graphdb-cluster-proxy-rpc
   labels:
-    app: graphdb-external-proxy
+    app: graphdb-cluster-proxy
 spec:
   selector:
-    app: graphdb-external-proxy
+    app: graphdb-cluster-proxy
   ports:
     - name: gdb-proxy-rpc
       port: 7300

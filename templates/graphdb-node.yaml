@@ -79,7 +79,7 @@ spec:
           ports:
             - name: graphdb
               containerPort: 7200
-              {{- if ne (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
+              {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
             - name: graphdb-rpc
               containerPort: 7300
               {{- end }}

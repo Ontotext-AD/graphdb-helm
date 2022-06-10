@@ -4,7 +4,6 @@
 # To override single property use --set
 # To override multiple, provide another values-override.yaml with the -f flag
 # See https://helm.sh/docs/chart_template_guide/values_files/
-#TODO: fix descriptions, also while at it the readme needs quite the rework
 
 global:
   imagePullSecrets: []
@@ -80,17 +79,21 @@ deployment:
 # GraphDB database configurations
 graphdb:
   clusterConfig:
-    # -- Number of GraphDB nodes to make a cluster with.
-    # It's recommended to have odd number of nodes like 3, 5 or 7
+    # -- Number of GraphDB nodes to be used in the cluster.
     # Set value to 1 to run a standalone GraphDB instance.
-    nodesCount: 3
+    nodesCount: 1
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
     # -- Cluster configuration parameters:
+    # The minimum wait time in milliseconds for a heartbeat from a leader.
     electionMinTimeout: 7000
+    # The variable portion of each waiting period in milliseconds for a heartbeat.
     electionRangeTimeout: 5000
+    # The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.
     heartbeatInterval: 2000
+    #The size of the data blocks transferred during data replication streaming through the RPC protocol.
     messageSize: 64
+    # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
     verificationTimeout: 1500
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
@@ -115,14 +118,15 @@ graphdb:
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
   clusterProxy:
+    # -- Number of cluster proxies used to access the GraphDB cluster
     replicas: 1
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
-        memory: 512Mi
+        memory: 1Gi
         cpu: 500m
       requests:
-        memory: 512Mi
+        memory: 1Gi
         cpu: 500m
     # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
@@ -138,6 +142,12 @@ graphdb:
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
+      # -- Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
+      # Example result: graphdb-default-node-0-pv
+      #      volumeNamePrefix: graphdb-default-node
+      #      storageClassName: standard
+      #      # -- Storage size request for each node. The persistent volume has to be able to satisfy the size.
+      #      storage: 10G
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:

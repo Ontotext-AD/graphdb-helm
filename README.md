@@ -157,7 +157,7 @@ You should see the following output:
   \____|_|  \__,_| .__/|_| |_|____/|____/    |_____|_____|
                  |_|
 --------------------------------------------------------------------------------------------
-version: 9.8.0
+version: 10.0.0
 GDB cluster: true
 
 ** Please be patient while the chart is being deployed and services are available **
@@ -179,7 +179,7 @@ See https://kubernetes.io/docs/concepts/storage/volumes/.
 
 ### Local deployment
 
-Local persistent volumes are configured with `deployment.storage` from [values.yaml](values.yaml).
+Local persistent volumes are configured with `graphdb.node.persistence` from [values.yaml](values.yaml).
 
 ### Cloud deployment
 
@@ -190,16 +190,10 @@ component has a section `persistence` that has to be updated.
 
 ## API Gateway
 
-The services are proxied using Kong API gateway. By default, it is configured to route:
+The services are proxied using nginx Ingress gateway. By default, it is configured to route:
 
 - GraphDB Workbench
-- GraphDB Workbench workers if the cluster deployment is enabled
-
-See the default declarative
-[configuration](files/kong.dbless.yaml) of Kong to understand what and how is proxied.
-
-To learn about the declarative syntax, see
-https://docs.konghq.com/1.5.x/db-less-admin-api/#declarative-configuration.
+- GraphDB cluster proxy if the cluster deployment is enabled
 
 ## Customizing
 
@@ -207,62 +201,23 @@ Every component in configured with sensible defaults. Some of them are applied f
 [values.yaml](values.yaml). Make sure you read it thoroughly, understand each property and the
 impact of changing any one of them.
 
-The properties are used across configuration maps and secrets and most of the components allow
-the overriding of their configuration maps and secrets from [values.yaml](values.yaml).
-See `<component>.configmap` and `<component>.secret`.
-
-**Note**: If you are familiar with Kubernetes, you could modify the components configuration
+**Note**: If you are familiar with Kubernetes, you could modify the component's configuration
 templates directly.
-
-
-### GraphDB repositories
-
-By default, the provisioning creates a default repository in GraphDB. This repo is provided by
-`graphdb-master-repo-default-configmap` for master instances and `graphdb-worker-repo-default-configmap` for worker instances.
-The repositories are created using .ttl repository configuration files, by default those are [worker.default.ttl](files/config/graphdb-repo.default.ttl) and [master.default.ttl](files/config/master.default.ttl).
-
-Provisioning of multiple repositories is also supported. If the configmaps contain more than one .ttl file, the provisioning will create the repositories from all .ttl files contained in the configmap.
-Note that `master` and `worker` repositories are different and must be supplied correctly in a cluster environment.
-Also note that when standalone GraphDB instance is used, the master configmap is used, but with a `worker` `config.ttl`!
-
-To change the default TTL, you can prepare another configuration map containing a
-`config.ttl` file(s)  entry:
-
-```bash
-kubectl create configmap graphdb-repo-configmap --from-file=config.ttl
-```
-
-After that, update the property `graphdb.masters.repositoryConfigmap` / `graphdb.workers.repositoryConfigmap` from
-[values.yaml](values.yaml) to refer to the new configuration map.
-
-#### Ontop repositories
-
-Ontop repositories require a jdbc driver. To use this type of repository, you have to provide a jdbc driver named `jdbc-driver.jar`.
-It must be located in each GraphDB instance in which you wish to use with Ontop repository, in the folder `/opt/graphdb/home/jdbc-driver`.
-The directory is part of the GraphDB home directory which is persistent, so the driver will persist after a restart or reschedule of a GraphDB pod.
 
 ### Customizing GraphDB cluster and GraphDB specific properties
 
 GraphDB's Helm chart is made to be highly customizable regarding GraphDB's specific options and properties.
 There are 3 important configuration sections:
 - GraphDB cluster configuration
-- Cluster instances (masters/workers) configuration
-- Backup, restore and cleanup options
+- GraphDB node configuration
+- GraphDB cluster proxy configuration
 
 #### GraphDB cluster configuration
 
-By default the Helm chart supports the 3 topologies that we recommend in our documentation. This is configured by setting `graphdb.topology`
-Possible values: `standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted`. Masters and workers count in cluster modes are controlled by mastersCount and workersCount properties
+Since the release of GraphDB master nodes are no longer needed for a cluster, so the size of the cluster is controlled by just one property: `graphdb.clusterConfig.nodesCount`.
+We recommend a cluster with odd amount of nodes like 3, 5, 7 etc...
 
-**standalone** - Launches single instance of GraphDB with a preconfigured worker repository.
-
-**1m_3w** - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
-
-**2m3w_rw_ro** - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
-
-**2m3w_muted** - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
-
-Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
+Note: If "1" is selected as node count, the launched instance will use master-1 properties, but a worker repository will be created!
 
 - The section `graphdb.clusterConfig` can be used to configure a GraphDB cluster. It's responsible for the connections between the cluster instances and their settings (muted, readonly).
 - The subsection `graphdb.clusterConfig.masterWorkerMapping` describes which GraphDB instances will be linked. The format must be `master-X -> worker-Y`. Required only for `2m3w_muted` topology.
@@ -416,7 +371,7 @@ If you're using Google cloud, please change this path to something else, not loc
 ##### Microsoft Azure
 
 We recommend not to use the Microsoft Azure storage of type `azurefile`. The write speeds of this storage type when used in a Kubernetes cluster is
-not good enough for GraphDB and we recommend not to use it in production environments.
+not good enough for GraphDB, and we recommend against using it in production environments.
 
 See https://github.com/Azure/AKS/issues/223
 
@@ -428,13 +383,13 @@ See https://helm.sh/docs/chart_template_guide/values_files/.
 - Preparing another *values.yaml*:
 
 ```bash
-helm install graphdb-ee . -f overrides.yaml
+helm install graphdb . -f overrides.yaml
 ```
 
 - Overriding specific values:
 
 ```bash
-helm install graphdb-ee . --set monitoring.enabled=false --set security.enabled=false
+helm install graphdb . --set monitoring.enabled=false --set security.enabled=false
 ```
 
 ### Deployment
@@ -464,113 +419,64 @@ about defining resource limits.
 
 ## Values
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| global.imagePullSecrets | list | [] | List of additional image pull secrets. This will be concatenated with anything at a lower level |
-| global.imageRegistry | string | docker.io | This is used as a global override for the image registry. If defined it takes precedence over `images.XYZ.registry` |
-| global.storageClass | string | standard | Used as a default storage class when one is not provided explicitly at a lower level |
-| global.deployment.host / global.ingressHost | string | Overrides the hostname at which graphdb will be exposed. The order of precedence is global.deplyment.host -> global.ingressHost -> deployment.host |  
+| Key                     | Type   | Default   | Description                                                                                                         |
+|-------------------------|--------|-----------|---------------------------------------------------------------------------------------------------------------------|
+| global.imagePullSecrets | list   | []        | List of additional image pull secrets. This will be concatenated with anything at a lower level                     |
+| global.imageRegistry    | string | docker.io | This is used as a global override for the image registry. If defined it takes precedence over `images.XYZ.registry` |
+| global.storageClass     | string | standard  | Used as a default storage class when one is not provided explicitly at a lower level                                |
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| deployment.host | string | `"localhost"` |  |
-| deployment.imagePullPolicy | string | `"IfNotPresent"` | Defines the policy with which components will request their image. |
-| deployment.ingress | object | `{"maxRequestSize":"512M","timeout":{"connect":5,"read":60,"send":60}}` | Ingress related configurations |
-| deployment.ingress.maxRequestSize | string | `"512M"` | Sets the maximum size for all requests to the underlying Nginx |
-| deployment.ingress.timeout | object | `{"connect":5,"read":60,"send":60}` | Default timeouts in seconds for the underlying Nginx. |
-| deployment.protocol | string | `"http"` | The hostname and protocol at which the graphdb will be accessible. Needed to configure ingress as well as some components require it to properly render their UIs |
-| deployment.storage | string | `"/data"` | The storage place where components will read/write their persistent data in case the default persistent volumes are used. They use the node's file system. |
-| deployment.tls.enabled | bool | `false` | Feature toggle for SSL termination. Disabled by default. |
-| deployment.tls.secretName | string | `nil` | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment. |
-| graphdb.backupRestore.auto_backup | string | `"*/5 * * * *"` | Cron Schedule for auto backup. Creates an automatic backup, stored in the graphdb-backup-pv (default folder - /data/graphdb-backups). The backups are saved in format MM-DD-YYYY-hh-mm in UTC! |
-| graphdb.backupRestore.backup_max_age | string | `"2"` | Max number of days for backups. |
-| graphdb.backupRestore.backups_count | string | `"2"` | Max number of backup dirs saved. |
-| graphdb.backupRestore.cleanup_cron | string | `"*/2 * * * *"` | Cleans up the backups directory. Makes sure that there is a limit of the stored backups. Each or both of backups_count and backups_max_age could be used. |
-| graphdb.backupRestore.enable_automatic_backups_cleanup | bool | `false` | Enables cleanup of the backups directory. WARNING!!! This can be used only by storage classes that have access mode ReadWriteMany because the backups PVC must be attached to a second pod. |
-| graphdb.backupRestore.enable_backups | bool | `false` | Enable auto/manual backups. |
-| graphdb.backupRestore.enable_restore | bool | `true` | Trigger restore at a given time from a given file. |
-| graphdb.backupRestore.persistence.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
-| graphdb.backupRestore.persistence.volumeClaimTemplateSpec.resources.requests.storage | string | `"10Gi"` |  |
-| graphdb.backupRestore.persistence.volumeClaimTemplateSpec.storageClassName | string | `"standard"` |  |
-| graphdb.backupRestore.repositories[0] | string | `"default"` |  |
-| graphdb.backupRestore.restore_from_backup | string | `"2021-06-24-12-59"` | The name of the backup directory we want to restore. Must be given in format YYYY-DD-MM-hh-mm, where YYYY-DD-MM-hh-mm is your backup directory. The backup directory name contains the repository name too, but it must be omitted here. |
-| graphdb.backupRestore.restore_repository | string | `"default"` | The name of the repository we want to restore. |
-| graphdb.backupRestore.trigger_backup | string | `""` | A future date at which we want to trigger a backup. Must be given in format YYYY-DD-MM hh:mm NOTE: UTC TIME IS USED! |
-| graphdb.backupRestore.trigger_restore | string | `"2021-06-24 13:28"` | A future date at which we want to trigger a restore. Works only with a cluster with workers. For a standalone the restore is called from an init container. Must be given in format YYYY-DD-MM hh:mm NOTE: UTC TIME IS USED! |
-| graphdb.clusterConfig.clusterSecret | string | `"s3cr37"` | A secret used for secure communication amongst the nodes in the cluster. |
-| graphdb.clusterConfig.masterWorkerMapping | list | `["master-1 -> worker-1","master-1 -> worker-2","master-2 -> worker-3"]` | Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology. |
-| graphdb.clusterConfig.mastersCount | int | `1` |  |
-| graphdb.clusterConfig.mutedMasters | list | `["master-2"]` | Describes which masters will be set as muted. Required only for 2m3w_muted topology. |
-| graphdb.clusterConfig.readOnlyMasters | list | `["master-2"]` | Describes which masters will be set as read only. Required only for 2m3w_rw_ro topology. |
-| graphdb.clusterConfig.syncPeersMapping | list | `["master-1 <-> master-2"]` | Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology. |
-| graphdb.clusterConfig.workersCount | int | `2` |  |
-| graphdb.configs.jolokiaAccessConfigMap | string | `"graphdb-jolokia-access-configmap"` | Reference to a configmap used to overwrite the default GraphDB jolokia-access.xml, with an externally provided jolokia-access.xml. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
-| graphdb.configs.logbackConfigMap | string | `"graphdb-logback-configmap"` | Reference to a configmap used to overwrite the default GraphDB logback.xml, with an externally provided logback.xml. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
-| graphdb.configs.propertiesConfigMap | string | `"graphdb-properties-configmap"` | Reference to a configmap used to overwrite the default graphdb.properties, with an externally provided graphdb.properties. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
-| graphdb.configs.settingsConfigMap | string | `"graphdb-settings-configmap"` | Reference to a configmap used to overwrite the default GraphDB settings.js, with an externally provided settings.js. Even if left to default if security is enabled the configmap will be used to enable GraphDB's security. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
-| graphdb.configs.usersConfigMap | string | `"graphdb-users-configmap"` | Reference to a configmap used to overwrite the default GraphDB users.js, with an externally provided users.js. Even if left to default if security is enabled the configmap will be used to add a provisioning user. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
-| graphdb.masters.java_args | string | `"-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m -Dgraphdb.home.work=/mnt/graphdb"` | Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.masters.license | string | `"graphdb-license"` | Reference to a secret containing 'graphdb.license' file to be used by master nodes. Can be set to "" (no license) if this GraphDB instance is used only with a "master" repository! Important: Must be created beforehand |
-| graphdb.masters.nodes[0].java_args | string | `"-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"` |  |
-| graphdb.masters.nodes[0].license | string | `"graphdb-license"` |  |
-| graphdb.masters.nodes[0].name | string | `"master-1"` |  |
-| graphdb.masters.persistence | object | `{"storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-default-master"}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.masters.persistence.storage | string | `"10G"` | Storage size request for each master. The persistent volume has to be able to satisfy the size. |
-| graphdb.masters.persistence.volumeNamePrefix | string | `"graphdb-default-master"` | Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used. Example result: graphdb-default-master-1-pv |
-| graphdb.masters.repositoryConfigmap | string | `"graphdb-repo-default-configmap"` | Reference to a configuration map containing one or more .ttl files used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
-| graphdb.masters.resources | object | `{"limits":{"memory":"1Gi"},"requests":{"memory":"1Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html |
-| graphdb.security.enabled | bool | `false` |  |
-| graphdb.security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
-| graphdb.security.provisioningUsername | string | `"provisioner"` |  |
-| graphdb.tools | object | `{"loadrdf":{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false},"persistence":{"storage":"10G","storageClassName":"standard"},"preload":{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false},"resources":{"limits":{"memory":"10G"},"requests":{"memory":"10G"}},"storage_tool":{"command":"scan","options":"","repository":"repo-test-1","trigger":false}}` | Tools for loading, scanning and repairing data in repos |
-| graphdb.tools.loadrdf | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html |
-| graphdb.tools.loadrdf.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p If you use the "-f" option, the tool will override the repository and could lose some data. |
-| graphdb.tools.loadrdf.trigger | bool | `false` | If trigger is set to true, then the loadrdf tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
-| graphdb.tools.persistence.storage | string | `"10G"` | Storage size request for the preload/loadrdf pv. The persistent volume has to be able to satisfy the size. |
-| graphdb.tools.preload | object | `{"flags":"-f","rdfDataFile":"geonames_europe.ttl","trigger":false}` | Tool to preload data in a chosen repo https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html |
-| graphdb.tools.preload.flags | string | `"-f"` | Options to add to the command possible flags: -f, -p, -r If you use the "-f" option, the tool will override the repository and could lose some data. |
-| graphdb.tools.preload.trigger | bool | `false` | If trigger is set to true, then the preload tool will be run while initializing the deployment Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv (default pv is: /data/graphdb-worker-preload-data) |
-| graphdb.tools.storage_tool | object | `{"command":"scan","options":"","repository":"repo-test-1","trigger":false}` | Tool for scanning and repairing data See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html |
-| graphdb.tools.storage_tool.command | string | `"scan"` | commands to run the storage-tool with |
-| graphdb.tools.storage_tool.options | string | `""` | additional options to run the storage-tool with |
-| graphdb.tools.storage_tool.repository | string | `"repo-test-1"` | repo to run command on |
-| graphdb.tools.storage_tool.trigger | bool | `false` | If trigger is set to true, then the storage tool will be run while initializing the deployment |
-| graphdb.topology | string | `"1m_3w"` | Cluster topology to be used. Possible values: standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted. standalone - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties 1m_3w - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created! |
-| graphdb.workbench.subpath | string | `"/graphdb"` | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front) |
-| graphdb.workers.java_args | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` | Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.workers.license | string | `"graphdb-license"` | Reference to a secret containing 'graphdb.license' file to be used by worker nodes. This is a required secret without which GraphDB won't operate if you use SE/EE editions. Important: Must be created beforehand |
-| graphdb.workers.nodes | list | `[{"license":"graphdb-license","name":"worker-1"},{"java_args":"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport ","name":"worker-2"}]` | Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties |
-| graphdb.workers.persistence | object | `{"storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-default-worker"}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.workers.persistence.storage | string | `"10G"` | Storage size request for each worker. The persistent volume has to be able to satisfy the size. |
-| graphdb.workers.persistence.volumeNamePrefix | string | `"graphdb-default-worker"` | Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used. Example result: graphdb-default-worker-1-pv |
-| graphdb.workers.repositoryConfigmap | string | `"graphdb-worker-repo-default-configmap"` | Reference to a configuration map containing one or more .ttl files used for repository initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html |
-| graphdb.workers.resources | object | `{"limits":{"memory":"1Gi"},"requests":{"memory":"1Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to your GraphDB version documentation For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html Note: Same as for the master node |
-| graphdb.workers.topologySpreadConstraints | string | `nil` |  |
-| images.busybox | map | `{repository: busybox, tag: "1.31"}` |  |
-| images.graphdb | map | `{repository: ontotext/graphdb, tag: "9.9.0-ee"}` |  |
-| images.kong | map | `{repository: kong, tag: "2.1-alpine"}` |  |
-| ingress.enabled | bool | `true` |  |
-| kong.configmap | string | `"kong-configmap"` | Reference to a configuration map with Kong configurations as environment variables. Override if you need to further configure Kong's system. See https://docs.konghq.com/2.0.x/configuration/ |
-| kong.enabled | bool | `true` |  |
-| kong.memCacheSize | string | `"64m"` | Memory cache size configuration for Kong in DB-less mode. Tune according to the given resource limits. See https://docs.konghq.com/2.0.x/configuration/#mem_cache_size |
-| kong.nodeSelector | object | `{}` |  |
-| kong.port | object | `{"nodePort":31122}` | Overwrite if you want to deploy Kong on a non-standard port, such as instances where you want to have two different installations on the same hardware. |
-| kong.resources.limits.memory | string | `"2048Mi"` |  |
-| kong.servicesConfigmap | string | `"kong-services-configmap"` | Reference to a configuration map containing declarative Kong configuration for services and routes. This is the DB-less config. See https://docs.konghq.com/1.5.x/db-less-admin-api/#declarative-configuration |
-| kong.timeout | object | `{"connect":60000,"read":60000,"write":60000}` | Global timeout configurations for all services. Values are in milliseconds. |
-| kong.workers | string | `"auto"` | Amount of Nginx worker processes. This affects how much memory will be consumed. The auto value will determine the workers based on the available CPUs |
-| versions.api | string | `"apps/v1"` |  |
-| versions.configmap | string | `"v1"` |  |
-| versions.daemon | string | `"apps/v1"` |  |
-| versions.deployment | string | `"apps/v1"` |  |
-| versions.ingress | string | `"networking.k8s.io/v1"` |  |
-| versions.job | string | `"batch/v1"` |  |
-| versions.pv | string | `"v1"` |  |
-| versions.pvc | string | `"v1"` |  |
-| versions.secret | string | `"v1"` |  |
-| versions.service | string | `"v1"` |  |
-| versions.statefulset | string | `"apps/v1"` |  |
-| versions.volume | string | `"v1"` |  |
+| Key                                        | Type   | Default                                                                                                    | Description                                                                                                                                                                                                                                                                                                                 |
+|--------------------------------------------|--------|------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| deployment.host                            | string | `"localhost"`                                                                                              | Overrides the hostname at which graphdb will be exposed.                                                                                                                                                                                                                                                                    |
+| deployment.imagePullPolicy                 | string | `"IfNotPresent"`                                                                                           | Defines the policy with which components will request their image.                                                                                                                                                                                                                                                          |
+| deployment.ingress                         | object | `{"enabled":"true","class":"nginx","maxRequestSize":"512M","timeout":{"connect":5,"read":600,"send":600}}` | Ingress related configurations.                                                                                                                                                                                                                                                                                             |
+| deployment.ingress.annotations             | object | `{}`                                                                                                       | Sets extra ingress annotations.                                                                                                                                                                                                                                                                                             |
+| deployment.ingress.class                   | string | `nginx`                                                                                                    |                                                                                                                                                                                                                                                                                                                             |
+| deployment.ingress.enabled                 | bool   | `true`                                                                                                     | Toggle to enable or disable the external access to the kubernetes cluster.                                                                                                                                                                                                                                                  |
+| deployment.ingress.maxRequestSize          | string | `"512M"`                                                                                                   | Sets the maximum size for all requests to the underlying Nginx.                                                                                                                                                                                                                                                             |
+| deployment.ingress.timeout                 | object | `{"connect":5,"read":600,"send":600}`                                                                      | Default timeouts in seconds for the underlying Nginx.                                                                                                                                                                                                                                                                       |
+| deployment.protocol                        | string | `"http"`                                                                                                   | The hostname and protocol at which the graphdb will be accessible. Needed to configure ingress as well as some components require it to properly render their UIs.                                                                                                                                                          |
+| deployment.storage                         | string | `"/data"`                                                                                                  | The storage place where components will read/write their persistent data in case the default persistent volumes are used. They use the node's file system.                                                                                                                                                                  |
+| deployment.tls.enabled                     | bool   | `false`                                                                                                    | Feature toggle for SSL termination. Disabled by default.                                                                                                                                                                                                                                                                    |
+| deployment.tls.secretName                  | string | `nil`                                                                                                      | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment.                                                                                                                                                                              |
+| graphdb.clusterConfig.clusterSecret        | string | `"s3cr37"`                                                                                                 | A secret used for secure communication amongst the nodes in the cluster.                                                                                                                                                                                                                                                    |
+| graphdb.clusterConfig.electionMinTimeout   | int    | `7000`                                                                                                     | The minimum wait time in milliseconds for a heartbeat from a leader.                                                                                                                                                                                                                                                        |
+| graphdb.clusterConfig.electionRangeTimeout | int    | `5000`                                                                                                     | The variable portion of each waiting period in milliseconds for a heartbeat.                                                                                                                                                                                                                                                |
+| graphdb.clusterConfig.heartbeatInterval    | int    | `2000`                                                                                                     | The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.                                                                                                                                                                                                                           |
+| graphdb.clusterConfig.messageSize          | int    | `64`                                                                                                       | The size of the data blocks transferred during data replication streaming through the RPC protocol.                                                                                                                                                                                                                         |
+| graphdb.clusterConfig.nodesCount           | int    | `1`                                                                                                        | Number of GraphDB nodes to be used in the cluster. Set value to `1` to run a standalone GraphDB instance.                                                                                                                                                                                                                   |
+| graphdb.clusterConfig.verificationTimeout  | int    | `1500`                                                                                                     | The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.                                                                                                                                                             |
+| graphdb.clusterProxy.replicas              | int    | `1`                                                                                                        | Number of cluster proxies used to access the GraphDB cluster                                                                                                                                                                                                                                                                | 
+| graphdb.clusterProxy.resources             | object | `{"limits":{"memory":"1Gi","cpu":"500m"},"requests":{"memory":"1Gi","cpu":"500m"}}`                        | Minimum requirements for a successfully running GraphDB cluster proxy                                                                                                                                                                                                                                                       |
+| graphdb.clusterProxy.java_args             | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"`                 | Java arguments with which cluster proxy instances will be launched. Configuration properties can also be passed here in the format -Dprop=value                                                                                                                                                                             |
+| graphdb.configs.logbackConfigMap           | string | `"graphdb-logback-configmap"`                                                                              | Reference to a configmap used to overwrite the default GraphDB logback.xml, with an externally provided logback.xml. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html                                                                                                         |
+| graphdb.configs.propertiesConfigMap        | string | `"graphdb-properties-configmap"`                                                                           | Reference to a configmap used to overwrite the default graphdb.properties, with an externally provided graphdb.properties. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html                                                                                                   |
+| graphdb.configs.settingsConfigMap          | string | `"graphdb-settings-configmap"`                                                                             | Reference to a configmap used to overwrite the default GraphDB settings.js, with an externally provided settings.js. Even if left to default if security is enabled the configmap will be used to enable GraphDB's security. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html |
+| graphdb.configs.usersConfigMap             | string | `"graphdb-users-configmap"`                                                                                | Reference to a configmap used to overwrite the default GraphDB users.js, with an externally provided users.js. Even if left to default if security is enabled the configmap will be used to add a provisioning user. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html         |
+| graphdb.node.java_args                     | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"`                 | Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value                                                                                                                                                                              |
+| graphdb.node.license                       | string | `"graphdb-license"`                                                                                        | Reference to a secret containing 'graphdb.license' file to be used by the cluster nodes. This is a required secret without which GraphDB won't operate in a cluster. Important: Must be created beforehand                                                                                                                  |
+| graphdb.node.persistence                   | object | `{"storage":"10G","storageClassName":"standard","volumeNamePrefix":"graphdb-default-node"}`                | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system.                                                                                                                                                                                                                   |
+| graphdb.node.persistence.storage           | string | `"10G"`                                                                                                    | Storage size request for each node. The persistent volume has to be able to satisfy the size.                                                                                                                                                                                                                               |
+| graphdb.node.persistence.volumeNamePrefix  | string | `"graphdb-default-node"`                                                                                   | Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used. Example result: graphdb-default-node-1-pv                                                                                                                                                    |
+| graphdb.node.resources                     | object | `{"limits":{"memory":"2Gi","cpu":"2000m"},"requests":{"memory":"2Gi","cpu":"2000m"}}`                      | Minimum requirements for data sets of up to 50 million RDF triples. For resizing, refer according to the GraphDB documentation. See http://graphdb.ontotext.com/documentation/requirements.html                                                                                                                             |
+| graphdb.security.enabled                   | bool   | `false`                                                                                                    |                                                                                                                                                                                                                                                                                                                             |
+| graphdb.security.provisioningPassword      | string | `"iHaveSuperpowers"`                                                                                       |                                                                                                                                                                                                                                                                                                                             |
+| graphdb.security.provisioningUsername      | string | `"provisioner"`                                                                                            |                                                                                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                                                                                                                           | Cluster topology to be used. Possible values: standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted. standalone - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties 1m_3w - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created! |
+| graphdb.workbench.subpath                  | string | `"/graphdb"`                                                                                               | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front)                                                                                                                                                                                        |
+| images.busybox                             | map    | `{repository: busybox, tag: "1.31"}`                                                                       |                                                                                                                                                                                                                                                                                                                             |
+| images.graphdb                             | map    | `{repository: ontotext/graphdb, tag: "10.0.0"}`                                                            |                                                                                                                                                                                                                                                                                                                             |
+| versions.api                               | string | `"apps/v1"`                                                                                                |                                                                                                                                                                                                                                                                                                                             |
+| versions.configmap                         | string | `"v1"`                                                                                                     |                                                                                                                                                                                                                                                                                                                             |
+| versions.daemon                            | string | `"apps/v1"`                                                                                                |                                                                                                                                                                                                                                                                                                                             |
+| versions.deployment                        | string | `"apps/v1"`                                                                                                |                                                                                                                                                                                                                                                                                                                             |
+| versions.ingress                           | string | `"networking.k8s.io/v1"`                                                                                   |                                                                                                                                                                                                                                                                                                                             |
+| versions.job                               | string | `"batch/v1"`                                                                                               |                                                                                                                                                                                                                                                                                                                             |
+| versions.pv                                | string | `"v1"`                                                                                                     |                                                                                                                                                                                                                                                                                                                             |
+| versions.pvc                               | string | `"v1"`                                                                                                     |                                                                                                                                                                                                                                                                                                                             |
+| versions.secret                            | string | `"v1"`                                                                                                     |                                                                                                                                                                                                                                                                                                                             |
+| versions.service                           | string | `"v1"`                                                                                                     |                                                                                                                                                                                                                                                                                                                             |
+| versions.statefulset                       | string | `"apps/v1"`                                                                                                |                                                                                                                                                                                                                                                                                                                             |
+| versions.volume                            | string | `"v1"`                                                                                                     |                                                                                                                                                                                                                                                                                                                             |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.5.0](https://github.com/norwoodj/helm-docs/releases/v1.5.0)
@@ -605,6 +511,6 @@ https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/.
 
 ## Maintainers
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| Ontotext GraphDB team | graphdb-support@ontotext.com |  |
+| Name                    | Email                        | Url |
+|-------------------------|------------------------------|-----|
+| Ontotext GraphDB team   | graphdb-support@ontotext.com |     |

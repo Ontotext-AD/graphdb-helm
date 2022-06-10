@@ -45,7 +45,7 @@ spec:
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /protocol
+              path: /proxy/ready
               port: gdb-proxy-port
             initialDelaySeconds: 20
             timeoutSeconds: 5

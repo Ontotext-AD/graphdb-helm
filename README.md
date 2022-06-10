@@ -214,38 +214,14 @@ There are 3 important configuration sections:
 
 #### GraphDB cluster configuration
 
-Since the release of GraphDB master nodes are no longer needed for a cluster, so the size of the cluster is controlled by just one property: `graphdb.clusterConfig.nodesCount`.
+With the release of GraphDB 10, master nodes are no longer needed for a cluster, so the size of the cluster is controlled by just one property: `graphdb.clusterConfig.nodesCount`.
 You will need at least three GraphDB installations to create a fully functional cluster. Remember that the Raft algorithm recommends an odd number of nodes, so a cluster of five nodes is a good choice.
 
 Note: If "1" is selected as node count, the launched instance will use master-1 properties, but a worker repository will be created!
 
-- The section `graphdb.clusterConfig` can be used to configure a GraphDB cluster. It's responsible for the connections between the cluster instances and their settings (muted, readonly).
-- The subsection `graphdb.clusterConfig.masterWorkerMapping` describes which GraphDB instances will be linked. The format must be `master-X -> worker-Y`. Required only for `2m3w_muted` topology.
-- The subsection `graphdb.clusterConfig.readOnlyMasters` describes which GraphDB master instances will be set as read only. The format must be `master-X`. Required only for `2m3w_rw_ro` topology.
-- The subsection `graphdb.clusterConfig.mutedMasters` describes  which GraphDB master instances will be linked as sync peer. The format must be `master-X <-> master-Y`. Required for `2m3w_rw_ro` and `2m3w_muted` topology.
+- The section `graphdb.clusterConfig` can be used to configure a GraphDB cluster. 
 
-`graphdb.clusterConfig.workersCount` and `graphdb.clusterConfig.mastersCount` tell the chart how many worker instances and how many masters instances to be launched.
-
-See more about the cluster topologies here: https://graphdb.ontotext.com/documentation/10.0-M3/graphdb/cluster-topologies.html
-
-#### Cluster instances (masters/workers) configuration
-
-GraphDB's Helm chart allows some configurations to be set for all masters or all workers instances. It also allows overrides of some configurations for each worker instance or each master instance.
-The global configurations for all masters/workers instances are placed in the section `graphdb.masters.*` and `graphdb.workers.*`.
-
-Each configuration can be overridden for each master/worker node. The overrides are described in `graphdb.masters.nodes.*` and `graphdb.workers.nodes.*`. In those subsections specific configurations for each cluster node can be specified in the format:
-
-```bash
-nodes:
-    - name: master-1
-        java_args: " -Xmx4G -XX:MaxRAMPercentage=70 -XX:+UseContainerSupport"
-        nodeSelector: {}
-        license: graphdb-license
-```
-
-For now the supported configurations are `java_args`, `nodeSelector`, `license`, `affinity`, `tolerations`, `topologySpreadConstraints`
-
-For more information about node scheduling options see https://kubernetes.io/docs/concepts/scheduling-eviction
+See more about the cluster here: https://graphdb.ontotext.com/documentation/10.0-M2/graphdb/cluster-basics.html
 
 #### Deploying GraphDB with security
 

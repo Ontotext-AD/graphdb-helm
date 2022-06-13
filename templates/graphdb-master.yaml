@@ -226,7 +226,11 @@ spec:
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
+            {{- if hasKey $.Values.graphdb.masters.persistence "volumeClaimTemplateSpec" }}
+            - name: graphdb-master-{{ $master_index }}-data-dynamic-pvc
+            {{- else }}
             - name: graphdb-master-storage
+            {{- end }}
               mountPath: /opt/graphdb/
             - name: graphdb-backup-pvc
               mountPath: {{ $.Values.deployment.storage }}/graphdb-backups/

@@ -206,7 +206,7 @@ The Helm chart is completely new and not backwards-compatible.
       kubectl patch pv <graphdb-default-pv> -p '{"spec":{"claimRef":{"namespace":"<namespace-name>"}}}'
       ```
 
-0Install the 10.0-M3 Helm chart. Remember to edit:
+10. Install the 10.0-M3 Helm chart. Remember to edit:
    
 - `graphdb.node.resources.limits.memory` and `graphdb.node.resources.requests.memory` to the ones used by the old workers
 - `graphdb.nodesCount:` to the number of nodes you want. The raft protocol recommends an odd amount of nodes. If it's not equal to the number of workers you had in the old cluster, GraphDB should start replicating.

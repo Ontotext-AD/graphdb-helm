@@ -1,0 +1,91 @@
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- $configs := ($.Values.graphdb.configs | default dict) }}
+---
+apiVersion: {{ $.Values.versions.statefulset }}
+kind: Deployment
+metadata:
+  name: graphdb-cluster-proxy
+  labels:
+    app: graphdb-cluster-proxy
+spec:
+  replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
+  selector:
+    matchLabels:
+      app: graphdb-cluster-proxy
+  template:
+    metadata:
+      labels:
+        app: graphdb-cluster-proxy
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
+    spec:
+      terminationGracePeriodSeconds: 15
+      imagePullSecrets:
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      containers:
+        - name: graphdb-cluster-proxy
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          envFrom:
+            - configMapRef:
+                name: graphdb-cluster-proxy-configmap
+          ports:
+            - name: gdb-proxy-port
+              containerPort: 7200
+            - name: gdb-proxy-rpc
+              containerPort: 7300
+          resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /protocol
+              port: gdb-proxy-port
+            failureThreshold: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /proxy/ready
+              port: gdb-proxy-port
+            initialDelaySeconds: 20
+            timeoutSeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /proxy/health
+              port: gdb-proxy-port
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 10
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-cluster-proxy
+  labels:
+    app: graphdb-cluster-proxy
+spec:
+  type: LoadBalancer
+  selector:
+    app: graphdb-cluster-proxy
+  ports:
+    - name: gdb-proxy-port
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-cluster-proxy-rpc
+  labels:
+    app: graphdb-cluster-proxy
+spec:
+  selector:
+    app: graphdb-cluster-proxy
+  ports:
+    - name: gdb-proxy-rpc
+      port: 7300
+      targetPort: 7300
+      protocol: TCP
+{{- end }}

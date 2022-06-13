@@ -4,15 +4,18 @@ set -eu
 function createCluster {
   waitAllNodes $1 $3
   local configLocation=$2
-  echo "Creating cluster!"
+  echo "Creating cluster"
   curl -o response.json -isSL -m 30 -X POST --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" 'http://graphdb-node:7200/rest/cluster/config'
-     if grep -q 'HTTP/1.1 201' "response.json"; then
+    if grep -q 'HTTP/1.1 201' "response.json"; then
         echo "Cluster creation successful!"
-    else
-        echo "Cluster creation failed, received response:"
-        cat response.json
-        echo
-        exit 1
+    else if grep -q 'Cluster already exists.\|HTTP/1.1 409' "response.json" ; then
+            echo "Cluster already exists"
+         else
+            echo "Cluster creation failed, received response:"
+            cat response.json
+            echo
+            exit 1
+        fi
     fi
 }
 

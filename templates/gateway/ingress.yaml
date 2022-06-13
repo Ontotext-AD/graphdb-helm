@@ -1,4 +1,5 @@
 {{- if .Values.deployment.ingress.enabled }}
+---
 apiVersion: {{ .Values.versions.ingress }}
 kind: Ingress
 metadata:
@@ -32,48 +33,11 @@ spec:
             pathType: Prefix
             backend:
               service:
+              {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+                name: graphdb-cluster-proxy
+              {{- else }}
                 name: graphdb-node
+              {{- end }}
                 port:
                   number: 7200
-{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
-{{- range $i, $node_index := until ((int $.Values.graphdb.clusterConfig.nodesCount)) }}
----
-apiVersion: {{ $.Values.versions.ingress }}
-kind: Ingress
-metadata:
-  name: ingress-node-{{ $node_index }}
-  annotations:
-    kubernetes.io/ingress.class: {{ $.Values.deployment.ingress.class }}
-    {{- if $.Values.deployment.tls.enabled }}
-    ingress.kubernetes.io/force-ssl-redirect: "true"
-    {{- end }}
-    nginx.ingress.kubernetes.io/proxy-body-size: {{ $.Values.deployment.ingress.maxRequestSize }}
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ $.Values.deployment.ingress.timeout.connect | quote }}
-    nginx.ingress.kubernetes.io/proxy-read-timeout: {{ $.Values.deployment.ingress.timeout.read | quote }}
-    nginx.ingress.kubernetes.io/proxy-send-timeout: {{ $.Values.deployment.ingress.timeout.send | quote }}
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/x-forwarded-prefix: "/node-{{ $node_index }}"
-    {{- with $.Values.deployment.ingress.annotations }}
-      {{- toYaml . | nindent 4 }}
-    {{- end }}
-spec:
-  {{- if $.Values.deployment.tls.enabled }}
-  tls:
-    - hosts:
-        - {{ include "resolveDeploymentHost" $ | quote }}
-      secretName: {{ required "TLS secret is required!" $.Values.deployment.tls.secretName }}
-  {{- end }}
-  rules:
-    - host: {{ include "resolveDeploymentHost" $ | quote }}
-      http:
-        paths:
-          - path: /node-{{ $node_index }}(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: graphdb-node-{{ $node_index }}
-                port:
-                  number: 7200
-{{- end }}
-{{- end }}
 {{- end }}

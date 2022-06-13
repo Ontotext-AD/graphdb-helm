@@ -1,7 +1,4 @@
-# Loop over the replica count
-
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
-
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
@@ -40,7 +37,6 @@ spec:
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
     spec:
-      serviceAccountName: graphdb-node-account
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:
@@ -54,9 +50,6 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-node-data-pvc
         {{- end }}
-        - name: graphdb-node-repo-config
-          configMap:
-            name: {{ required "Config map with .ttl for repositories creation is required!" $.Values.graphdb.node.repositoryConfigmap }}
         {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
         - name: graphdb-settings-config
           configMap:
@@ -86,7 +79,7 @@ spec:
           ports:
             - name: graphdb
               containerPort: 7200
-              {{- if ne (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
+              {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
             - name: graphdb-rpc
               containerPort: 7300
               {{- end }}
@@ -128,14 +121,6 @@ spec:
             timeoutSeconds: 5
             periodSeconds: 10
       initContainers:
-        # Label set so it can be targeted by a service
-        - name: label-set
-          image: bitnami/kubectl:latest
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              podName=(${HOSTNAME//./ })
-              kubectl label pods ${podName} set-component=${podName}
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
         - name: provision-license
@@ -161,37 +146,6 @@ spec:
               cp /tmp/license/*.license ./graphdb.license
               echo 'Done'
         {{- end }}
-        # REPO PROVISION
-        - name: provision-repository
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
-            {{- end }}
-              mountPath: /opt/graphdb/home
-            - name: graphdb-node-repo-config
-              mountPath: /tmp/graphdb
-          command: ['sh', '-c']
-          args:
-            - |
-              set -eu
-              for filename in /tmp/graphdb/*.ttl; do
-                repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
-                echo "Repo name: $repositoryName"
-                echo "File name: $filename"
-                mkdir -p /opt/graphdb/home/data/repositories/$repositoryName ;
-                cd /opt/graphdb/home/data/repositories/$repositoryName ;
-
-                # If the repo configuration exists -> skip provisioning
-                [ -f config.ttl ] && echo "Repository $repositoryName exists, exiting..." && continue
-
-                echo "Provisioning GraphDB $repositoryName repository with file $filename" ;
-                cp $filename ./config.ttl ;
-                echo 'Done'
-              done
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
@@ -261,45 +215,3 @@ spec:
       port: 7200
       targetPort: 7200
       protocol: TCP
-
-{{- if ne (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
----
-apiVersion: {{ $.Values.versions.service }}
-kind: Service
-metadata:
-  name: graphdb-headless
-  labels:
-    app: graphdb-node
-spec:
-  ports:
-    - name: graphdb
-      port: 7200
-    - name: graphdb-rpc
-      port: 7300
-  clusterIP: None
-  selector:
-    app: graphdb-node
-{{ end }}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    k8s-app: graphdb-node
-  name: graphdb-node-account
-  namespace: {{ $.Release.Namespace }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: graphdb-node
-  labels:
-    k8s-app: graphdb-node
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: graphdb-node-account
-    namespace: {{ $.Release.Namespace }}

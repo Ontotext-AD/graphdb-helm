@@ -5,6 +5,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: create-graphdb-cluster-job
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed

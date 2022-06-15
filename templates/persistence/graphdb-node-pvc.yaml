@@ -5,7 +5,7 @@ apiVersion: {{ $.Values.versions.pvc }}
 kind: PersistentVolumeClaim
 metadata:
   name: graphdb-node-{{ $node_index }}-data-pvc
-  labels:
+  labels: {{- include "graphdb.labels" . | nindent 4 }}
     name: graphdb-node-{{ $node_index }}-data-pvc
 spec:
   {{- if $.Values.graphdb.node.persistence.volumeNamePrefix }}

@@ -14,7 +14,7 @@ apiVersion: {{ $.Values.versions.pv }}
 kind: PersistentVolume
 metadata:
   name: {{ $.Release.Namespace }}-graphdb-default-node-{{ $node_index }}-pv
-  labels:
+  labels: {{- include "graphdb.labels" . | nindent 4 }}
     name: {{ $.Release.Namespace }}-graphdb-default-node-{{ $node_index }}-pv
 spec:
   claimRef:

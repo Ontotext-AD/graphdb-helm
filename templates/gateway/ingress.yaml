@@ -4,6 +4,8 @@ apiVersion: {{ .Values.versions.ingress }}
 kind: Ingress
 metadata:
   name: ingress
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.deployment.ingress.class }}
     {{- if .Values.deployment.tls.enabled }}

@@ -81,7 +81,7 @@ graphdb:
   clusterConfig:
     # -- Number of GraphDB nodes to be used in the cluster.
     # Set value to 1 to run a standalone GraphDB instance.
-    nodesCount: 1
+    nodesCount: 3
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
     # -- Cluster configuration parameters:
@@ -120,6 +120,8 @@ graphdb:
   clusterProxy:
     # -- Number of cluster proxies used to access the GraphDB cluster
     replicas: 1
+    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
@@ -128,15 +130,30 @@ graphdb:
       requests:
         memory: 1Gi
         cpu: 500m
-    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    # -- Configurations for the cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
+    startupProbe:
+      httpGet:
+        path: /protocol
+        port: gdb-proxy-port
+      failureThreshold: 30
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
+    readinessProbe:
+      httpGet:
+        path: /proxy/ready
+        port: gdb-proxy-port
+      initialDelaySeconds: 20
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
     livenessProbe:
-      path: /proxy/health
-      port: gdb-proxy-port
+      httpGet:
+        path: /proxy/health
+        port: gdb-proxy-port
       initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
-    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 
   # -- Settings for the GraphDB cluster nodes
   node:
@@ -161,21 +178,38 @@ graphdb:
           - "ReadWriteOnce"
         resources:
           requests:
-            storage: "5Gi"
+            storage: "30Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to the GraphDB documentation
     # http://graphdb.ontotext.com/documentation/requirements.html
     resources:
       limits:
-        memory: 2Gi
+        memory: 4Gi
         cpu: 2000m
       requests:
-        memory: 2Gi
+        memory: 4Gi
         cpu: 2000m
-
+    # -- Configurations for the GraphDB nodestartup probe. Misconfigured probe can lead to a failing cluster.
+    startupProbe:
+      httpGet:
+        path: /protocol
+        port: graphdb
+      failureThreshold: 30
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB node readiness probe. Misconfigured probe can lead to a failing cluster.
+    readinessProbe:
+      httpGet:
+        path: /protocol
+        port: graphdb
+      initialDelaySeconds: 5
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB node liveness probe. Misconfigured probe can lead to a failing cluster.
     livenessProbe:
-      path: /protocol
-      port: graphdb
+      httpGet:
+        path: /protocol
+        port: graphdb
       initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10

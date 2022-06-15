@@ -4,7 +4,7 @@ apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
 metadata:
   name: graphdb-node
-  labels:
+  labels: {{- include "graphdb.labels" . | nindent 4 }}
     app: graphdb-node
 spec:
   replicas: {{ $.Values.graphdb.clusterConfig.nodesCount }}
@@ -99,27 +99,9 @@ spec:
             {{- end }}
           resources: {{ $.Values.graphdb.node.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
-          startupProbe:
-            httpGet:
-              path: /protocol
-              port: graphdb
-            failureThreshold: 30
-            timeoutSeconds: 5
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /protocol
-              port: graphdb
-            initialDelaySeconds: 5
-            timeoutSeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.graphdb.node.livenessProbe.path }}
-              port: {{ .Values.graphdb.node.livenessProbe.port }}
-            initialDelaySeconds: {{ .Values.graphdb.node.livenessProbe.initialDelaySeconds }}
-            timeoutSeconds: {{ .Values.graphdb.node.livenessProbe.timeoutSeconds }}
-            periodSeconds: {{ .Values.graphdb.node.livenessProbe.periodSeconds }}
+          startupProbe: {{ $.Values.graphdb.node.startupProbe | toYaml | nindent 12 }}
+          readinessProbe: {{ $.Values.graphdb.node.readinessProbe | toYaml | nindent 12 }}
+          livenessProbe: {{ $.Values.graphdb.node.livenessProbe | toYaml | nindent 12 }}
       initContainers:
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION
@@ -207,6 +189,7 @@ metadata:
   name: graphdb-node
   labels:
     app: graphdb-node
+    {{- include "graphdb.labels" . | nindent 4 }}
 spec:
   selector:
     app: graphdb-node

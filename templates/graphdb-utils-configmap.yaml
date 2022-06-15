@@ -4,6 +4,7 @@ metadata:
   name: graphdb-utils-configmap
   labels:
     name: graphdb-utils-configmap
+    {{- include "graphdb.labels" . | nindent 4 }}
 data:
   graphdb.sh: |-
 {{ tpl (.Files.Get "files/scripts/graphdb.sh" | indent 4) . }}

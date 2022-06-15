@@ -31,6 +31,8 @@ spec:
     metadata:
       labels:
         app: graphdb-worker-{{ $worker_index }}
+        app-release: {{ $.Release.Name }}
+        app-type: worker
     spec:
       terminationGracePeriodSeconds: 120
       volumes:

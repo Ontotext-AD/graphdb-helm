@@ -44,6 +44,8 @@ spec:
     metadata:
       labels:
         app: graphdb-master-{{ $master_index }}
+        app-release: {{ $.Release.Name }}
+        app-type: master
     spec:
       terminationGracePeriodSeconds: 120
       volumes:

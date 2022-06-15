@@ -115,11 +115,11 @@ spec:
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /protocol
-              port: graphdb
-            initialDelaySeconds: 60
-            timeoutSeconds: 5
-            periodSeconds: 10
+              path: {{ .Values.graphdb.node.livenessProbe.path }}
+              port: {{ .Values.graphdb.node.livenessProbe.port }}
+            initialDelaySeconds: {{ .Values.graphdb.node.livenessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.graphdb.node.livenessProbe.timeoutSeconds }}
+            periodSeconds: {{ .Values.graphdb.node.livenessProbe.periodSeconds }}
       initContainers:
       {{- if ne ($.Values.graphdb.node.license) "" }}
         # LICENSE PROVISION

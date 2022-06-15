@@ -129,6 +129,13 @@ graphdb:
         memory: 1Gi
         cpu: 500m
     # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    livenessProbe:
+      path: /proxy/health
+      port: gdb-proxy-port
+      initialDelaySeconds: 60
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 
   # -- Settings for the GraphDB cluster nodes
@@ -165,6 +172,13 @@ graphdb:
       requests:
         memory: 2Gi
         cpu: 2000m
+
+    livenessProbe:
+      path: /protocol
+      port: graphdb
+      initialDelaySeconds: 60
+      timeoutSeconds: 5
+      periodSeconds: 10
 
   # GraphDB workbench configurations
   workbench:

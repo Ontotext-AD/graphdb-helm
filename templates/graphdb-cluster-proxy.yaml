@@ -2,13 +2,14 @@
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
 ---
 apiVersion: {{ $.Values.versions.statefulset }}
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: graphdb-cluster-proxy
   labels:
     app: graphdb-cluster-proxy
 spec:
   replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
+  serviceName: graphdb-proxy
   selector:
     matchLabels:
       app: graphdb-cluster-proxy
@@ -20,6 +21,7 @@ spec:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
     spec:
       terminationGracePeriodSeconds: 15
+      setHostnameAsFQDN: true
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -77,7 +79,7 @@ spec:
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
 metadata:
-  name: graphdb-cluster-proxy-rpc
+  name: graphdb-proxy
   labels:
     app: graphdb-cluster-proxy
 spec:

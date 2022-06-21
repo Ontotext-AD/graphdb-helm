@@ -135,6 +135,8 @@ kubectl cp graphdb.license graphdb-node-0:/opt/graphdb/home/conf
 ```
 ### Cluster migration from GraphDB 9.x to 10.0-M3
 
+**Warning**: Before starting the migration change your master into read only mode.
+
 The Helm chart is completely new and not backwards-compatible.
 
 1. Get the PV information of the workers:

@@ -84,6 +84,9 @@ graphdb:
     nodesCount: 1
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
+    # -- Timeout for the cluster creation CURL query.
+    # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
+    clusterCreationTimeout: 60
     # -- Cluster configuration parameters:
     # The minimum wait time in milliseconds for a heartbeat from a leader.
     electionMinTimeout: 7000

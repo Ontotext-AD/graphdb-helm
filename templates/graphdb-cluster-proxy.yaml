@@ -4,7 +4,7 @@
 apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
 metadata:
-  name: graphdb-cluster-proxy
+  name: gdb-proxy
   labels:
     app: graphdb-cluster-proxy
 spec:
@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
-        - name: graphdb-cluster-proxy
+        - name: graphdb-proxy
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]

@@ -32,7 +32,7 @@ spec:
             - |
               cp /tmp/cluster-config/cluster-config.json /usr/local/bin/cluster-config.json
               cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
-              /usr/local/bin/graphdb.sh createCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "/usr/local/bin/cluster-config.json" "{{ $authToken }}" >> /proc/1/fd/1
+              /usr/local/bin/graphdb.sh createCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "/usr/local/bin/cluster-config.json" "{{ $authToken }}" {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
         - name: cluster-config
@@ -41,6 +41,6 @@ spec:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 4
+  backoffLimit: 9
 {{- end }}
 

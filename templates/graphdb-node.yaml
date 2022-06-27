@@ -40,7 +40,7 @@ spec:
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120
       volumes:
-        {{- if ne ($.Values.graphdb.node.license) "" }}
+        {{- if $.Values.graphdb.node.license }}
         - name: graphdb-license
           secret:
             secretName: {{ $.Values.graphdb.node.license }}
@@ -103,7 +103,7 @@ spec:
           readinessProbe: {{ $.Values.graphdb.node.readinessProbe | toYaml | nindent 12 }}
           livenessProbe: {{ $.Values.graphdb.node.livenessProbe | toYaml | nindent 12 }}
       initContainers:
-      {{- if ne ($.Values.graphdb.node.license) "" }}
+      {{- if $.Values.graphdb.node.license }}
         # LICENSE PROVISION
         - name: provision-license
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
@@ -122,6 +122,10 @@ spec:
             - |
               mkdir -p /opt/graphdb/home/conf/
               cd /opt/graphdb/home/conf/
+              [ -f graphdb.license ] && rm graphdb.license
+
+              mkdir -p /opt/graphdb/home/work/
+              cd /opt/graphdb/home/work/
               [ -f graphdb.license ] && rm graphdb.license
 
               echo 'Provisioning GraphDB node license'

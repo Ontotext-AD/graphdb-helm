@@ -30,7 +30,7 @@ versions:
 images:
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.0.0-M3"
+    tag: "10.0.0"
   busybox:
     repository: busybox
     tag: "1.31"
@@ -81,7 +81,7 @@ graphdb:
   clusterConfig:
     # -- Number of GraphDB nodes to be used in the cluster.
     # Set value to 1 to run a standalone GraphDB instance.
-    nodesCount: 3
+    nodesCount: 1
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
     # -- Timeout for the cluster creation CURL query.
@@ -133,7 +133,7 @@ graphdb:
       requests:
         memory: 1Gi
         cpu: 500m
-    # -- Configurations for the cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
+    # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:
         path: /protocol
@@ -141,7 +141,7 @@ graphdb:
       failureThreshold: 30
       timeoutSeconds: 5
       periodSeconds: 10
-    # -- Configurations for the cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
+    # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
     readinessProbe:
       httpGet:
         path: /proxy/ready
@@ -149,7 +149,7 @@ graphdb:
       initialDelaySeconds: 20
       timeoutSeconds: 5
       periodSeconds: 10
-    # -- Configurations for the cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
+    # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
     livenessProbe:
       httpGet:
         path: /proxy/health
@@ -162,7 +162,7 @@ graphdb:
   node:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand
-    license: graphdb-license
+    license: 
     # -- Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 
@@ -181,16 +181,16 @@ graphdb:
           - "ReadWriteOnce"
         resources:
           requests:
-            storage: "30Gi"
+            storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to the GraphDB documentation
     # http://graphdb.ontotext.com/documentation/requirements.html
     resources:
       limits:
-        memory: 4Gi
+        memory: 2Gi
         cpu: 2000m
       requests:
-        memory: 4Gi
+        memory: 2Gi
         cpu: 2000m
     # -- Configurations for the GraphDB nodestartup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:

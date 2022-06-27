@@ -1,19 +1,23 @@
 {{/*
     A welcome screen showing useful information after installing/upgrading the chart.
 */}}
---------------------------------------------------------------------------------------------
-   ____                 _     ____  ____      _____ _____
-  / ___|_ __ __ _ _ __ | |__ |  _ \| __ )    | ____| ____|
- | |  _| '__/ _` | '_ \| '_ \| | | |  _ \    |  _| |  _|
- | |_| | | | (_| | |_) | | | | |_| | |_) |   | |___| |___
-  \____|_|  \__,_| .__/|_| |_|____/|____/    |_____|_____|
-                 |_|
---------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+        ____                 _     ____  ____
+       / ___|_ __ __ _ _ __ | |__ |  _ \| __ )
+      | |  _| '__/ _` | '_ \| '_ \| | | |  _ \
+      | |_| | | | (_| | |_) | | | | |_| | |_) |
+       \____|_|  \__,_| .__/|_| |_|____/|____/
+                      |_|
+-------------------------------------------------------------------------------
 version: {{ .Chart.AppVersion }}
 GDB cluster: {{ gt (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
 
 ** Please be patient while the chart is being deployed and services are available **
 You can check their status with kubectl get pods
 
+{{- if and (gt (int .Values.graphdb.clusterConfig.nodesCount) 1) (not .Values.graphdb.node.license) }}
+
+WARNING: You are attempting to make a cluster without providing a license secret!
+{{ end }}
 Endpoints:
 * GraphDB workbench: {{ .Values.deployment.protocol }}://{{ include "resolveDeploymentHost" . }}{{ .Values.graphdb.workbench.subpath }}

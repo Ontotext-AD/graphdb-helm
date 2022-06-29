@@ -15,15 +15,13 @@ spec:
   selector:
     matchLabels:
       app: graphdb-node
-  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") }}
+  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
   volumeClaimTemplates:
-  {{- end }}
-    {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
     - metadata:
         name: graphdb-node-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
-    {{- end }}
+  {{- end }}
     {{- if $.Values.graphdb.import_directory_mount.enabled }}
     - metadata:
         name: graphdb-server-import-dir
@@ -44,11 +42,6 @@ spec:
         - name: graphdb-license
           secret:
             secretName: {{ $.Values.graphdb.node.license }}
-        {{- end }}
-        {{- if not (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") }}
-        - name: graphdb-node-storage
-          persistentVolumeClaim:
-            claimName: graphdb-node-data-pvc
         {{- end }}
         {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
         - name: graphdb-settings-config
@@ -72,6 +65,14 @@ spec:
         {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      nodeSelector:
+        {{- default "{}" ($.Values.graphdb.node.nodeSelector | toYaml | nindent 8) }}
+      affinity:
+        {{- default "{}" ($.Values.graphdb.node.affinity | toYaml | nindent 8) }}
+      tolerations:
+        {{- default "{}" ($.Values.graphdb.node.tolerations | toYaml | nindent 8) }}
+      topologySpreadConstraints:
+        {{- default "{}" ($.Values.graphdb.node.topologySpreadConstraints | toYaml | nindent 8) }}
       containers:
         - name: graphdb-node
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
@@ -202,3 +203,10 @@ spec:
       port: 7200
       targetPort: 7200
       protocol: TCP
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+    - name: rpc
+      port: 7300
+      targetPort: 7300
+      protocol: TCP
+  clusterIP: None
+{{- end }}

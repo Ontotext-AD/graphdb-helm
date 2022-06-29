@@ -11,6 +11,7 @@ metadata:
 spec:
   replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
   serviceName: graphdb-proxy
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       app: graphdb-cluster-proxy
@@ -23,6 +24,14 @@ spec:
     spec:
       terminationGracePeriodSeconds: 15
       setHostnameAsFQDN: true
+      nodeSelector:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8) }}
+      affinity:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8) }}
+      tolerations:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8) }}
+      topologySpreadConstraints:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8) }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -68,6 +77,7 @@ metadata:
     app: graphdb-cluster-proxy
     {{- include "graphdb.labels" . | nindent 4 }}
 spec:
+  clusterIP: None
   selector:
     app: graphdb-cluster-proxy
   ports:

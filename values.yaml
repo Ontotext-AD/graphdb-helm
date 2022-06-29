@@ -125,6 +125,12 @@ graphdb:
     replicas: 1
     # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
+    # By default, no restrictions are applied.
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: {}
+    # topologySpreadConstraints: {}
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
@@ -162,19 +168,18 @@ graphdb:
   node:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand
-    license: 
+    license:
     # -- Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
+    # By default, no restrictions are applied.
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: {}
+    # topologySpreadConstraints: {}
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
-      # -- Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
-      # Example result: graphdb-default-node-0-pv
-      #      volumeNamePrefix: graphdb-default-node
-      #      storageClassName: standard
-      #      # -- Storage size request for each node. The persistent volume has to be able to satisfy the size.
-      #      storage: 10G
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -192,7 +197,7 @@ graphdb:
       requests:
         memory: 2Gi
         cpu: 2000m
-    # -- Configurations for the GraphDB nodestartup probe. Misconfigured probe can lead to a failing cluster.
+    # -- Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:
         path: /protocol

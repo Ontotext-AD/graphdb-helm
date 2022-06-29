@@ -15,19 +15,21 @@ spec:
   selector:
     matchLabels:
       app: graphdb-node
-  {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") ($.Values.graphdb.import_directory_mount.enabled)}}
   volumeClaimTemplates:
+    {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
     - metadata:
         name: graphdb-node-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
-  {{- end }}
+    {{- end }}
     {{- if $.Values.graphdb.import_directory_mount.enabled }}
     - metadata:
         name: graphdb-server-import-dir
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
       spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
+  {{- end }}
   template:
     metadata:
       labels:

@@ -1,7 +1,17 @@
 # GraphDB Helm chart release notes
 ## Version 10.0
 
-- Removed Kong
+### Breaking
+New major release that isn't compatible with the old chart, due to major breaking changes in Graphdb 10.
+Migration steps can be found [here](README.md#cluster-migration-from-graphdb-9x-to-100).
+
+### New
+- Changed to work with the new GraphDB 10.
+- Removed Kong.
+- Moved from multiple stateful sets with 1 replica to statefulsets with multiple replicas.
+- Configurable liveness, readiness, startup probes.
+- Can use standalone without license by default. Don't forget to set your license for a working cluster and connectors!
+- New overridable configmaps for users, settings and logback.
 
 ## Version 9.9.0
 

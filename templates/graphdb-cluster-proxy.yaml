@@ -7,9 +7,11 @@ metadata:
   name: gdb-proxy
   labels:
     app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
 spec:
   replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
   serviceName: graphdb-proxy
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       app: graphdb-cluster-proxy
@@ -22,6 +24,14 @@ spec:
     spec:
       terminationGracePeriodSeconds: 15
       setHostnameAsFQDN: true
+      nodeSelector:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8) }}
+      affinity:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8) }}
+      tolerations:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8) }}
+      topologySpreadConstraints:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8) }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -38,27 +48,9 @@ spec:
             - name: gdb-proxy-rpc
               containerPort: 7300
           resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
-          startupProbe:
-            httpGet:
-              path: /protocol
-              port: gdb-proxy-port
-            failureThreshold: 30
-            timeoutSeconds: 5
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /proxy/ready
-              port: gdb-proxy-port
-            initialDelaySeconds: 20
-            timeoutSeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /proxy/health
-              port: gdb-proxy-port
-            initialDelaySeconds: 60
-            timeoutSeconds: 5
-            periodSeconds: 10
+          startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
+          readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}
+          livenessProbe: {{ $.Values.graphdb.clusterProxy.livenessProbe | toYaml | nindent 12 }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service
@@ -66,6 +58,7 @@ metadata:
   name: graphdb-cluster-proxy
   labels:
     app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
 spec:
   type: LoadBalancer
   selector:
@@ -82,7 +75,9 @@ metadata:
   name: graphdb-proxy
   labels:
     app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
 spec:
+  clusterIP: None
   selector:
     app: graphdb-cluster-proxy
   ports:

@@ -4,7 +4,6 @@
 # To override single property use --set
 # To override multiple, provide another values-override.yaml with the -f flag
 # See https://helm.sh/docs/chart_template_guide/values_files/
-#
 
 global:
   imagePullSecrets: []
@@ -29,9 +28,6 @@ versions:
 
 # Top lvl flat for easier maintenance
 images:
-  kong:
-    repository: kong
-    tag: "2.1-alpine"
   graphdb:
     repository: ontotext/graphdb
     tag: "10.0.0"
@@ -60,6 +56,7 @@ deployment:
   # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
   tls:
     # -- Feature toggle for SSL termination. Disabled by default.
+    # If TLS is enabled, the protocol should also be updated (https)
     enabled: false
     # -- Name of a Kubernetes secret object with the key and certificate.
     # If TLS is enabled, it's required to be provided, depending on the deployment.
@@ -76,76 +73,33 @@ deployment:
     # -- Default timeouts in seconds for the underlying Nginx.
     timeout:
       connect: 5
-      read: 60
-      send: 60
-
-# KONG API gateway configurations.
-# This gateway sits behind the ingress and exposes the rest of the components.
-# By default Kong is deployed without database, e.g. stateless mode.
-kong:
-  enabled: true
-  # -- Reference to a configuration map with Kong configurations as environment variables.
-  # Override if you need to further configure Kong's system.
-  # See https://docs.konghq.com/2.0.x/configuration/
-  configmap: kong-configmap
-  # -- Reference to a configuration map containing declarative Kong configuration for
-  # services and routes. This is the DB-less config.
-  # See https://docs.konghq.com/1.5.x/db-less-admin-api/#declarative-configuration
-  servicesConfigmap: kong-services-configmap
-  # -- Overwrite if you want to deploy Kong on a non-standard port, such as instances
-  # where you want to have two different installations on the same hardware.
-  port:
-    nodePort: 31122
-  # -- Global timeout configurations for all services. Values are in milliseconds.
-  timeout:
-    connect: 60000
-    read: 60000
-    write: 60000
-  # -- Memory cache size configuration for Kong in DB-less mode.
-  # Tune according to the given resource limits.
-  # See https://docs.konghq.com/2.0.x/configuration/#mem_cache_size
-  memCacheSize: "64m"
-  # -- Amount of Nginx worker processes. This affects how much memory will be consumed.
-  # The auto value will determine the workers based on the available CPUs
-  workers: auto
-  # Default resource limitations.
-  resources:
-    limits:
-      memory: 1024Mi
-  # Schedule and assign on specific node. By default, no restrictions are applied.
-  # See https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-  nodeSelector: {}
+      read: 600
+      send: 600
 
 # GraphDB database configurations
 graphdb:
-  # -- Cluster topology to be used. Possible values: standalone, 1m_3w, 2m3w_rw_ro, 2m3w_muted.
-  # standalone - Launches single instance of GraphDB with a preconfigured worker repository. Masters and workers count is controlled by mastersCount and workersCount properties
-  # 1m_3w - 1 master and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-one-master.html
-  # 2m3w_rw_ro - 2 masters, one of which is read only and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-a-second-readonly-master.html
-  # 2m3w_muted - 2 masters, one of which is muted and multiple workers. https://graphdb.ontotext.com/documentation/enterprise/ee/setting-up-a-cluster-with-multiple-masters-with-dedicated-workers.html
-  # Note: If "standalone" is selected, the launched instance will use master-1 properties, but a worker repository will be created!
-  topology: "standalone"
   clusterConfig:
-    # -- Describes how the masters and workers are linked in the format master-X -> worker-Y. Required only for 2m3w_muted topology.
-    masterWorkerMapping:
-      - master-1 -> worker-1
-      - master-1 -> worker-2
-      - master-2 -> worker-3
-    # -- Describes which masters will be set as read only. Required only for 2m3w_rw_ro topology.
-    readOnlyMasters:
-      - master-2
-    # -- Describes which masters will be set as muted. Required only for 2m3w_muted topology.
-    mutedMasters:
-      - master-2
-    # -- Describes which masters will be linked as sync peer. Required for 2m3w_rw_ro and 2m3w_muted topology.
-    syncPeersMapping:
-      - master-1 <-> master-2
-    workersCount: 3
-    mastersCount: 1
+    # -- Number of GraphDB nodes to be used in the cluster.
+    # Set value to 1 to run a standalone GraphDB instance.
+    nodesCount: 1
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
+    # -- Timeout for the cluster creation CURL query.
+    # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
+    clusterCreationTimeout: 60
+    # -- Cluster configuration parameters:
+    # The minimum wait time in milliseconds for a heartbeat from a leader.
+    electionMinTimeout: 7000
+    # The variable portion of each waiting period in milliseconds for a heartbeat.
+    electionRangeTimeout: 5000
+    # The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.
+    heartbeatInterval: 2000
+    #The size of the data blocks transferred during data replication streaming through the RPC protocol.
+    messageSize: 64
+    # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
+    verificationTimeout: 1500
 
-  # -- References to configuration maps containing settings.js, users.js, graphdb.properties, logback.xml and jolokia-access.xml files to overwrite
+  # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
   # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
   configs:
     # Override default settings configuration
@@ -156,220 +110,132 @@ graphdb:
     #propertiesConfigMap: graphdb-properties-configmap
     # Override default logback configuration
     #logbackConfigMap: graphdb-logback-configmap
-    # Override default jolokia access configuration
-    #jolokiaAccessConfigMap: graphdb-jolokia-access-configmap
 
   security:
-    # If the security is enabled, it's mandatory to have a provisioning user, so the healthchecks and cluster linking can work properly
+    # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
     enabled: false
     provisioningUsername: provisioner
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
-  masters:
-    # -- Reference to a configuration map containing one or more .ttl files used for repository
-    # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
-    repositoryConfigmap: graphdb-repo-default-configmap
-    # -- Reference to a secret containing 'graphdb.license' file to be used by master nodes.
-    # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
-    # Can be set to "" if you want to use this instance only with master repositories, which does not require a license!
-    # Important: Must be created beforehand
-    license: graphdb-license
-    # -- Java arguments with which master instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
-    # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction
-    # -- Specific GraphDB master instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
-#    nodes:
-#      - name: master-1
-#        java_args: "-XX:MaxRAMPercentage=70 -XX:+UseContainerSupport -Ddefault.min.distinct.threshold=100m"
-#        license: graphdb-license
-    # -- Below are minimum requirements for data sets of up to 50 million RDF triples
-    # For resizing, refer according to your GraphDB version documentation
-    # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
-    resources:
-      limits:
-        memory: 2Gi
-      requests:
-        memory: 2Gi
-    # -- Persistence configurations.
-    # By default, Helm will use a PV that reads and writes to the host file system.
-    persistence:
-      # -- Name reference of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
-      # Example result: graphdb-default-master-1-pv
-#      volumeNamePrefix: graphdb-default-master
-#      storageClassName: standard
-#      # -- Storage size request for each master. The persistent volume has to be able to satisfy the size.
-#      storage: 10G
-      # use dynamic volume provisioning
-       volumeClaimTemplateSpec:
-         accessModes:
-           - "ReadWriteOnce"
-         resources:
-           requests:
-             storage: "5Gi"
-    # additional JMX attributes to be set after the cluster is initialized
-    additionalJmxArrtibutes: {}
-  workers:
-    # -- Reference to a configuration map containing one or more .ttl files used for repository
-    # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
-    repositoryConfigmap: graphdb-worker-repo-default-configmap
-    # -- Reference to a secret containing 'graphdb.license' file to be used by worker nodes.
-    # This is a required secret without which GraphDB won't operate if you use SE/EE editions.
-    # Important: Must be created beforehand
-    license: graphdb-license
-    # -- Java arguments with which worker instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+  # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
+  # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
+  clusterProxy:
+    # -- Number of cluster proxies used to access the GraphDB cluster
+    replicas: 1
+    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL workers.
-    # By default, no restrictions are applied. The same options can be specified per instance in the nodes section.
-    # See https://kubernetes.io/docs/concepts/scheduling-eviction
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
+    # By default, no restrictions are applied.
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: {}
+    # topologySpreadConstraints: {}
+    # -- Minimum requirements for a successfully running GraphDB cluster proxy
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 500m
+      requests:
+        memory: 1Gi
+        cpu: 500m
+    # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
+    startupProbe:
+      httpGet:
+        path: /protocol
+        port: gdb-proxy-port
+      failureThreshold: 30
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
+    readinessProbe:
+      httpGet:
+        path: /proxy/ready
+        port: gdb-proxy-port
+      initialDelaySeconds: 20
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
+    livenessProbe:
+      httpGet:
+        path: /proxy/health
+        port: gdb-proxy-port
+      initialDelaySeconds: 60
+      timeoutSeconds: 5
+      periodSeconds: 10
 
-    topologySpreadConstraints:
-    # -- Specific GraphDB worker instances configurations. Supported properties for per node configuration are: license, java_args, graphdb_properties
-#    nodes:
-#      - name: worker-1
-#        license: graphdb-license
-#      - name: worker-2
-#        java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport "
+  # -- Settings for the GraphDB cluster nodes
+  node:
+    # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
+    # Important: Must be created beforehand
+    license:
+    # -- Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
+    # By default, no restrictions are applied.
+    # nodeSelector: {}
+    # affinity: {}
+    # tolerations: {}
+    # topologySpreadConstraints: {}
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
-      # -- Name reference prefix of a persistent volume to which the claim will try to attach. If changed, the default PVs won't be used.
-      # Example result: graphdb-default-worker-1-pv
-#      volumeNamePrefix: graphdb-default-worker
-#      storageClassName: standard
-#      # -- Storage size request for each worker. The persistent volume has to be able to satisfy the size.
-#      storage: 10G
       # use dynamic volume provisioning
-       volumeClaimTemplateSpec:
-         accessModes:
-           - "ReadWriteOnce"
-         resources:
-           requests:
-             storage: "5Gi"
+      volumeClaimTemplateSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
-    # For resizing, refer according to your GraphDB version documentation
-    # For EE see http://graphdb.ontotext.com/documentation/enterprise/requirements.html
-    # Note: Same as for the master node
+    # For resizing, refer according to the GraphDB documentation
+    # http://graphdb.ontotext.com/documentation/requirements.html
     resources:
       limits:
         memory: 2Gi
+        cpu: 2000m
       requests:
         memory: 2Gi
-  # Reference to a configuration map with GraphDB specific configurations.
-  # Injected as environment variables.
-  #configmap: graphdb-configmap
+        cpu: 2000m
+    # -- Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster.
+    startupProbe:
+      httpGet:
+        path: /protocol
+        port: graphdb
+      failureThreshold: 30
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB node readiness probe. Misconfigured probe can lead to a failing cluster.
+    readinessProbe:
+      httpGet:
+        path: /protocol
+        port: graphdb
+      initialDelaySeconds: 5
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB node liveness probe. Misconfigured probe can lead to a failing cluster.
+    livenessProbe:
+      httpGet:
+        path: /protocol
+        port: graphdb
+      initialDelaySeconds: 60
+      timeoutSeconds: 5
+      periodSeconds: 10
+
   # GraphDB workbench configurations
   workbench:
     # -- This is the sub path at which GraphDB workbench can be opened.
     # Should be configured in the API gateway (or any other proxy in front)
     subpath: /graphdb
 
+  # WARNING: Setting enabled to true in most cloud providers will result in an error
   # Attach additional PV which will be used as an import directory
   # https://graphdb.ontotext.com/documentation/standard/loading-data-using-the-workbench.html#importing-server-files
   import_directory_mount:
     enabled: false
     volumeClaimTemplateSpec:
-     accessModes:
-       - "ReadWriteOnce"
-     resources:
-       requests:
-         storage: "10Gi"
-
-  backupRestore:
-    # -- Enable auto/manual backups.
-    enable_backups: false
-    # -- Cron Schedule for auto backup. Creates an automatic backup, stored in the graphdb-backup-pv
-    # (default folder - /data/graphdb-backups).
-    # The backups are saved in format MM-DD-YYYY-hh-mm in UTC!
-    auto_backup: "0 0 23 ? * MON *"
-    repositories:
-      - default
-    # -- Enables cleanup of the backups directory.
-    # WARNING!!! This can be used only by storage classes that have access mode ReadWriteMany because the backups PVC must be attached to a second pod.
-    enable_automatic_backups_cleanup: false
-    # -- Cleans up the backups directory.
-    # Makes sure that there is a limit of the stored backups.
-    # Each or both of backups_count and backups_max_age could be used.
-    cleanup_cron: "*/2 * * * *"
-    # -- Max number of backup dirs saved.
-    backups_count: "2"
-    # -- Max number of days for backups.
-    backup_max_age: "2"
-    # -- A future date at which we want to trigger a backup. Must be given in format YYYY-DD-MM hh:mm
-    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
-    trigger_backup: ""
-
-    # -- Trigger restore at a given time from a given file.
-    enable_restore: false
-    # -- A future date at which we want to trigger a restore. Works only with a cluster with workers.
-    # For a standalone the restore is called from an init container. Must be given in format YYYY-DD-MM hh:mm
-    # NOTE: Timezone depends on the Kubernetes cluster. Usually UTC!
-    trigger_restore: "2021-06-24 13:28"
-    # -- The name of the backup directory we want to restore.
-    # Must be given in format YYYY-DD-MM-hh-mm, where YYYY-DD-MM-hh-mm is your backup directory. The backup directory name contains the repository name too, but it must be omitted here.
-    restore_from_backup: "2021-06-24-12-59"
-    # -- The name of the repository we want to restore.
-    restore_repository: default
-    persistence:
-     volumeClaimTemplateSpec:
-       accessModes:
-         - "ReadWriteOnce"
-       resources:
-         requests:
-           storage: "10Gi"
-
-  # -- Tools for loading, scanning and repairing data in repos
-  tools:
-    resources:
-      limits:
-        memory: "10G"
-      requests:
-        memory: "10G"
-    # -- Tool to preload data in a chosen repo
-    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-preload.html
-    preload:
-      # -- If trigger is set to true, then the preload tool will be run while initializing the deployment
-      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
-      # (default pv is: /data/graphdb-worker-preload-data)
-      trigger: false
-      # -- Options to add to the command
-      # possible flags: -f, -p, -r
-      # If you use the "-f" option, the tool will override the repository and could lose some data.
-      flags: "-f"
-      rdfDataFile: "geonames_europe.ttl"
-    # -- Tool to preload data in a chosen repo
-    # https://graphdb.ontotext.com/documentation/enterprise/loading-data-using-the-loadrdf-tool.html
-    loadrdf:
-      # -- If trigger is set to true, then the loadrdf tool will be run while initializing the deployment
-      # Don't forget to add repo config file(should be named config.ttl) and RDF data file to the graphdb-preload-data-pv
-      # (default pv is: /data/graphdb-worker-preload-data)
-      trigger: false
-      # -- Options to add to the command
-      # possible flags: -f, -p
-      # If you use the "-f" option, the tool will override the repository and could lose some data.
-      flags: "-f"
-      rdfDataFile: "geonames_europe.ttl"
-    persistence:
-      #storageClassName: standard
-      # -- Storage size request for the preload/loadrdf pv. The persistent volume has to be able to satisfy the size.
-      #storage: 10G
-      volumeClaimTemplateSpec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "10Gi"
-
-    # -- Tool for scanning and repairing data
-    # See https://graphdb.ontotext.com/documentation/enterprise/storage-tool.html
-    storage_tool:
-      # -- If trigger is set to true, then the storage tool will be run while initializing the deployment
-      trigger: false
-      # -- commands to run the storage-tool with
-      command: "scan"
-      # -- repo to run command on
-      repository: "repo-test-1"
-      # -- additional options to run the storage-tool with
-      options: ""
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "10Gi"

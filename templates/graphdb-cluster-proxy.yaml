@@ -1,0 +1,88 @@
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- $configs := ($.Values.graphdb.configs | default dict) }}
+---
+apiVersion: {{ $.Values.versions.statefulset }}
+kind: StatefulSet
+metadata:
+  name: gdb-proxy
+  labels:
+    app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
+spec:
+  replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
+  serviceName: graphdb-proxy
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: graphdb-cluster-proxy
+  template:
+    metadata:
+      labels:
+        app: graphdb-cluster-proxy
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
+    spec:
+      terminationGracePeriodSeconds: 15
+      setHostnameAsFQDN: true
+      nodeSelector:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8) }}
+      affinity:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8) }}
+      tolerations:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8) }}
+      topologySpreadConstraints:
+        {{- default "{}" ($.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8) }}
+      imagePullSecrets:
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      containers:
+        - name: graphdb-proxy
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          envFrom:
+            - configMapRef:
+                name: graphdb-cluster-proxy-configmap
+          ports:
+            - name: gdb-proxy-port
+              containerPort: 7200
+            - name: gdb-proxy-rpc
+              containerPort: 7300
+          resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
+          startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
+          readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}
+          livenessProbe: {{ $.Values.graphdb.clusterProxy.livenessProbe | toYaml | nindent 12 }}
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-cluster-proxy
+  labels:
+    app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: graphdb-cluster-proxy
+  ports:
+    - name: gdb-proxy-port
+      port: 7200
+      targetPort: 7200
+      protocol: TCP
+---
+apiVersion: {{ $.Values.versions.service }}
+kind: Service
+metadata:
+  name: graphdb-proxy
+  labels:
+    app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app: graphdb-cluster-proxy
+  ports:
+    - name: gdb-proxy-rpc
+      port: 7300
+      targetPort: 7300
+      protocol: TCP
+{{- end }}

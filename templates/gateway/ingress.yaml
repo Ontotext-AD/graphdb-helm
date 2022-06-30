@@ -1,39 +1,45 @@
 {{- if .Values.deployment.ingress.enabled }}
+---
 apiVersion: {{ .Values.versions.ingress }}
 kind: Ingress
 metadata:
   name: ingress
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.deployment.ingress.class }}
-    {{ if .Values.deployment.tls.enabled }}
+    {{- if .Values.deployment.tls.enabled }}
     ingress.kubernetes.io/force-ssl-redirect: "true"
-    {{ end }}
+    {{- end }}
     nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.deployment.ingress.maxRequestSize }}
     nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
     nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
-    nginx.ingress.kubernetes.io/proxy-redirect-from: http://graphdb-master-1:7200
-    nginx.ingress.kubernetes.io/proxy-redirect-to: {{ .Values.deployment.protocol }}://{{ .Values.deployment.host }}/graphdb
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/x-forwarded-prefix: {{ $.Values.graphdb.workbench.subpath | quote }}
     {{- with .Values.deployment.ingress.annotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-
 spec:
-  {{ if .Values.deployment.tls.enabled }}
+  {{- if .Values.deployment.tls.enabled }}
   tls:
     - hosts:
         - {{ include "resolveDeploymentHost" . | quote }}
       secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
-  {{ end }}
+  {{- end }}
   rules:
     - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
-          - path: /
+          - path: {{ $.Values.graphdb.workbench.subpath }}(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: kong-proxy
+              {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+                name: graphdb-cluster-proxy
+              {{- else }}
+                name: graphdb-node
+              {{- end }}
                 port:
-                  number: 8000
+                  number: 7200
 {{- end }}

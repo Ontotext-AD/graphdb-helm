@@ -1,55 +1,3 @@
-{{/*
-Resolves specific worker node value
-Example usage for license: {{ default $.Values.graphdb.workers.license (include "resolveWorkerValue" (dict "nodes" $.Values.graphdb.workers.nodes "value_name" "license" "worker_index" $worker_index )) }}
-The example will return the global workers license or a specific worker license IF PRESENT, resolves the following values.yaml syntax:
-  workers:
-    license: graphdb-workers-license
-    nodes:
-        - name: worker-1
-          license: graphdb-worker1-license
-*/}}
-{{- define "resolveWorkerValue" -}}
-{{- $worker_index:=.worker_index }}
-{{- $value_name:=.value_name }}
-  {{- range .nodes }}
-    {{- if (eq (trimPrefix "worker-" .name | int64) ( $worker_index | int64)) }}
-      {{- if (hasKey . $value_name) }}
-        {{- if or (kindIs "map" (get . $value_name)) (kindIs "slice" (get . $value_name)) }} {{- get . $value_name | toYaml }} {{- else }} {{- get . $value_name }} {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-
-{{/*
-Same as above, but for masters nodes
-*/}}
-{{- define "resolveMasterValue" -}}
-{{- $master_index:=.master_index }}
-{{- $value_name:=.value_name }}
-{{- range .nodes }}
-  {{- if (eq (trimPrefix "master-" .name | int64) ( $master_index | int64)) }}
-    {{- if (hasKey . $value_name) }}
-      {{- if or (kindIs "map" (get . $value_name)) (kindIs "slice" (get . $value_name)) }} {{- get . $value_name | toYaml }} {{- else }} {{- get . $value_name }} {{- end }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-{{- end }}
-
-{{- define "shouldRenderBackupVolumeClaimTemplate" -}}
-  {{- if or .backupRestore.enable_backups .backupRestore.enable_restore }}
-      {{- if and .backupRestore.persistence.volumeClaimTemplateSpec (eq .master_index 1)}}
-        {{- print true -}}
-      {{- end }}
-  {{- end }}
-{{- end }}
-
-{{- define "shouldRenderToolsVolumeClaimTemplate" -}}
-  {{- if or .tools.preload.trigger .tools.loadrdf.trigger }}
-    {{- if and .tools.persistence.volumeClaimTemplateSpec (eq .master_index 1)}}
-      {{- print "true" -}}
-    {{- end }}
-  {{- end }}
-{{- end }}
 
 {{- define "resolveDeploymentHost" -}}
   {{- $global := .Values.global | default dict -}}
@@ -73,6 +21,11 @@ Combined image pull secrets
   {{- end -}}
 
   {{- toYaml $secrets -}}
+{{- end -}}
+
+{{- define "graphdbLicenseSecret"}}
+  {{- $secret := (lookup "v1" "Secret" "" "graphdb-license") | default dict }}
+  {{- toYaml $secret}}
 {{- end -}}
 
 {{/*

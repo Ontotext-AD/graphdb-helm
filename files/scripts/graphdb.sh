@@ -2,6 +2,7 @@
 set -eu
 
 function createCluster {
+  #  figure out the services/external proxy situation when scaling from 1 node to create a cluster
   waitAllNodes $1 $3
   local configLocation=$2
   local timeout=$4
@@ -18,23 +19,6 @@ function createCluster {
             exit 1
         fi
     fi
-}
-
-function updateCluster {
-#curl to leader/loadBalancer to update cluster
-echo "Not implemented yet."
-}
-
-function deleteCluster {
-  curl -o response.json -isSL -m 15 -X DELETE --header 'Accept: */*' 'http://graphdb-node:7200/rest/cluster/config?force=false'
-  if grep -q 'HTTP/1.1 200' "response.json"; then
-    echo "Cluster deletion successful!"
-  else
-    echo "Cluster deletion failed, received response:"
-    cat response.json
-    echo
-    exit 1
-  fi
 }
 
 function waitService {

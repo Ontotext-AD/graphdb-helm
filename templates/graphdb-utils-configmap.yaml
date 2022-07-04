@@ -8,3 +8,5 @@ metadata:
 data:
   graphdb.sh: |-
 {{ tpl (.Files.Get "files/scripts/graphdb.sh" | indent 4) . }}
+  update-cluster.sh: |-
+{{ tpl (.Files.Get "files/scripts/update-cluster.sh" | indent 4) . }}

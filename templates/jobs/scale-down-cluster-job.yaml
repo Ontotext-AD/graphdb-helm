@@ -1,5 +1,5 @@
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
-apiVersion: batch/v1
+apiVersion: {{ $.Values.versions.job }}
 kind: Job
 metadata:
   name: scale-down-cluster-job
@@ -16,7 +16,7 @@ spec:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: scale-down-cluster
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0

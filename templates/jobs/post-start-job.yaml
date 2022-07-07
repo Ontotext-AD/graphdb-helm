@@ -1,7 +1,7 @@
 {{- if gt (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
 #Set auth token var
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
-apiVersion: batch/v1
+apiVersion: {{ $.Values.versions.job }}
 kind: Job
 metadata:
   name: create-graphdb-cluster-job
@@ -19,7 +19,7 @@ spec:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: create-graphdb-cluster
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 0

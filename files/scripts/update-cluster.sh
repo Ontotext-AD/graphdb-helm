@@ -40,7 +40,7 @@ function updateClusterNodes {
 }
 
 function deleteCluster {
-  curl -o response.json -isSL -m 15 -X DELETE --header 'Accept: */*' 'http://graphdb-node:7200/rest/cluster/config?force=false'
+  curl -o response.json -isSL -m 15 -X DELETE --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"
   else
@@ -50,3 +50,5 @@ function deleteCluster {
     exit 1
   fi
 }
+
+"$@"

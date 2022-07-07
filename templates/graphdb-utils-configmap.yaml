@@ -6,7 +6,7 @@ metadata:
     name: graphdb-utils-configmap
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-install, pre-upgrade, pre-rollback
+    "helm.sh/hook": pre-install, pre-upgrade, pre-rollback, post-install, post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook-weight": "-10"
 data:

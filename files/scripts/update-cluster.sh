@@ -43,11 +43,14 @@ function deleteCluster {
   curl -o response.json -isSL -m 15 -X DELETE --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"
-  else
-    echo "Cluster deletion failed, received response:"
-    cat response.json
-    echo
-    exit 1
+  else if grep -q 'Node is not part of the cluster.\|HTTP/1.1 412' "response.json" ; then
+         echo "Node 0 is not part of the cluster"
+       else
+         echo "Cluster deletion failed, received response:"
+         cat response.json
+         echo
+         exit 1
+       fi
   fi
 }
 

@@ -30,13 +30,37 @@ function patchCluster {
 }
 
 function doNothing {
+  getNodeCountInCurrentCluster
   #do not forget to change scale-up job to use something else
   echo "Not implemented yet."
 }
 
 function updateClusterNodes {
-  #temporarly for testing scale/patch it by deleting it as a pre-upgrade/pre-rollback, create cluster will take care of the rest... hopefully
-  deleteCluster
+  #temporarly for testing scale/patch it by deleting it as a pre-upgrade/pre-rollback, create cluster will take care of the rest
+  local expectedNodes=$1
+  if [ $expectedNodes -lt 2 ]; then
+    deleteCluster
+  fi
+  local currentNodes=$(getNodeCountInCurrentCluster)
+  #if [ $expectedNodes -lt $currentNodes ]; then
+    echo "Scaling down!"
+    removeNodes $expectedNodes $expectedNodes
+  #fi
+
+}
+
+function removeNodes {
+  local expectedNodes=$1
+  local currentNodes=$2
+  local nodes=""
+  for ((i=$expectedNodes;i<currentNodes;i++)) do
+    nodes=${nodes}\"graphdb-node-$i.graphdb-node:7300\"
+    if [ $i -lt $(expr currentNodes - 1) ]; then
+      nodes=${nodes}\,
+    fi
+  done
+  nodes=\{\"nodes\":\[${nodes}\]\}
+  curl -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' -d '$nodes'  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
 }
 
 function deleteCluster {
@@ -52,6 +76,33 @@ function deleteCluster {
          exit 1
        fi
   fi
+}
+
+function getNodeCountInCurrentCluster {
+  #local token=$1 --header "Authorization: Basic ${token}"
+  local node_address=http://graphdb-node-0.graphdb-node:7200
+  waitService "${node_address}/rest/repositories" "$token"
+  curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header 'Accept: */*' "${node_address}/rest/cluster/config"
+  echo `(grep -o 'graphdb-node-' "clusterResponse.json" | grep -c "")`
+}
+
+function waitService {
+  local address=$1
+  local token=$2
+
+  local attempt_counter=0
+  local max_attempts=100
+
+  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${token}" --silent --fail ${address}); do
+    if [[ ${attempt_counter} -eq ${max_attempts} ]];then
+      echo "Max attempts reached"
+      exit 1
+    fi
+
+    printf '.'
+    attempt_counter=$((attempt_counter+1))
+    sleep 5
+  done
 }
 
 "$@"

@@ -2,7 +2,6 @@
 set -eu
 
 function createCluster {
-  #  figure out the services/external proxy situation when scaling from 1 node to create a cluster
   waitAllNodes $1 $3
   local configLocation=$2
   local timeout=$4

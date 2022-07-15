@@ -29,38 +29,50 @@ function patchCluster {
   echo "Not implemented yet."
 }
 
-function doNothing {
-  getNodeCountInCurrentCluster
-  #do not forget to change scale-up job to use something else
-  echo "Not implemented yet."
-}
-
 function updateClusterNodes {
   #temporarly for testing scale/patch it by deleting it as a pre-upgrade/pre-rollback, create cluster will take care of the rest
   local expectedNodes=$1
+  local authToken=$2
   if [ $expectedNodes -lt 2 ]; then
     deleteCluster
   fi
-  local currentNodes=$(getNodeCountInCurrentCluster)
-  #if [ $expectedNodes -lt $currentNodes ]; then
+  local currentNodes=$(getNodeCountInCurrentCluster authToken)
+  if [ $expectedNodes -lt $currentNodes ]; then
     echo "Scaling down!"
-    removeNodes $expectedNodes $expectedNodes
-  #fi
-
+    removeNodes $expectedNodes $expectedNodes $authToken
+  elif [ $expectedNodes -lt $currentNodes ]; then
+        echo "Scaling up!"
+        addNodes $expectedNodes $expectedNodes $authToken
+  fi
 }
 
 function removeNodes {
   local expectedNodes=$1
   local currentNodes=$2
+  local authToken=$3
   local nodes=""
-  for ((i=$expectedNodes;i<currentNodes;i++)) do
+  for ((i=$expectedNodes;i<$currentNodes;i++)) do
     nodes=${nodes}\"graphdb-node-$i.graphdb-node:7300\"
-    if [ $i -lt $(expr currentNodes - 1) ]; then
+    if [ $i -lt $(expr $currentNodes - 1) ]; then
       nodes=${nodes}\,
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  curl -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' -d '$nodes'  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  curl -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "$nodes"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+}
+
+function addNodes {
+  local expectedNodes=$1
+  local currentNodes=$2
+  local nodes=""
+  for ((i=$currentNodes;i<$expectedNodes;i++)) do
+    nodes=${nodes}\"graphdb-node-$i.graphdb-node:7300\"
+    if [ $i -lt $(expr $expectedNodes - 1) ]; then
+      nodes=${nodes}\,
+    fi
+  done
+  nodes=\{\"nodes\":\[${nodes}\]\}
+  curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "$nodes"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
 }
 
 function deleteCluster {
@@ -79,7 +91,7 @@ function deleteCluster {
 }
 
 function getNodeCountInCurrentCluster {
-  #local token=$1 --header "Authorization: Basic ${token}"
+  local token=$1 --header "Authorization: Basic ${token}"
   local node_address=http://graphdb-node-0.graphdb-node:7200
   waitService "${node_address}/rest/repositories" "$token"
   curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header 'Accept: */*' "${node_address}/rest/cluster/config"

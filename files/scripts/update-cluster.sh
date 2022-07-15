@@ -91,10 +91,10 @@ function deleteCluster {
 }
 
 function getNodeCountInCurrentCluster {
-  local token=$1 --header "Authorization: Basic ${token}"
+  local token=$1
   local node_address=http://graphdb-node-0.graphdb-node:7200
   waitService "${node_address}/rest/repositories" "$token"
-  curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header 'Accept: */*' "${node_address}/rest/cluster/config"
+  curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header "Authorization: Basic ${token}" --header 'Accept: */*' "${node_address}/rest/cluster/config"
   echo `(grep -o 'graphdb-node-' "clusterResponse.json" | grep -c "")`
 }
 

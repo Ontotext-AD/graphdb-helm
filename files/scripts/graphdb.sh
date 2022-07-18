@@ -4,9 +4,10 @@ set -eu
 function createCluster {
   waitAllNodes $1 $3
   local configLocation=$2
+  local token=$3
   local timeout=$4
   echo "Creating cluster"
-  curl -o response.json -isSL -m $timeout -X POST --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" http://graphdb-node-0.graphdb-node:7200/rest/cluster/config
+  curl -o response.json -isSL -m $timeout -X POST --header "Authorization: Basic ${token}" --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" http://graphdb-node-0.graphdb-node:7200/rest/cluster/config
     if grep -q 'HTTP/1.1 201' "response.json"; then
         echo "Cluster creation successful!"
     else if grep -q 'Cluster already exists.\|HTTP/1.1 409' "response.json" ; then

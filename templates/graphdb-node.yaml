@@ -168,13 +168,13 @@ spec:
               set -eu
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb-users-configmap/users.js ]]; then
                 echo "Provisioning users with users.js file..."
-                mkdir -p /opt/graphdb/data ;
+                mkdir -p /opt/graphdb/home/data ;
                 cp /tmp/graphdb-users-configmap/users.js /opt/graphdb/home/data/users.js
               fi
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/settings.js && -f /tmp/graphdb-settings-configmap/settings.js ]]; then
                 echo "Provisioning settings with settings.js file..."
-                mkdir -p /opt/graphdb/data ;
-                cp /tmp/graphdb-settings-configmap/settings.js /opt/graphdb/data/settings.js
+                mkdir -p /opt/graphdb/home/data ;
+                cp /tmp/graphdb-settings-configmap/settings.js /opt/graphdb/home/data/settings.js
               fi
               if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb-properties-configmap/graphdb.properties ]]; then
                 echo "Provisioning graphdb properties file..."

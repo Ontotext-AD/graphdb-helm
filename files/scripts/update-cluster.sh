@@ -30,19 +30,19 @@ function patchCluster {
 }
 
 function updateClusterNodes {
-  #temporarly for testing scale/patch it by deleting it as a pre-upgrade/pre-rollback, create cluster will take care of the rest
   local expectedNodes=$1
   local authToken=$2
-  if [ $expectedNodes -lt 2 ]; then
+  local namespace=$3
+  if [ "$expectedNodes" -lt 2 ]; then
     deleteCluster
   fi
   local currentNodes=$(getNodeCountInCurrentCluster authToken)
-  if [ $expectedNodes -lt $currentNodes ]; then
+  if [ "$expectedNodes" -lt "$currentNodes" ]; then
     echo "Scaling down!"
-    removeNodes $expectedNodes $expectedNodes $authToken
-  elif [ $expectedNodes -lt $currentNodes ]; then
+    removeNodes "$expectedNodes" "$currentNodes" "$authToken" "$namespace"
+  elif [ "$expectedNodes" -gt "$currentNodes" ]; then
         echo "Scaling up!"
-        addNodes $expectedNodes $expectedNodes $authToken
+        addNodes "$expectedNodes" "$currentNodes" "$authToken" "$namespace"
   fi
 }
 
@@ -50,29 +50,32 @@ function removeNodes {
   local expectedNodes=$1
   local currentNodes=$2
   local authToken=$3
+  local namespace=$4
   local nodes=""
   for ((i=$expectedNodes;i<$currentNodes;i++)) do
-    nodes=${nodes}\"graphdb-node-$i.graphdb-node:7300\"
+    nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
     if [ $i -lt $(expr $currentNodes - 1) ]; then
       nodes=${nodes}\,
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  curl -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "$nodes"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  curl  -o clusterRemove.json -isSL -m 15 -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
 }
 
 function addNodes {
   local expectedNodes=$1
   local currentNodes=$2
+  local authToken=$3
+  local namespace=$4
   local nodes=""
   for ((i=$currentNodes;i<$expectedNodes;i++)) do
-    nodes=${nodes}\"graphdb-node-$i.graphdb-node:7300\"
+    nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
     if [ $i -lt $(expr $expectedNodes - 1) ]; then
       nodes=${nodes}\,
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "$nodes"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  curl -o clusterAdd.json -isSL -m 15 -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
 }
 
 function deleteCluster {
@@ -95,7 +98,7 @@ function getNodeCountInCurrentCluster {
   local node_address=http://graphdb-node-0.graphdb-node:7200
   waitService "${node_address}/rest/repositories" "$token"
   curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header "Authorization: Basic ${token}" --header 'Accept: */*' "${node_address}/rest/cluster/config"
-  echo `(grep -o 'graphdb-node-' "clusterResponse.json" | grep -c "")`
+  grep -o 'graphdb-node-' "clusterResponse.json" | grep -c ""
 }
 
 function waitService {

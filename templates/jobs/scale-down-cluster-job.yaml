@@ -27,7 +27,7 @@ spec:
           args:
             - |
               cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh updateClusterNodes {{ .Values.graphdb.clusterConfig.nodesCount }} "{{ $authToken }}" {{ $.Release.Namespace }} >> /proc/1/fd/1
+              /usr/local/bin/update-cluster.sh removeNodes {{ .Values.graphdb.clusterConfig.nodesCount }} "{{ $authToken }}" {{ $.Release.Namespace }} >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
         - name: graphdb-utils

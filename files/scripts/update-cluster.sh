@@ -29,67 +29,90 @@ function patchCluster {
   echo "Not implemented yet."
 }
 
-function updateClusterNodes {
+function removeNodes {
   local expectedNodes=$1
   local authToken=$2
   local namespace=$3
-  if [ "$expectedNodes" -lt 2 ]; then
-    deleteCluster
-  fi
-  local currentNodes=$(getNodeCountInCurrentCluster authToken)
-  if [ "$expectedNodes" -lt "$currentNodes" ]; then
-    echo "Scaling down!"
-    removeNodes "$expectedNodes" "$currentNodes" "$authToken" "$namespace"
-  elif [ "$expectedNodes" -gt "$currentNodes" ]; then
-        echo "Scaling up!"
-        addNodes "$expectedNodes" "$currentNodes" "$authToken" "$namespace"
-  fi
-}
-
-function removeNodes {
-  local expectedNodes=$1
-  local currentNodes=$2
-  local authToken=$3
-  local namespace=$4
+  local currentNodes=$(getNodeCountInCurrentCluster "$authToken")
   local nodes=""
-  for ((i=$expectedNodes;i<$currentNodes;i++)) do
+# if there is no cluster or current nodes are less or equal to expected so no need to remove more, exit
+  if [ "$currentNodes" -lt 2 ] || [ "$currentNodes" -le "$expectedNodes" ]; then
+    echo "No scaling required"
+    exit 0
+  fi
+# if there is a cluster and we wanna scale to 1 node, delete it
+  if [ "$expectedNodes" -lt 2 ]; then
+    echo "Deleting cluster"
+    deleteCluster "$authToken"
+    exit 0
+  fi
+
+  for ((i = expectedNodes; i < currentNodes; i++)) do
     nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
     if [ $i -lt $(expr $currentNodes - 1) ]; then
       nodes=${nodes}\,
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  curl  -o clusterRemove.json -isSL -m 15 -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  curl -o clusterRemove.json -isSL -m 15 -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  if grep -q 'HTTP/1.1 200' "clusterRemove.json"; then
+    echo "Scaling down successful."
+  else
+    echo "Issue scaling down:"
+    cat clusterRemove.json
+    echo
+    exit 1
+  fi
 }
 
 function addNodes {
   local expectedNodes=$1
-  local currentNodes=$2
-  local authToken=$3
-  local namespace=$4
+  local authToken=$2
+  local namespace=$3
+  local timeout=$4
+  local currentNodes=$(getNodeCountInCurrentCluster "$authToken")
   local nodes=""
-  for ((i=$currentNodes;i<$expectedNodes;i++)) do
+# if there is no cluster or current nodes are more or equal to expected so no need to add more, exit
+  if [ "$currentNodes" -lt 2 ] || [ "$currentNodes" -ge "$expectedNodes" ]; then
+    echo "No scaling required"
+    exit 0
+  fi
+  for ((i = currentNodes; i < expectedNodes; i++)) do
     nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
     if [ $i -lt $(expr $expectedNodes - 1) ]; then
       nodes=${nodes}\,
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  curl -o clusterAdd.json -isSL -m 15 -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  curl -o clusterAdd.json -isSL -m ${timeout} -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  if grep -q 'HTTP/1.1 200' "clusterAdd.json"; then
+    echo "Scaling successful."
+  elif grep -q 'Mismatching fingerprints\|HTTP/1.1 412' "clusterAdd.json"; then
+    echo "Issue scaling:"
+    cat clusterAdd.json
+    echo
+    echo "Manual clear of the mismatched repositories will be required to add the node"
+    exit 0
+  else
+    echo "Issue scaling:"
+    cat clusterAdd.json
+    echo
+    exit 1
+  fi
 }
 
 function deleteCluster {
-  curl -o response.json -isSL -m 15 -X DELETE --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
+  local token=$1
+  curl -o response.json -isSL -m 15 -X DELETE --header "Authorization: Basic ${token}" --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"
-  else if grep -q 'Node is not part of the cluster.\|HTTP/1.1 412' "response.json" ; then
-         echo "Node 0 is not part of the cluster"
-       else
-         echo "Cluster deletion failed, received response:"
-         cat response.json
-         echo
-         exit 1
-       fi
+  elif grep -q 'Node is not part of the cluster.\|HTTP/1.1 412' "response.json" ; then
+    echo "Node 0 is not part of a cluster"
+  else
+    echo "Cluster deletion failed, received response:"
+    cat response.json
+    echo
+    exit 1
   fi
 }
 
@@ -113,8 +136,6 @@ function waitService {
       echo "Max attempts reached"
       exit 1
     fi
-
-    printf '.'
     attempt_counter=$((attempt_counter+1))
     sleep 5
   done

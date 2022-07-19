@@ -29,7 +29,7 @@ spec:
           args:
             - |
               cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh updateClusterNodes {{ .Values.graphdb.clusterConfig.nodesCount }} "{{ $authToken }}" {{ $.Release.Namespace }} >> /proc/1/fd/1
+              /usr/local/bin/update-cluster.sh addNodes {{ .Values.graphdb.clusterConfig.nodesCount }} "{{ $authToken }}" {{ $.Release.Namespace }} {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
         - name: graphdb-utils

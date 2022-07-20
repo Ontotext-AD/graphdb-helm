@@ -9,7 +9,7 @@ metadata:
   annotations:
     "helm.sh/hook": post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
-    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-weight": "2"
 spec:
   ttlSecondsAfterFinished: 300
   template:
@@ -32,7 +32,7 @@ spec:
             - |
               cp /tmp/cluster-config/cluster-config.json /usr/local/bin/cluster-config.json
               cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh patchCluster "/usr/local/bin/cluster-config.json" "{{ $authToken }}" {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
+              /usr/local/bin/update-cluster.sh patchCluster "/usr/local/bin/cluster-config.json" "{{ $authToken }}" >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
         - name: cluster-config

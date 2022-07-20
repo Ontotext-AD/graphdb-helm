@@ -1,32 +1,21 @@
 #!/usr/bin/env bash
 
-# Required commands:
-# 1. Patch the cluster config
-#   - take current - curl GET node-0/rest/cluster/config
-#   - compare it with one in values.yaml
-#   - if different - curl PATCH node-o/rest/cluster/config
-#   - else do nothing
-# 2. Add/Remove nodes
-#   - parse - curl GET node-0/rest/cluster/config for number of nodes
-#   - compare with node count in values.yaml
-#   - if cluster nodes = 1 do nothing, create cluster would have taken care of such situation
-#   - if cluster nodes = values.yaml do nothing
-#   ADD
-#   - if cluster nodes < values.yaml user - curl post /rest/cluster/config/node to add extra
-#   REMOVE
-#   - if cluster nodes > values.yaml use - curl DELETE /rest/cluster/config/node to delete extra
-#   - if cluster nodes > values.yaml = 1 use - curl DELETE /rest/cluster/config to delete cluster and figure out the services/external proxy situation
-#
-#
-#  POSSIBLE ISSUES:
-#  if all nodes need to be ready for a process, solution: - curl GET /rest/cluster/group/status and parse their statuses and count from it
-#  if an API requires leader i have no idea in what state the external proxy would be
-#
-#  After things are done and working merge this script with graphdb.sh
-
 function patchCluster {
-  #curl to leader/loadBalancer to patch cluster
-  echo "Not implemented yet."
+  local configLocation=$1
+  local token=$2
+  echo "Patching cluster"
+  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$token"
+  curl -o patchResponse.json -isSL -m 15 -X PATCH  --header "Authorization: Basic ${token}" --header 'Content-Type: application/json' --header 'Accept: application/json' -d @"$configLocation" 'http://graphdb-cluster-proxy:7200/rest/cluster/config'
+    if grep -q 'HTTP/1.1 200' "patchResponse.json"; then
+      echo "Patch successful"
+    elif grep -q 'Cluster does not exist.\|HTTP/1.1 412' "patchResponse.json" ; then
+      echo "Cluster does not exist"
+    else
+      echo "Cluster patch failed, received response:"
+      cat patchResponse.json
+      echo
+      exit 1
+    fi
 }
 
 function removeNodes {
@@ -40,7 +29,7 @@ function removeNodes {
     echo "No scaling required"
     exit 0
   fi
-# if there is a cluster and we wanna scale to 1 node, delete it
+# if there is a cluster and we wanna scale to 1 node, delete it (we would have exit on the last if in case on no cluster)
   if [ "$expectedNodes" -lt 2 ]; then
     echo "Deleting cluster"
     deleteCluster "$authToken"
@@ -54,6 +43,7 @@ function removeNodes {
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
+  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$token"
   curl -o clusterRemove.json -isSL -m 15 -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
   if grep -q 'HTTP/1.1 200' "clusterRemove.json"; then
     echo "Scaling down successful."
@@ -84,6 +74,7 @@ function addNodes {
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
+  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$token"
   curl -o clusterAdd.json -isSL -m ${timeout} -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
   if grep -q 'HTTP/1.1 200' "clusterAdd.json"; then
     echo "Scaling successful."
@@ -103,6 +94,7 @@ function addNodes {
 
 function deleteCluster {
   local token=$1
+  waitService "http://graphdb-node-0.graphdb-node:7200/rest/repositories" "$token"
   curl -o response.json -isSL -m 15 -X DELETE --header "Authorization: Basic ${token}" --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"

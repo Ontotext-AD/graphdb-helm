@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+set -eu
 
 function patchCluster {
   local configLocation=$1
-  local token=$2
+  local authToken=$2
   echo "Patching cluster"
-  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$token"
-  curl -o patchResponse.json -isSL -m 15 -X PATCH  --header "Authorization: Basic ${token}" --header 'Content-Type: application/json' --header 'Accept: application/json' -d @"$configLocation" 'http://graphdb-cluster-proxy:7200/rest/cluster/config'
+  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$authToken"
+  curl -o patchResponse.json -isSL -m 15 -X PATCH  --header "Authorization: Basic ${authToken}" --header 'Content-Type: application/json' --header 'Accept: application/json' -d @"$configLocation" 'http://graphdb-cluster-proxy:7200/rest/cluster/config'
     if grep -q 'HTTP/1.1 200' "patchResponse.json"; then
       echo "Patch successful"
     elif grep -q 'Cluster does not exist.\|HTTP/1.1 412' "patchResponse.json" ; then
@@ -43,8 +44,8 @@ function removeNodes {
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$token"
-  curl -o clusterRemove.json -isSL -m 15 -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$authToken"
+  curl -o clusterRemove.json -isSL -m 15 -X DELETE --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${authToken}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
   if grep -q 'HTTP/1.1 200' "clusterRemove.json"; then
     echo "Scaling down successful."
   else
@@ -74,8 +75,8 @@ function addNodes {
     fi
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
-  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$token"
-  curl -o clusterAdd.json -isSL -m ${timeout} -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${token}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
+  waitService "http://graphdb-cluster-proxy:7200/proxy/ready" "$authToken"
+  curl -o clusterAdd.json -isSL -m ${timeout} -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic ${authToken}" -d "${nodes}"  'http://graphdb-cluster-proxy:7200/rest/cluster/config/node'
   if grep -q 'HTTP/1.1 200' "clusterAdd.json"; then
     echo "Scaling successful."
   elif grep -q 'Mismatching fingerprints\|HTTP/1.1 412' "clusterAdd.json"; then
@@ -93,9 +94,9 @@ function addNodes {
 }
 
 function deleteCluster {
-  local token=$1
-  waitService "http://graphdb-node-0.graphdb-node:7200/rest/repositories" "$token"
-  curl -o response.json -isSL -m 15 -X DELETE --header "Authorization: Basic ${token}" --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
+  local authToken=$1
+  waitService "http://graphdb-node-0.graphdb-node:7200/rest/repositories" "$authToken"
+  curl -o response.json -isSL -m 15 -X DELETE --header "Authorization: Basic ${authToken}" --header 'Accept: */*' 'http://graphdb-node-0.graphdb-node:7200/rest/cluster/config?force=false'
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"
   elif grep -q 'Node is not part of the cluster.\|HTTP/1.1 412' "response.json" ; then
@@ -109,21 +110,21 @@ function deleteCluster {
 }
 
 function getNodeCountInCurrentCluster {
-  local token=$1
+  local authToken=$1
   local node_address=http://graphdb-node-0.graphdb-node:7200
-  waitService "${node_address}/rest/repositories" "$token"
-  curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header "Authorization: Basic ${token}" --header 'Accept: */*' "${node_address}/rest/cluster/config"
+  waitService "${node_address}/rest/repositories" "$authToken"
+  curl -o clusterResponse.json -isSL -m 15 -X GET --header 'Content-Type: application/json' --header "Authorization: Basic ${authToken}" --header 'Accept: */*' "${node_address}/rest/cluster/config"
   grep -o 'graphdb-node-' "clusterResponse.json" | grep -c ""
 }
 
 function waitService {
   local address=$1
-  local token=$2
+  local authToken=$2
 
   local attempt_counter=0
   local max_attempts=100
 
-  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${token}" --silent --fail ${address}); do
+  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${authToken}" --silent --fail ${address}); do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1

@@ -2,12 +2,13 @@
 ## Version 10.0.1
 
 ### Breaking
-- The graphdb-node service now is always headless. If you installed Version 10.0 with `graphdb.clusterConfig.nodesCount` set to `1` you will have to delete the service prior to an update
+- The graphdb-node service now is always headless. If you installed Version 10.0.0 with `graphdb.clusterConfig.nodesCount` set to `1` you will have to delete the service prior to an update
 
 ### New
 - Upgrade to GraphDB 10.0.1
 - Cluster size can now be scaled
 - Fixed an issue with deploying with security turned on
+- Fixed an issue with the cluster proxy returning its internal address when queried externally
 
 ## Version 10.0.0
 

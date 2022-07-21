@@ -45,8 +45,9 @@ function waitAllNodes {
   local node_count=$1
   local token=$2
 
-  for (( c=0; c<$node_count; c++ ))
+  for (( c=$node_count; c>0; c ))
   do
+    c=$((c-1))
     local node_address=http://graphdb-node-$c.graphdb-node:7200
     waitService "${node_address}/rest/repositories" "$token"
   done

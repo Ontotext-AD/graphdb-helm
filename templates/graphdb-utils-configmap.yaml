@@ -5,6 +5,12 @@ metadata:
   labels:
     name: graphdb-utils-configmap
     {{- include "graphdb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade, pre-rollback, post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    "helm.sh/hook-weight": "-10"
 data:
   graphdb.sh: |-
 {{ tpl (.Files.Get "files/scripts/graphdb.sh" | indent 4) . }}
+  update-cluster.sh: |-
+{{ tpl (.Files.Get "files/scripts/update-cluster.sh" | indent 4) . }}

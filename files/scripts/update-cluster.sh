@@ -25,18 +25,20 @@ function removeNodes {
   local namespace=$3
   local currentNodes=$(getNodeCountInCurrentCluster "$authToken")
   local nodes=""
+  echo "Cluster reported: $currentNodes current nodes"
+  echo "Cluster is expected to have: $expectedNodes nodes"
 # if there is no cluster or current nodes are less or equal to expected so no need to remove more, exit
   if [ "$currentNodes" -lt 2 ] || [ "$currentNodes" -le "$expectedNodes" ]; then
-    echo "No scaling required"
+    echo "No scaling down of the cluster required"
     exit 0
   fi
 # if there is a cluster and we wanna scale to 1 node, delete it (we would have exit on the last if in case on no cluster)
   if [ "$expectedNodes" -lt 2 ]; then
-    echo "Deleting cluster"
+    echo "Scaling down to 1 node. Deleting cluster"
     deleteCluster "$authToken"
     exit 0
   fi
-
+  echo "Scaling the cluster down"
   for ((i = expectedNodes; i < currentNodes; i++)) do
     nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
     if [ $i -lt $(expr $currentNodes - 1) ]; then
@@ -63,11 +65,14 @@ function addNodes {
   local timeout=$4
   local currentNodes=$(getNodeCountInCurrentCluster "$authToken")
   local nodes=""
+  echo "Cluster reported: $currentNodes current nodes"
+  echo "Cluster is expected to have: $expectedNodes nodes"
 # if there is no cluster or current nodes are more or equal to expected so no need to add more, exit
   if [ "$currentNodes" -lt 2 ] || [ "$currentNodes" -ge "$expectedNodes" ]; then
-    echo "No scaling required"
+    echo "No scaling up of the cluster required"
     exit 0
   fi
+  echo "Scaling the cluster up"
   for ((i = currentNodes; i < expectedNodes; i++)) do
     nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
     if [ $i -lt $(expr $expectedNodes - 1) ]; then
@@ -84,7 +89,7 @@ function addNodes {
     cat clusterAdd.json
     echo
     echo "Manual clear of the mismatched repositories will be required to add the node"
-    exit 0
+    exit 1
   else
     echo "Issue scaling:"
     cat clusterAdd.json
@@ -100,7 +105,7 @@ function deleteCluster {
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"
   elif grep -q 'Node is not part of the cluster.\|HTTP/1.1 412' "response.json" ; then
-    echo "Node 0 is not part of a cluster"
+    echo "No cluster present."
   else
     echo "Cluster deletion failed, received response:"
     cat response.json

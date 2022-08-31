@@ -12,8 +12,8 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
     nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
-    {{- range $key, $value := .Values.deployment.ingress.annotations }}
-      {{ $key }}: {{ $value | quote }}
+    {{- with .Values.deployment.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
     {{- end }}
 
 spec:

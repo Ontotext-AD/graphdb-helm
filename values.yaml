@@ -30,7 +30,7 @@ versions:
 images:
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.0.2"
+    tag: "10.0.3"
   busybox:
     repository: busybox
     tag: "1.31"

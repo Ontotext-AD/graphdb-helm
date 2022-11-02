@@ -5,8 +5,8 @@ apiVersion: v2
 name: graphdb
 description: Helm chart for GraphDB
 type: application
-version: 10.0.3
-appVersion: 10.0.3
+version: 10.1.0
+appVersion: 10.1.0
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png
 maintainers:

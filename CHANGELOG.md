@@ -1,4 +1,10 @@
 # GraphDB Helm chart release notes
+## Version 10.1.1-R2 
+
+### New 
+- Fixed ingress template to properly handle root context
+- Fixed single node returning wrong location header with explicit transactions
+
 ## Version 10.0.1
 
 ### Breaking

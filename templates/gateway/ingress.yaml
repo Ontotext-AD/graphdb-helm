@@ -15,7 +15,11 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
     nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
     nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
+    {{- if eq $.Values.graphdb.workbench.subpath "/" }}
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    {{- else }}
     nginx.ingress.kubernetes.io/rewrite-target: /$2
+    {{- end }}
     nginx.ingress.kubernetes.io/x-forwarded-prefix: {{ $.Values.graphdb.workbench.subpath | quote }}
     {{- with .Values.deployment.ingress.annotations }}
       {{- toYaml . | nindent 4 }}
@@ -31,7 +35,11 @@ spec:
     - host: {{ include "resolveDeploymentHost" . | quote }}
       http:
         paths:
+          {{- if eq $.Values.graphdb.workbench.subpath "/" }}
+          - path: /(.*)
+          {{- else }}
           - path: {{ $.Values.graphdb.workbench.subpath }}(/|$)(.*)
+          {{- end }}
             pathType: Prefix
             backend:
               service:

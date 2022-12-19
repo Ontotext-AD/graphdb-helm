@@ -125,6 +125,9 @@ graphdb:
     replicas: 1
     # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+    # -- Service type used by the graphdb-cluster-proxy service
+    # Note: If using ALB in AWS EKS this will default to being on the public internet
+    serviceType: LoadBalancer
     # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
     # By default, no restrictions are applied.
     # nodeSelector: {}

@@ -60,7 +60,7 @@ metadata:
     app: graphdb-cluster-proxy
     {{- include "graphdb.labels" . | nindent 4 }}
 spec:
-  type: LoadBalancer
+  type: {{ $.Values.graphdb.clusterProxy.serviceType }}
   selector:
     app: graphdb-cluster-proxy
   ports:

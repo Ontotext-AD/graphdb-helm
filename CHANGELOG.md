@@ -1,4 +1,8 @@
 # GraphDB Helm chart release notes
+## Version 10.1.2-R2
+### New 
+- Added ability to override cluster proxy's type, default remains LoadBalancer
+
 ## Version 10.1.1-R2 
 
 ### New 

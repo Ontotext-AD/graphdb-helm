@@ -202,6 +202,12 @@ graphdb:
              storage: "5Gi"
     # additional JMX attributes to be set after the cluster is initialized
     additionalJmxArrtibutes: {}
+    # additional environment variables to be set for each master
+    extraEnvFrom: []
+    # additional volumes to be set for each master
+    extraVolumes: []
+    # additional volume mounts to be set for each master node pod
+    extraVolumeMounts: []
   workers:
     # -- Reference to a configuration map containing one or more .ttl files used for repository
     # initialization in the post install hook. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-a-repository.html
@@ -248,6 +254,12 @@ graphdb:
         memory: 2Gi
       requests:
         memory: 2Gi
+    # additional environment variables to be set for each worker node
+    extraEnvFrom: []
+    # additional volumes to be set for each worker node
+    extraVolumes: []
+    # additional volume mounts to be set for each worker node pod
+    extraVolumeMounts: []
   # Reference to a configuration map with GraphDB specific configurations.
   # Injected as environment variables.
   #configmap: graphdb-configmap

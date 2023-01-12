@@ -61,6 +61,9 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-worker-preload-data-pvc
         {{- end }}
+        {{- with .Values.graphdb.workers.extraVolumes }}
+          {{- tpl ( toYaml . ) $ | nindent 8 }}
+        {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
@@ -81,6 +84,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: graphdb-worker-{{ $worker_index }}-configmap
+            {{- with .Values.graphdb.workers.extraEnvFrom }}
+              {{- tpl ( toYaml . ) $ | nindent 12 }}
+            {{- end }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.workers.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-worker-{{ $worker_index }}-data-dynamic-pvc
@@ -88,6 +94,9 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- with .Values.graphdb.workers.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           resources: {{ $.Values.graphdb.workers.resources | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
           startupProbe:

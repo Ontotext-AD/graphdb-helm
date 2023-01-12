@@ -1,2 +1,13 @@
+# Idea
+.idea
+*.iml
+
+# Eclipse
+.metadata
+.classpath
+.project
+.settings
+
+# Helm
 values_overrides.yaml
 values_overrides.yml

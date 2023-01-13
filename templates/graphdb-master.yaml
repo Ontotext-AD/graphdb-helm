@@ -68,7 +68,7 @@ spec:
           configMap:
             name: {{ $.Values.deployment.logbackConfigMap }}
         {{- end }}
-        {{- with .Values.graphdb.masters.extraVolumes }}
+        {{- with $.Values.graphdb.masters.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       imagePullSecrets:
@@ -91,7 +91,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: graphdb-master-{{ $master_index }}-configmap
-            {{- with .Values.graphdb.masters.extraEnvFrom }}
+            {{- with $.Values.graphdb.masters.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
           volumeMounts:
@@ -109,7 +109,7 @@ spec:
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
-            {{- with .Values.graphdb.masters.extraVolumeMounts }}
+            {{- with $.Values.graphdb.masters.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           resources: {{ $.Values.graphdb.masters.resources | toYaml | nindent 12 }}

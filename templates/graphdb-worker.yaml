@@ -61,7 +61,7 @@ spec:
           persistentVolumeClaim:
             claimName: graphdb-worker-preload-data-pvc
         {{- end }}
-        {{- with .Values.graphdb.workers.extraVolumes }}
+        {{- with $.Values.graphdb.workers.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       imagePullSecrets:
@@ -84,7 +84,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: graphdb-worker-{{ $worker_index }}-configmap
-            {{- with .Values.graphdb.workers.extraEnvFrom }}
+            {{- with $.Values.graphdb.workers.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
           volumeMounts:
@@ -94,7 +94,7 @@ spec:
             - name: graphdb-worker-storage
             {{- end }}
               mountPath: /opt/graphdb/home
-            {{- with .Values.graphdb.workers.extraVolumeMounts }}
+            {{- with $.Values.graphdb.workers.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           resources: {{ $.Values.graphdb.workers.resources | toYaml | nindent 12 }}

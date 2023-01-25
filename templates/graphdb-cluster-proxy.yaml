@@ -15,6 +15,13 @@ spec:
   selector:
     matchLabels:
       app: graphdb-cluster-proxy
+  volumeClaimTemplates:
+    {{- if $.Values.graphdb.clusterProxy.persistence.enablePersistence }}
+    - metadata:
+        name: graphdb-cluster-proxy-data-dynamic-pvc
+      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.clusterProxy.persistence.volumeClaimTemplateSpec }}
+      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+    {{- end }}
   template:
     metadata:
       labels:
@@ -47,6 +54,11 @@ spec:
               containerPort: 7200
             - name: gdb-proxy-rpc
               containerPort: 7300
+         {{- if $.Values.graphdb.clusterProxy.persistence.enablePersistence }}
+          volumeMounts:
+            - name: graphdb-cluster-proxy-data-dynamic-pvc
+              mountPath: /opt/graphdb/home
+          {{- end }}
           resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
           startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
           readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}

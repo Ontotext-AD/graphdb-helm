@@ -242,3 +242,48 @@ graphdb:
       resources:
         requests:
           storage: "10Gi"
+  backup:
+    enabled: true
+    schedule: "*/3 * * * *"
+    # can be local, S3, GC, Azure
+    type: s3
+    # If using cloud services
+    cloudSecretConfig: s3-secret
+    backupPath: blabla.tar
+    # [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
+    repositories: ""
+    backupSystemData: false
+    countOfBackupsToKeep: 5
+    persistence:
+      backupsVolumeName: gdb-backups
+  restore:
+    enabled: false
+    # can be local, S3, GC, Azure
+    type: s3
+    # If using cloud services
+    cloudSecret: s3-secret
+    # including bucket name
+    cloudBackupPath: blabla.tar
+    # [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
+    repositories: ""
+    restoreSystemData: false
+    removeStaleRepositories: false
+    persistence:
+      # use dynamic volume provisioning
+      volumeClaimTemplateSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "5Gi"
+
+
+
+
+#                       'cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh;
+#                        {{- if eq $.Values.graphdb.backup.type "local" }}
+#                        /usr/local/bin/graphdb.sh backup "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}";
+#                        {{- else }}
+#                        /usr/local/bin/graphdb.sh backupCloud "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}" "/usr/local/bin/cluster-config.json";
+#                        {{- end }}
+#                        >> /proc/1/fd/1']

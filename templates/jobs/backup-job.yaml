@@ -1,0 +1,59 @@
+{{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
+{{- if and .Values.graphdb.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: auto-backup
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-failed
+    "helm.sh/hook-weight": "3"
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  schedule: {{ .Values.graphdb.backup.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+          {{- include "combinedImagePullSecrets" $ | nindent 12 }}
+          containers:
+            - name: backup
+              image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+              volumeMounts:
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+                {{- if eq .Values.graphdb.backup.type "local" }}
+                - name: gdb-backups
+                  mountPath: /opt/graphdb/backups
+                {{- else }}
+                - name: cloud-config
+                  mountPath: /tmp/cloud-config
+                {{- end }}
+              command:
+              - 'bash'
+              - '-c'
+              - 'tail -f /dev/null;
+              - cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh;
+              {{- if eq $.Values.graphdb.backup.type "local" }}
+              - /usr/local/bin/graphdb.sh backup "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}";
+              {{- else }}
+              - /usr/local/bin/graphdb.sh backupCloud "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}" "/usr/local/bin/cluster-config.json";
+              {{- end }}
+              - >> /proc/1/fd/1'
+          restartPolicy: Never
+          volumes:
+          {{- if ne $.Values.graphdb.backup.type "local" }}
+            - name: cloud-config
+              secret:
+                secretName: {{ $.Values.graphdb.backup.cloudSecretConfig }}
+          {{- else }}
+            - name: gdb-backups
+              persistentVolumeClaim:
+                claimName: {{ .Values.graphdb.backup.persistence.backupsVolumeName }}
+          {{- end }}
+            - name: graphdb-utils
+              configMap:
+                name: graphdb-utils-configmap
+{{- end }}

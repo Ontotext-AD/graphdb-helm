@@ -1,4 +1,8 @@
 # GraphDB Helm chart release notes
+## Version 10.1.5-R2
+### New
+- Fixed an issue with the external proxy connecting to the nodes when https is used
+
 ## Version 10.1.2-R2
 ### New 
 - Added ability to override cluster proxy's type, default remains LoadBalancer

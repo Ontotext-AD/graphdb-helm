@@ -52,4 +52,22 @@ function waitAllNodes {
   done
 }
 
+function createRepositoryFromFile {
+  waitAllNodes $1 $3
+  local repositoriesConfigsLocation=$2
+  local authToken=$3
+  local timeout=60
+  echo "Creating repositories"
+  for filename in ${repositoriesConfigsLocation}/*.ttl; do
+    repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
+    echo "Provisioning repository ${repositoryName}"
+    response=$(curl -X POST --connect-timeout 60 --retry 5 --retry-all-errors --retry-delay 10 -H "Authorization: Basic ${authToken}" --write-out "%{http_code}" -H 'Content-Type: multipart/form-data' -F config=@${filename}  http://graphdb-node-0.graphdb-node:7200/rest/repositories)
+    if grep -q "201" <<< "$response" ; then
+      echo "Successfully created repository ${repositoryName}"
+    else
+      echo "Could not create repository ${repositoryName}"
+    fi
+  done
+}
+
 "$@"

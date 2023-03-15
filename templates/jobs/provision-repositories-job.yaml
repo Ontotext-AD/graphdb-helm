@@ -42,5 +42,5 @@ spec:
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 9
+  backoffLimit: 3
 {{- end }}

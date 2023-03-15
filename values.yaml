@@ -110,6 +110,8 @@ graphdb:
     #propertiesConfigMap: graphdb-properties-configmap
     # Override default logback configuration
     #logbackConfigMap: graphdb-logback-configmap
+    # Optional configmap containing repository configuration ttl file(s). GraphDB will automatically create repositories with the provided repositories configuration files
+    # provisionRepositoriesConfigMap: graphdb-repositories-configmap
 
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
@@ -137,17 +139,17 @@ graphdb:
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
-        memory: 1Gi
-        cpu: 500m
+        memory: 1500Mi
+        cpu: 800m
       requests:
-        memory: 1Gi
-        cpu: 500m
+        memory: 1500Mi
+        cpu: 800m
     # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:
         path: /protocol
         port: gdb-proxy-port
-      failureThreshold: 30
+      failureThreshold: 40
       timeoutSeconds: 5
       periodSeconds: 10
     # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
@@ -155,7 +157,7 @@ graphdb:
       httpGet:
         path: /proxy/ready
         port: gdb-proxy-port
-      initialDelaySeconds: 20
+      initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
     # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
@@ -163,7 +165,7 @@ graphdb:
       httpGet:
         path: /proxy/health
         port: gdb-proxy-port
-      initialDelaySeconds: 60
+      initialDelaySeconds: 120
       timeoutSeconds: 5
       periodSeconds: 10
 

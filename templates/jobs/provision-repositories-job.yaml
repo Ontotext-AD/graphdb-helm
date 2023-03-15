@@ -1,0 +1,46 @@
+{{- $configs := (.Values.graphdb.configs | default dict) }}
+{{- if $configs.provisionRepositoriesConfigMap }}
+#Set auth token var
+{{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
+apiVersion: {{ $.Values.versions.job }}
+kind: Job
+metadata:
+  name: provision-repositories-job
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    "helm.sh/hook-weight": "4"
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      imagePullSecrets:
+        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      containers:
+        - name: provision-repositories
+          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          volumeMounts:
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+            - name: repositories-config
+              mountPath: /tmp/repositories-config
+          command: ['sh','-c']
+          args:
+            - |
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
+              /usr/local/bin/graphdb.sh createRepositoryFromFile {{ .Values.graphdb.clusterConfig.nodesCount }} "/tmp/repositories-config" "{{ $authToken }}" >> /proc/1/fd/1
+      restartPolicy: Never
+      volumes:
+        - name: repositories-config
+          configMap:
+            name: {{ .Values.graphdb.configs.provisionRepositoriesConfigMap }}
+        - name: graphdb-utils
+          configMap:
+            name: graphdb-utils-configmap
+  backoffLimit: 3
+{{- end }}

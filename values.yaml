@@ -191,7 +191,7 @@ graphdb:
     extraVolumeMounts: []
     # securityContext defines privilege and access control settings for the node pods.
     securityContext: {}
-    # securityContext defines privilege and access control settings for the node containers (including provisioning ones).
+    # containerSecurityContext defines privilege and access control settings for the node containers (including provisioning ones).
     containerSecurityContext: {}
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
@@ -222,7 +222,7 @@ graphdb:
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
       # enable or disable proxy persistence
-      enablePersistence: false
+      enablePersistence: true
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -254,15 +254,15 @@ graphdb:
       initialDelaySeconds: 120
       timeoutSeconds: 5
       periodSeconds: 10
-    # additional environment variables to be set for each worker node
+    # additional environment variables to be set for each cluster proxy
     extraEnvFrom: []
-    # additional volumes to be set for each worker node
+    # additional volumes to be set for each cluster proxy
     extraVolumes: []
-    # additional volume mounts to be set for each worker node pod
+    # additional volume mounts to be set for each cluster proxy
     extraVolumeMounts: []
     # securityContext defines privilege and access control settings for the proxy pods.
     securityContext: {}
-    # securityContext defines privilege and access control settings for the proxy containers.
+    # containerSecurityContext defines privilege and access control settings for the proxy containers.
     containerSecurityContext: {}
 
   # GraphDB workbench configurations

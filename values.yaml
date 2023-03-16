@@ -218,6 +218,18 @@ graphdb:
       requests:
         memory: 1500Mi
         cpu: 800m
+    # -- Persistence configurations.
+    # By default, Helm will use a PV that reads and writes to the host file system.
+    persistence:
+      # enable or disable proxy persistence
+      enablePersistence: false
+      # use dynamic volume provisioning
+      volumeClaimTemplateSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "500Mi"
     # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:

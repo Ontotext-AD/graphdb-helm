@@ -75,6 +75,12 @@ deployment:
       connect: 5
       read: 600
       send: 600
+  # jobSecurityContext defines privilege and access control settings for all the job pods
+  jobSecurityContext: {}
+  # jobContainerSecurityContext defines privilege and access control settings for all the job containers
+  jobContainerSecurityContext:
+    allowPrivilegeEscalation: false
+    runAsUser: 0
 
 # GraphDB database configurations
 graphdb:
@@ -89,9 +95,9 @@ graphdb:
     clusterCreationTimeout: 60
     # -- Cluster configuration parameters:
     # The minimum wait time in milliseconds for a heartbeat from a leader.
-    electionMinTimeout: 7000
+    electionMinTimeout: 8000
     # The variable portion of each waiting period in milliseconds for a heartbeat.
-    electionRangeTimeout: 5000
+    electionRangeTimeout: 6000
     # The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.
     heartbeatInterval: 2000
     #The size of the data blocks transferred during data replication streaming through the RPC protocol.

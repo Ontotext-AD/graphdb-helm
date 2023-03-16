@@ -1,5 +1,7 @@
 # Helm charts for GraphDB
 
+You can download the GraphDB Helm chart, including all sub-charts managed by Ontotext, from the [Ontotext Helm repository](https://maven.ontotext.com/repository/helm-public/).
+
 ## Install
 ### Prerequisites
 

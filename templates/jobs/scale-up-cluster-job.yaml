@@ -1,5 +1,4 @@
 {{- if gt (int .Values.graphdb.clusterConfig.nodesCount) 1 }}
-{{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
 apiVersion: {{ $.Values.versions.job }}
 kind: Job
 metadata:
@@ -16,12 +15,15 @@ spec:
     spec:
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      securityContext:
+        {{- $.Values.deployment.jobSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: scale-up-cluster
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsUser: 0
+          envFrom:
+            - secretRef:
+                name: graphdb-provision-user
+          securityContext: {{- $.Values.deployment.jobContainerSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
@@ -29,7 +31,7 @@ spec:
           args:
             - |
               cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh addNodes {{ .Values.graphdb.clusterConfig.nodesCount }} "{{ $authToken }}" {{ $.Release.Namespace }} {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
+              /usr/local/bin/update-cluster.sh addNodes {{ .Values.graphdb.clusterConfig.nodesCount }} {{ $.Release.Namespace }} {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
         - name: graphdb-utils

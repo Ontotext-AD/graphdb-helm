@@ -1,7 +1,5 @@
 {{- $configs := (.Values.graphdb.configs | default dict) }}
 {{- if $configs.provisionRepositoriesConfigMap }}
-#Set auth token var
-{{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
 apiVersion: {{ $.Values.versions.job }}
 kind: Job
 metadata:
@@ -18,12 +16,15 @@ spec:
     spec:
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+      securityContext:
+        {{- $.Values.deployment.jobSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: provision-repositories
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsUser: 0
+          envFrom:
+            - secretRef:
+                name: graphdb-provision-user
+          securityContext: {{- $.Values.deployment.jobContainerSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
@@ -33,7 +34,7 @@ spec:
           args:
             - |
               cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
-              /usr/local/bin/graphdb.sh createRepositoryFromFile {{ .Values.graphdb.clusterConfig.nodesCount }} "/tmp/repositories-config" "{{ $authToken }}" >> /proc/1/fd/1
+              /usr/local/bin/graphdb.sh createRepositoryFromFile {{ .Values.graphdb.clusterConfig.nodesCount }} "/tmp/repositories-config" >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
         - name: repositories-config

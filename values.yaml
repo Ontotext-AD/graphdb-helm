@@ -50,7 +50,7 @@ deployment:
   # Needed to configure ingress as well as some components require it to properly render their UIs
   protocol: http
   # Important: This should be a resolvable hostname, not an IP address!
-  host: graphdb.local
+  host: localhost
 
   # Configures SSL termination on ingress level.
   # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
@@ -81,7 +81,7 @@ graphdb:
   clusterConfig:
     # -- Number of GraphDB nodes to be used in the cluster.
     # Set value to 1 to run a standalone GraphDB instance.
-    nodesCount: 3
+    nodesCount: 1
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
     # -- Timeout for the cluster creation CURL query.
@@ -110,6 +110,8 @@ graphdb:
     #propertiesConfigMap: graphdb-properties-configmap
     # Override default logback configuration
     #logbackConfigMap: graphdb-logback-configmap
+    # Optional configmap containing repository configuration ttl file(s). GraphDB will automatically create repositories with the provided repositories configuration files
+    # provisionRepositoriesConfigMap: graphdb-repositories-configmap
 
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
@@ -205,17 +207,17 @@ graphdb:
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
-        memory: 1Gi
-        cpu: 500m
+        memory: 1500Mi
+        cpu: 800m
       requests:
-        memory: 1Gi
-        cpu: 500m
+        memory: 1500Mi
+        cpu: 800m
     # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:
         path: /protocol
         port: gdb-proxy-port
-      failureThreshold: 30
+      failureThreshold: 40
       timeoutSeconds: 5
       periodSeconds: 10
     # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
@@ -223,7 +225,7 @@ graphdb:
       httpGet:
         path: /proxy/ready
         port: gdb-proxy-port
-      initialDelaySeconds: 20
+      initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
     # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
@@ -231,7 +233,7 @@ graphdb:
       httpGet:
         path: /proxy/health
         port: gdb-proxy-port
-      initialDelaySeconds: 60
+      initialDelaySeconds: 120
       timeoutSeconds: 5
       periodSeconds: 10
     # additional environment variables to be set for each worker node

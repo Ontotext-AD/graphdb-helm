@@ -24,14 +24,20 @@ spec:
     spec:
       terminationGracePeriodSeconds: 15
       setHostnameAsFQDN: true
+      volumes:
+        {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
+          {{- tpl ( toYaml . ) $ | nindent 8 }}
+        {{- end }}
       nodeSelector:
-        {{- default "{}" ($.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8 }}
       affinity:
-        {{- default "{}" ($.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8 }}
       tolerations:
-        {{- default "{}" ($.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8 }}
       topologySpreadConstraints:
-        {{- default "{}" ($.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8 }}
+      securityContext:
+        {{- $.Values.graphdb.clusterProxy.securityContext | toYaml | nindent 8 }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -42,12 +48,20 @@ spec:
           envFrom:
             - configMapRef:
                 name: graphdb-cluster-proxy-configmap
+            {{- with $.Values.graphdb.clusterProxy.extraEnvFrom }}
+              {{- tpl ( toYaml . ) $ | nindent 12 }}
+            {{- end }}
           ports:
             - name: gdb-proxy-port
               containerPort: 7200
             - name: gdb-proxy-rpc
               containerPort: 7300
+          volumeMounts:
+            {{- with $.Values.graphdb.clusterProxy.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
+          securityContext: {{ $.Values.graphdb.clusterProxy.containerSecurityContext | toYaml | nindent 12 }}
           startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
           readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}
           livenessProbe: {{ $.Values.graphdb.clusterProxy.livenessProbe | toYaml | nindent 12 }}

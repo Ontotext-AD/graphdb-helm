@@ -1,3 +1,4 @@
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
 # Default configuration map for provisioning the GraphDB cluster configuration.
 # To change it, prepare another configuration map and update "graphdb.configs.clusterConfig"
 apiVersion: {{ .Values.versions.configmap }}
@@ -9,3 +10,4 @@ metadata:
 data:
   cluster-config.json: |-
 {{ tpl (.Files.Get "files/config/cluster-config.json" | indent 4) . }}
+{{- end }}

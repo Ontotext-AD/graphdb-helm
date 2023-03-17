@@ -76,9 +76,9 @@ deployment:
       read: 600
       send: 600
   # jobSecurityContext defines privilege and access control settings for all the job pods
-  jobSecurityContext: {}
+  jobPodSecurityContext: {}
   # jobContainerSecurityContext defines privilege and access control settings for all the job containers
-  jobContainerSecurityContext:
+  jobSecurityContext:
     allowPrivilegeEscalation: false
     runAsUser: 0
 
@@ -189,10 +189,12 @@ graphdb:
     extraVolumes: []
     # additional volume mounts to be set for the graphdb nodes
     extraVolumeMounts: []
-    # securityContext defines privilege and access control settings for the node pods.
+    # podSecurityContext defines privilege and access control settings for the node pods.
+    podSecurityContext: {}
+    # securityContext defines privilege and access control settings for the node container running graphdb.
     securityContext: {}
-    # containerSecurityContext defines privilege and access control settings for the node containers (including provisioning ones).
-    containerSecurityContext: {}
+    # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
+    initContainerSecurityContext: {}
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
@@ -260,10 +262,10 @@ graphdb:
     extraVolumes: []
     # additional volume mounts to be set for each cluster proxy
     extraVolumeMounts: []
-    # securityContext defines privilege and access control settings for the proxy pods.
+    # podSecurityContext defines privilege and access control settings for the proxy pods.
+    podSecurityContext: {}
+    # securityContext defines privilege and access control settings for the proxy containers.
     securityContext: {}
-    # containerSecurityContext defines privilege and access control settings for the proxy containers.
-    containerSecurityContext: {}
 
   # GraphDB workbench configurations
   workbench:

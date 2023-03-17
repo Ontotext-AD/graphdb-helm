@@ -79,7 +79,7 @@ spec:
       topologySpreadConstraints:
         {{- $.Values.graphdb.node.topologySpreadConstraints | toYaml | nindent 8 }}
       securityContext:
-        {{- $.Values.graphdb.node.securityContext | toYaml | nindent 8 }}
+        {{- $.Values.graphdb.node.podSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: graphdb-node
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
@@ -112,7 +112,7 @@ spec:
               {{- toYaml . | nindent 12 }}
             {{- end }}
           resources: {{ $.Values.graphdb.node.resources | toYaml | nindent 12 }}
-          securityContext: {{ $.Values.graphdb.node.containerSecurityContext | toYaml | nindent 12 }}
+          securityContext: {{ $.Values.graphdb.node.securityContext | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
           startupProbe: {{ $.Values.graphdb.node.startupProbe | toYaml | nindent 12 }}
           readinessProbe: {{ $.Values.graphdb.node.readinessProbe | toYaml | nindent 12 }}
@@ -132,7 +132,7 @@ spec:
               mountPath: /opt/graphdb/home
             - name: graphdb-license
               mountPath: /tmp/license/
-          securityContext: {{ $.Values.graphdb.node.containerSecurityContext | toYaml | nindent 12 }}
+          securityContext: {{ $.Values.graphdb.node.initContainerSecurityContext | toYaml | nindent 12 }}
           command: ['sh', '-c']
           args:
             - |
@@ -175,7 +175,7 @@ spec:
             - name: graphdb-logback-config
               mountPath: /tmp/graphdb-logback-configmap
             {{- end }}
-          securityContext: {{ $.Values.graphdb.node.containerSecurityContext | toYaml | nindent 12 }}
+          securityContext: {{ $.Values.graphdb.node.initContainerSecurityContext | toYaml | nindent 12 }}
           command: ['sh', '-c']
           args:
             - |

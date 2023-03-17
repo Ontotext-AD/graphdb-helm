@@ -31,10 +31,10 @@ spec:
     spec:
       terminationGracePeriodSeconds: 15
       setHostnameAsFQDN: true
+      {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
       volumes:
-        {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
-        {{- end }}
+        {{- tpl ( toYaml . ) $ | nindent 8 }}
+      {{- end }}
       nodeSelector:
         {{- $.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8 }}
       affinity:
@@ -44,7 +44,7 @@ spec:
       topologySpreadConstraints:
         {{- $.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8 }}
       securityContext:
-        {{- $.Values.graphdb.clusterProxy.securityContext | toYaml | nindent 8 }}
+        {{- $.Values.graphdb.clusterProxy.podSecurityContext | toYaml | nindent 8 }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -72,7 +72,7 @@ spec:
               {{- toYaml . | nindent 12 }}
             {{- end }}
           resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
-          securityContext: {{ $.Values.graphdb.clusterProxy.containerSecurityContext | toYaml | nindent 12 }}
+          securityContext: {{ $.Values.graphdb.clusterProxy.securityContext | toYaml | nindent 12 }}
           startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
           readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}
           livenessProbe: {{ $.Values.graphdb.clusterProxy.livenessProbe | toYaml | nindent 12 }}

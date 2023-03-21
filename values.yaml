@@ -124,8 +124,8 @@ graphdb:
   jobPodSecurityContext: {}
   # jobContainerSecurityContext defines privilege and access control settings for all the job containers
   jobSecurityContext: {}
-  # -- Settings for the GraphDB cluster nodes
 
+  # -- Settings for the GraphDB cluster nodes
   node:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand

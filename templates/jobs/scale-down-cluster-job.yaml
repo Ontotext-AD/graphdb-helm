@@ -9,8 +9,10 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
 spec:
   ttlSecondsAfterFinished: 300
+  backoffLimit: 4
   template:
     spec:
+      restartPolicy: Never
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       securityContext:
@@ -23,17 +25,20 @@ spec:
                 name: graphdb-provision-user
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
+            - name: job-temp
+              mountPath: /tmp
             - name: graphdb-utils
               mountPath: /tmp/utils
-          command: ['sh','-c']
+          command: ['bash']
           args:
-            - |
-              cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh removeNodes {{ .Values.graphdb.clusterConfig.nodesCount }} {{ $.Release.Namespace }} >> /proc/1/fd/1
-      restartPolicy: Never
+            - "/tmp/utils/update-cluster.sh"
+            - "removeNodes"
+            - "{{ .Values.graphdb.clusterConfig.nodesCount }}"
+            - "{{ $.Release.Namespace }}"
       volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 4
-

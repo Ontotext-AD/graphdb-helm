@@ -14,6 +14,8 @@
   instead of inside the statefulsets
 - Updated default clusterConfig.electionMinTimeout and clusterConfig.electionRangeTimeout to the current GraphDB defaults
 - Updated the cluster proxy probes settings, so it can become available sooner
+- Updated the cluster and repositories jobs with simpler arguments removing the need to copy scripts and to make them executable
+- Added ephemeral volumes in the cluster and repositories jobs to avoid issues with readonly file systems
 
 ## Version 10.2.0-R2
 

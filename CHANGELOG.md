@@ -1,5 +1,7 @@
 # GraphDB Helm chart release notes
+
 ## Version 10.2.0-TR2 (change version before official release)
+
 ### New
 
 - Added configurable security context for both the node and cluster-proxy statefulsets and all the jobs
@@ -8,33 +10,45 @@
 - Changed the provision user credentials to be used through a secret instead of rendering inside the jobs
 - Changed the logback.xml and graphdb.properties provisioning to work even if such are already present
 - Changed the graphdb-cluster-config-configmap map to not render when there is no cluster
-- Changed the default values of nodeSelector, affinity, tolerations and topologySpreadConstraints to be a part of the values.yaml file instead of inside the statefulsets
+- Changed the default values of nodeSelector, affinity, tolerations and topologySpreadConstraints to be a part of the values.yaml file
+  instead of inside the statefulsets
 - Updated default clusterConfig.electionMinTimeout and clusterConfig.electionRangeTimeout to the current GraphDB defaults
+- Updated the cluster proxy probes settings, so it can become available sooner
 
 ## Version 10.2.0-R2
+
 ### New
-- Added the ability to provision a repository 
+
+- Added the ability to provision a repository
 
 ## Version 10.1.5-R2
+
 ### New
+
 - Fixed an issue with the external proxy connecting to the nodes when https is used
 
 ## Version 10.1.2-R2
-### New 
+
+### New
+
 - Added ability to override cluster proxy's type, default remains LoadBalancer
 
-## Version 10.1.1-R2 
+## Version 10.1.1-R2
 
-### New 
+### New
+
 - Fixed ingress template to properly handle root context
 - Fixed single node returning wrong location header with explicit transactions
 
 ## Version 10.0.1
 
 ### Breaking
-- The graphdb-node service now is always headless. If you installed Version 10.0.0 with `graphdb.clusterConfig.nodesCount` set to `1` you will have to delete the service prior to an update
+
+- The graphdb-node service now is always headless. If you installed Version 10.0.0 with `graphdb.clusterConfig.nodesCount` set to `1` you
+  will have to delete the service prior to an update
 
 ### New
+
 - Upgrade to GraphDB 10.0.1
 - Cluster size can now be scaled
 - Fixed an issue with deploying with security turned on
@@ -43,10 +57,12 @@
 ## Version 10.0.0
 
 ### Breaking
-New major release that isn't compatible with the old chart, due to major breaking changes in Graphdb 10.
-Migration steps can be found [here](README.md#cluster-migration-from-graphdb-9x-to-100).
+
+New major release that isn't compatible with the old chart, due to major breaking changes in Graphdb 10. Migration steps can be found
+[here](README.md#cluster-migration-from-graphdb-9x-to-100).
 
 ### New
+
 - Changed to work with the new GraphDB 10.
 - Removed Kong.
 - Moved from multiple stateful sets with 1 replica to statefulsets with multiple replicas.
@@ -62,7 +78,8 @@ Migration steps can be found [here](README.md#cluster-migration-from-graphdb-9x-
 
 ### New
 
-- Added global variables support (global.deployment.host/global.ingressHost, global.storageClass, global.imagePullSecrets and global.imageRegistry)
+- Added global variables support (global.deployment.host/global.ingressHost, global.storageClass, global.imagePullSecrets and
+  global.imageRegistry)
 - Add ability to override logback.xml by setting `deplyment.logbackConfigFile` to the location of the file to use
 - Set additional JMX attributes using `graphdb.masters.additionalJmxArrtibutes`. This is a map of attr_name=attr_value pairs
 - Fixed loadrdf tool path

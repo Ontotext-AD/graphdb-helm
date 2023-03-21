@@ -75,12 +75,6 @@ deployment:
       connect: 5
       read: 600
       send: 600
-  # jobSecurityContext defines privilege and access control settings for all the job pods
-  jobPodSecurityContext: {}
-  # jobContainerSecurityContext defines privilege and access control settings for all the job containers
-  jobSecurityContext:
-    allowPrivilegeEscalation: false
-    runAsUser: 0
 
 # GraphDB database configurations
 graphdb:
@@ -126,7 +120,12 @@ graphdb:
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
+  # jobSecurityContext defines privilege and access control settings for all the job pods
+  jobPodSecurityContext: {}
+  # jobContainerSecurityContext defines privilege and access control settings for all the job containers
+  jobSecurityContext: {}
   # -- Settings for the GraphDB cluster nodes
+
   node:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand

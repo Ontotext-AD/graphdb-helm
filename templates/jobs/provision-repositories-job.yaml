@@ -17,14 +17,14 @@ spec:
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       securityContext:
-        {{- $.Values.deployment.jobPodSecurityContext | toYaml | nindent 8 }}
+        {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: provision-repositories
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           envFrom:
             - secretRef:
                 name: graphdb-provision-user
-          securityContext: {{- $.Values.deployment.jobSecurityContext | toYaml | nindent 12 }}
+          securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils

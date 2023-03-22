@@ -1,4 +1,24 @@
 # GraphDB Helm chart release notes
+## Version 10.2.0-TR2 (change version before official release)
+### New
+
+- Added configurable security context for both the node and cluster-proxy statefulsets and all the jobs
+- Added extraEnv, extraVolumes and extraVolumeMounts to the statefulsets
+- Added an optional PV/PVC to the cluster-proxy to properly preserve logs (enabled by default)
+- Changed the provision user credentials to be used through a secret instead of rendering inside the jobs
+- Changed the logback.xml and graphdb.properties provisioning to work even if such are already present
+- Changed the graphdb-cluster-config-configmap map to not render when there is no cluster
+- Changed the default values of nodeSelector, affinity, tolerations and topologySpreadConstraints to be a part of the values.yaml file instead of inside the statefulsets
+- Updated default clusterConfig.electionMinTimeout and clusterConfig.electionRangeTimeout to the current GraphDB defaults
+
+## Version 10.2.0-R2
+### New
+- Added the ability to provision a repository 
+
+## Version 10.1.5-R2
+### New
+- Fixed an issue with the external proxy connecting to the nodes when https is used
+
 ## Version 10.1.2-R2
 ### New 
 - Added ability to override cluster proxy's type, default remains LoadBalancer

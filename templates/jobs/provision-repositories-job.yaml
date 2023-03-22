@@ -1,12 +1,15 @@
+{{- $configs := (.Values.graphdb.configs | default dict) }}
+{{- if $configs.provisionRepositoriesConfigMap }}
 apiVersion: {{ $.Values.versions.job }}
 kind: Job
 metadata:
-  name: scale-down-cluster-job
+  name: provision-repositories-job
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-upgrade, pre-rollback
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    "helm.sh/hook-weight": "4"
 spec:
   ttlSecondsAfterFinished: 300
   template:
@@ -16,7 +19,7 @@ spec:
       securityContext:
         {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
       containers:
-        - name: scale-down-cluster
+        - name: provision-repositories
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           envFrom:
             - secretRef:
@@ -25,15 +28,20 @@ spec:
           volumeMounts:
             - name: graphdb-utils
               mountPath: /tmp/utils
+            - name: repositories-config
+              mountPath: /tmp/repositories-config
           command: ['sh','-c']
           args:
             - |
-              cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh removeNodes {{ .Values.graphdb.clusterConfig.nodesCount }} {{ $.Release.Namespace }} >> /proc/1/fd/1
+              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
+              /usr/local/bin/graphdb.sh createRepositoryFromFile {{ .Values.graphdb.clusterConfig.nodesCount }} "/tmp/repositories-config" >> /proc/1/fd/1
       restartPolicy: Never
       volumes:
+        - name: repositories-config
+          configMap:
+            name: {{ .Values.graphdb.configs.provisionRepositoriesConfigMap }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 4
-
+  backoffLimit: 3
+{{- end }}

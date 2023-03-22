@@ -86,13 +86,11 @@ function backupCloud {
   fi
 
   local region=$(cat /tmp/cloud-config/region)
-  local awsAccessKey=$(cat /tmp/cloud-config/aws_access_key)
+  local awsAccessKeyId=$(cat /tmp/cloud-config/aws_access_key_id)
   local awsSecret=$(cat /tmp/cloud-config/aws_secret_access_key)
   local currentDate=$(date +'%Y-%m-%d-%H-%M')
 
-  repositoriesToBackup+="}, \"bucketUri\": \"s3:///${backupPath}/graphdb-backup-${currentDate}.tar?region=${region}&AWS_ACCESS_KEY_ID=${awsAccessKey}&AWS_SECRET_ACCESS_KEY=${awsSecret}\" }"
-
-echo $repositoriesToBackup
+  repositoriesToBackup+="}, \"bucketUri\": \"s3:///${backupPath}/graphdb-backup-${currentDate}.tar?region=${region}&AWS_ACCESS_KEY_ID=${awsAccessKeyId}&AWS_SECRET_ACCESS_KEY=${awsSecret}\" }"
 
   echo "Starting backup procedure"
   echo "Will backup repositories: ${repositories}"
@@ -105,6 +103,102 @@ echo $repositoriesToBackup
   else
     echo "Backup creation failed! Response was -> ${response}"
     exit 1
+  fi
+}
+
+function restore {
+  local backupName=$1
+  local repositories=$2
+  local restoreSystemData=$3
+  local removeStaleRepositories=$4
+  local authToken=$5
+  local restoreParams="params={"
+  if [[ $restoreSystemData ]] ; then
+    restoreParams+="\"restoreSystemData\": true"
+  else
+    restoreParams+="\"restoreSystemData\": false"
+  fi
+
+  if [[ $removeStaleRepositories ]] ; then
+    restoreParams+=", \"removeStaleRepositories\": true"
+  else
+    restoreParams+=", \"removeStaleRepositories\": false"
+  fi
+
+  if [[ ${repositories} -ne "" ]] ; then
+    restoreParams+=", \"repositories\": ["
+    reposList=(${repositories//,/ })
+    for repo in "${reposList[@]}"; do
+      restoreParams+="\"${repo}\","
+    done
+    restoreParams=$(echo ${restoreParams} | sed 's/.$//')
+    restoreParams+="]}"
+  fi
+
+  echo "Starting restore procedure"
+  echo "Restoring from backup: ${backupName}"
+  echo "Will restore repositories: ${repositories}"
+  echo "Including system data: ${restoreSystemData}"
+  echo "With removing of stale repositories: ${removeStaleRepositories}"
+
+  HTTP_CODE=$(curl -X POST --connect-timeout 60 --retry 5 --retry-all-errors --retry-delay 10 -F "${restoreParams}" -F file=@/opt/graphdb/restore/${backupName} --header "Authorization: Basic ${authToken}" --header 'Content-Type: multipart/form-data' --write-out "%{http_code}" http://graphdb-node-0.graphdb-node:7200/rest/recovery/restore)
+  if [[ ${HTTP_CODE} -ne 200 ]] ; then
+    echo "Restore operation failed! Returned code ${HTTP_CODE}"
+    exit 1
+  else
+    echo "Restore finished successfully!"
+    exit 0
+  fi
+}
+
+function restoreCloud {
+  local backupPath=$1
+  local repositories=$2
+  local restoreSystemData=$3
+  local removeStaleRepositories=$4
+  local authToken=$5
+  local restoreOptions="{ \"restoreOptions\": {"
+  if [[ $restoreSystemData ]] ; then
+    restoreOptions+="\"restoreSystemData\": true"
+  else
+    restoreOptions+="\"restoreSystemData\": false"
+  fi
+
+  if [[ $removeStaleRepositories ]] ; then
+    restoreOptions+=", \"removeStaleRepositories\": true"
+  else
+    restoreOptions+=", \"removeStaleRepositories\": false"
+  fi
+
+  if [[ ${repositories} -ne "" ]] ; then
+    restoreOptions+=", \"repositories\": ["
+    reposList=(${repositories//,/ })
+    for repo in "${reposList[@]}"; do
+      restoreOptions+="\"${repo}\","
+    done
+    restoreOptions=$(echo ${restoreOptions} | sed 's/.$//')
+    restoreOptions+="]"
+  fi
+
+  local region=$REGION
+  local awsAccessKeyId=$AWS_ACCESS_KEY_ID
+  local awsSecret=$AWS_SECRET_ACCESS_KEY
+
+  restoreOptions+="}, \"bucketUri\": \"s3:///${backupPath}?region=${region}&AWS_ACCESS_KEY_ID=${awsAccessKeyId}&AWS_SECRET_ACCESS_KEY=${awsSecret}\" }"
+
+  echo "Starting restore procedure"
+  echo "Restoring from backup located at: ${backupPath}"
+  echo "Will restore repositories: ${repositories}"
+  echo "Including system data: ${restoreSystemData}"
+  echo "With removing of stale repositories: ${removeStaleRepositories}"
+
+  HTTP_CODE=$(curl -X POST --connect-timeout 60 --retry 5 --retry-all-errors --retry-delay 10 -d "${restoreOptions}" --header "Authorization: Basic ${authToken}" --header 'Content-Type: application/json' --write-out "%{http_code}" http://graphdb-node-0.graphdb-node:7200/rest/recovery/cloud-restore)
+  if [[ ${HTTP_CODE} -ne 200 ]] ; then
+    echo "Restore operation failed! Returned code ${HTTP_CODE}"
+    exit 1
+  else
+    echo "Restore finished successfully!"
+    exit 0
   fi
 }
 

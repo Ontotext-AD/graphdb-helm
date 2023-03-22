@@ -1,0 +1,64 @@
+{{- if .Values.graphdb.restore.enabled }}
+{{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: graphdb-restore
+  annotations:
+{{/* TODO: FIX SO REDEPLOY DOESN'T RE-RESTORE*/}}
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-failed
+    "helm.sh/hook-weight": "-5"
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+          {{- include "combinedImagePullSecrets" $ | nindent 12 }}
+          containers:
+            - name: restore
+              image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+              {{- if ne $.Values.graphdb.backup.type "local" }}
+              envFrom:
+                - secretRef:
+                    {{ $.Values.graphdb.restore.cloudSecretConfig }}
+              {{- end }}
+              volumeMounts:
+                - name: job-temp
+                  mountPath: /tmp
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+                {{- if eq .Values.graphdb.restore.type "local" }}
+                - name: gdb-restores
+                  mountPath: /opt/graphdb/restore
+                {{- end }}
+              command: ['bash']
+              args:
+                - "/tmp/utils/graphdb.sh"
+              {{- if eq $.Values.graphdb.restore.type "local" }}
+                - restore
+              {{- else }}
+                - restoreCloud
+              {{- end }}
+                - "{{ $.Values.graphdb.restore.backupName }}"
+                - "{{ $.Values.graphdb.restore.repositories }}"
+                - "{{ $.Values.graphdb.restore.restoreSystemData }}"
+                - "{{ $.Values.graphdb.restore.removeStaleRepositories }}"
+                - "{{ $authToken }}"
+          volumes:
+          - name: job-temp
+            emptyDir:
+              sizeLimit: 10Mi
+          {{- if eq $.Values.graphdb.backup.type "local" }}
+            - name: gdb-backups
+              persistentVolumeClaim:
+                claimName: {{ .Values.graphdb.restore.persistence.backupsVolumeName }}
+          {{- end }}
+            - name: graphdb-utils
+              configMap:
+                name: graphdb-utils-configmap
+{{- end }}

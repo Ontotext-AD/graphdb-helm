@@ -1,5 +1,5 @@
+{{- if .Values.graphdb.backup.enabled }}
 {{- $authToken := printf "%s:%s" .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | b64enc }}
-{{- if and .Values.graphdb.backup.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -34,12 +34,11 @@ spec:
               command:
               - 'bash'
               - '-c'
-              - 'tail -f /dev/null;
-              - cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh;
+              - 'cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh;
               {{- if eq $.Values.graphdb.backup.type "local" }}
               - /usr/local/bin/graphdb.sh backup "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}";
               {{- else }}
-              - /usr/local/bin/graphdb.sh backupCloud "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}" "/usr/local/bin/cluster-config.json";
+              - /usr/local/bin/graphdb.sh backupCloud "{{ $.Values.graphdb.backup.repositories }}" {{ $.Values.graphdb.backup.backupSystemData | quote }} "{{ $authToken }}"
               {{- end }}
               - >> /proc/1/fd/1'
           restartPolicy: Never

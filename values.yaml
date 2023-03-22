@@ -89,9 +89,9 @@ graphdb:
     clusterCreationTimeout: 60
     # -- Cluster configuration parameters:
     # The minimum wait time in milliseconds for a heartbeat from a leader.
-    electionMinTimeout: 7000
+    electionMinTimeout: 8000
     # The variable portion of each waiting period in milliseconds for a heartbeat.
-    electionRangeTimeout: 5000
+    electionRangeTimeout: 6000
     # The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.
     heartbeatInterval: 2000
     #The size of the data blocks transferred during data replication streaming through the RPC protocol.
@@ -120,54 +120,10 @@ graphdb:
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
-  # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
-  # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
-  clusterProxy:
-    # -- Number of cluster proxies used to access the GraphDB cluster
-    replicas: 1
-    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-    # -- Service type used by the graphdb-cluster-proxy service
-    # Note: If using ALB in AWS EKS this will default to being on the public internet
-    serviceType: LoadBalancer
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
-    # By default, no restrictions are applied.
-    # nodeSelector: {}
-    # affinity: {}
-    # tolerations: {}
-    # topologySpreadConstraints: {}
-    # -- Minimum requirements for a successfully running GraphDB cluster proxy
-    resources:
-      limits:
-        memory: 1500Mi
-        cpu: 800m
-      requests:
-        memory: 1500Mi
-        cpu: 800m
-    # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
-    startupProbe:
-      httpGet:
-        path: /protocol
-        port: gdb-proxy-port
-      failureThreshold: 40
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
-    readinessProbe:
-      httpGet:
-        path: /proxy/ready
-        port: gdb-proxy-port
-      initialDelaySeconds: 60
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
-    livenessProbe:
-      httpGet:
-        path: /proxy/health
-        port: gdb-proxy-port
-      initialDelaySeconds: 120
-      timeoutSeconds: 5
-      periodSeconds: 10
+  # jobSecurityContext defines privilege and access control settings for all the job pods
+  jobPodSecurityContext: {}
+  # jobContainerSecurityContext defines privilege and access control settings for all the job containers
+  jobSecurityContext: {}
 
   # -- Settings for the GraphDB cluster nodes
   node:
@@ -178,10 +134,10 @@ graphdb:
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
     # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
     # By default, no restrictions are applied.
-    # nodeSelector: {}
-    # affinity: {}
-    # tolerations: {}
-    # topologySpreadConstraints: {}
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []
+    topologySpreadConstraints: []
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -226,6 +182,89 @@ graphdb:
       initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
+    # additional environment variables to be set for the graphdb nodes
+    extraEnvFrom: []
+    # additional volumes to be set for the graphdb nodes
+    extraVolumes: []
+    # additional volume mounts to be set for the graphdb nodes
+    extraVolumeMounts: []
+    # podSecurityContext defines privilege and access control settings for the node pods.
+    podSecurityContext: {}
+    # securityContext defines privilege and access control settings for the node container running graphdb.
+    securityContext: {}
+    # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
+    initContainerSecurityContext: {}
+
+  # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
+  # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
+  clusterProxy:
+    # -- Number of cluster proxies used to access the GraphDB cluster
+    replicas: 1
+    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
+    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+    # -- Service type used by the graphdb-cluster-proxy service
+    # Note: If using ALB in AWS EKS this will default to being on the public internet
+    serviceType: LoadBalancer
+    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
+    # By default, no restrictions are applied.
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []
+    topologySpreadConstraints: []
+    # -- Minimum requirements for a successfully running GraphDB cluster proxy
+    resources:
+      limits:
+        memory: 1500Mi
+        cpu: 800m
+      requests:
+        memory: 1500Mi
+        cpu: 800m
+    # -- Persistence configurations.
+    # By default, Helm will use a PV that reads and writes to the host file system.
+    persistence:
+      # enable or disable proxy persistence
+      enablePersistence: true
+      # use dynamic volume provisioning
+      volumeClaimTemplateSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "500Mi"
+    # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
+    startupProbe:
+      httpGet:
+        path: /protocol
+        port: gdb-proxy-port
+      failureThreshold: 40
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
+    readinessProbe:
+      httpGet:
+        path: /proxy/ready
+        port: gdb-proxy-port
+      initialDelaySeconds: 60
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
+    livenessProbe:
+      httpGet:
+        path: /proxy/health
+        port: gdb-proxy-port
+      initialDelaySeconds: 120
+      timeoutSeconds: 5
+      periodSeconds: 10
+    # additional environment variables to be set for each cluster proxy
+    extraEnvFrom: []
+    # additional volumes to be set for each cluster proxy
+    extraVolumes: []
+    # additional volume mounts to be set for each cluster proxy
+    extraVolumeMounts: []
+    # podSecurityContext defines privilege and access control settings for the proxy pods.
+    podSecurityContext: {}
+    # securityContext defines privilege and access control settings for the proxy containers.
+    securityContext: {}
 
   # GraphDB workbench configurations
   workbench:

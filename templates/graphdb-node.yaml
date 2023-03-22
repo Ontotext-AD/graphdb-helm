@@ -65,16 +65,21 @@ spec:
           configMap:
             name: {{ $configs.logbackConfigMap }}
         {{- end }}
+        {{- with $.Values.graphdb.node.extraVolumes }}
+          {{- tpl ( toYaml . ) $ | nindent 8 }}
+        {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       nodeSelector:
-        {{- default "{}" ($.Values.graphdb.node.nodeSelector | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.node.nodeSelector | toYaml | nindent 8 }}
       affinity:
-        {{- default "{}" ($.Values.graphdb.node.affinity | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.node.affinity | toYaml | nindent 8 }}
       tolerations:
-        {{- default "{}" ($.Values.graphdb.node.tolerations | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.node.tolerations | toYaml | nindent 8 }}
       topologySpreadConstraints:
-        {{- default "{}" ($.Values.graphdb.node.topologySpreadConstraints | toYaml | nindent 8) }}
+        {{- $.Values.graphdb.node.topologySpreadConstraints | toYaml | nindent 8 }}
+      securityContext:
+        {{- $.Values.graphdb.node.podSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: graphdb-node
           image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
@@ -89,6 +94,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: graphdb-node-configmap
+            {{- with $.Values.graphdb.node.extraEnvFrom }}
+              {{- tpl ( toYaml . ) $ | nindent 12 }}
+            {{- end }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-node-data-dynamic-pvc
@@ -100,7 +108,11 @@ spec:
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
+            {{- with $.Values.graphdb.node.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           resources: {{ $.Values.graphdb.node.resources | toYaml | nindent 12 }}
+          securityContext: {{ $.Values.graphdb.node.securityContext | toYaml | nindent 12 }}
           # Allow for GraphDB to start within 10*30 seconds before readiness & liveness probes interfere
           startupProbe: {{ $.Values.graphdb.node.startupProbe | toYaml | nindent 12 }}
           readinessProbe: {{ $.Values.graphdb.node.readinessProbe | toYaml | nindent 12 }}
@@ -120,6 +132,7 @@ spec:
               mountPath: /opt/graphdb/home
             - name: graphdb-license
               mountPath: /tmp/license/
+          securityContext: {{ $.Values.graphdb.node.initContainerSecurityContext | toYaml | nindent 12 }}
           command: ['sh', '-c']
           args:
             - |
@@ -162,6 +175,7 @@ spec:
             - name: graphdb-logback-config
               mountPath: /tmp/graphdb-logback-configmap
             {{- end }}
+          securityContext: {{ $.Values.graphdb.node.initContainerSecurityContext | toYaml | nindent 12 }}
           command: ['sh', '-c']
           args:
             - |
@@ -176,12 +190,12 @@ spec:
                 mkdir -p /opt/graphdb/home/data ;
                 cp /tmp/graphdb-settings-configmap/settings.js /opt/graphdb/home/data/settings.js
               fi
-              if [[ ! -f /opt/graphdb/home/conf/graphdb.properties && -f /tmp/graphdb-properties-configmap/graphdb.properties ]]; then
+              if [[ -f /tmp/graphdb-properties-configmap/graphdb.properties ]]; then
                 echo "Provisioning graphdb properties file..."
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb-properties-configmap/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
               fi
-              if [[ ! -f /opt/graphdb/home/conf/logback.xml && -f /tmp/graphdb-logback-configmap/logback.xml ]]; then
+              if [[ -f /tmp/graphdb-logback-configmap/logback.xml ]]; then
                 echo "Provisioning logging config file..."
                 mkdir -p /opt/graphdb/home/conf ;
                 cp /tmp/graphdb-logback-configmap/logback.xml /opt/graphdb/home/conf/logback.xml

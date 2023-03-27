@@ -11,8 +11,10 @@ metadata:
     "helm.sh/hook-weight": "1"
 spec:
   ttlSecondsAfterFinished: 300
+  backoffLimit: 4
   template:
     spec:
+      restartPolicy: Never
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       securityContext:
@@ -25,17 +27,22 @@ spec:
                 name: graphdb-provision-user
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
+            - name: job-temp
+              mountPath: /tmp
             - name: graphdb-utils
               mountPath: /tmp/utils
-          command: ['sh','-c']
+          command: ['bash']
           args:
-            - |
-              cp /tmp/utils/update-cluster.sh /usr/local/bin/update-cluster.sh; chmod +x /usr/local/bin/update-cluster.sh
-              /usr/local/bin/update-cluster.sh addNodes {{ .Values.graphdb.clusterConfig.nodesCount }} {{ $.Release.Namespace }} {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
-      restartPolicy: Never
+            - "/tmp/utils/update-cluster.sh"
+            - "addNodes"
+            - "{{ .Values.graphdb.clusterConfig.nodesCount }}"
+            - "{{ $.Release.Namespace }}"
+            - "{{ .Values.graphdb.clusterConfig.clusterCreationTimeout }}"
       volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 4
 {{- end }}

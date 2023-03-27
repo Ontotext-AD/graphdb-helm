@@ -1,0 +1,74 @@
+global:
+  storageClass: "crc-csi-hostpath-provisioner"
+
+deployment:
+  host: graphdb.apps-crc.testing
+  protocol: https
+  ingress:
+    enabled: false
+
+graphdb:
+  clusterConfig:
+    nodesCount: 3
+
+  workbench:
+    subpath: /
+
+  node:
+    # Cluster requires license, you have to provision it before deploying this chart
+    license: graphdb-license
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+    # Uncomment to disable default resource limits and requests
+    #resources:
+    #  limits:
+    #    memory: null
+    #    cpu: null
+    #  requests:
+    #    memory: null
+    #    cpu: null
+    initContainerSecurityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+
+  clusterProxy:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+          - ALL
+    # Uncomment to disable default resource limits and requests
+    #resources:
+    #  limits:
+    #    memory: null
+    #    cpu: null
+    #  requests:
+    #    memory: null
+    #    cpu: null
+
+  jobSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+        - ALL

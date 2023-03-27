@@ -12,8 +12,10 @@ metadata:
     "helm.sh/hook-weight": "4"
 spec:
   ttlSecondsAfterFinished: 300
+  backoffLimit: 3
   template:
     spec:
+      restartPolicy: Never
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       securityContext:
@@ -26,22 +28,26 @@ spec:
                 name: graphdb-provision-user
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
+            - name: job-temp
+              mountPath: /tmp
             - name: graphdb-utils
               mountPath: /tmp/utils
             - name: repositories-config
               mountPath: /tmp/repositories-config
-          command: ['sh','-c']
+          command: ['bash']
           args:
-            - |
-              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
-              /usr/local/bin/graphdb.sh createRepositoryFromFile {{ .Values.graphdb.clusterConfig.nodesCount }} "/tmp/repositories-config" >> /proc/1/fd/1
-      restartPolicy: Never
+            - "/tmp/utils/graphdb.sh"
+            - "createRepositoryFromFile"
+            - "{{ .Values.graphdb.clusterConfig.nodesCount }}"
+            - "/tmp/repositories-config"
       volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
         - name: repositories-config
           configMap:
             name: {{ .Values.graphdb.configs.provisionRepositoriesConfigMap }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 3
 {{- end }}

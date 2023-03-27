@@ -11,8 +11,10 @@ metadata:
     "helm.sh/hook-weight": "-1"
 spec:
   ttlSecondsAfterFinished: 300
+  backoffLimit: 9
   template:
     spec:
+      restartPolicy: Never
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       securityContext:
@@ -25,23 +27,27 @@ spec:
                 name: graphdb-provision-user
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
+            - name: job-temp
+              mountPath: /tmp
             - name: graphdb-utils
               mountPath: /tmp/utils
             - name: cluster-config
               mountPath: /tmp/cluster-config
-          command: ['sh','-c']
+          command: ['bash']
           args:
-            - |
-              cp /tmp/cluster-config/cluster-config.json /usr/local/bin/cluster-config.json
-              cp /tmp/utils/graphdb.sh /usr/local/bin/graphdb.sh; chmod +x /usr/local/bin/graphdb.sh
-              /usr/local/bin/graphdb.sh createCluster {{ .Values.graphdb.clusterConfig.nodesCount }} "/usr/local/bin/cluster-config.json" {{ .Values.graphdb.clusterConfig.clusterCreationTimeout }} >> /proc/1/fd/1
-      restartPolicy: Never
+            - "/tmp/utils/graphdb.sh"
+            - createCluster
+            - "{{ .Values.graphdb.clusterConfig.nodesCount }}"
+            - "/tmp/cluster-config/cluster-config.json"
+            - "{{ .Values.graphdb.clusterConfig.clusterCreationTimeout }}"
       volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
         - name: cluster-config
           configMap:
             name: graphdb-cluster-config-configmap
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap
-  backoffLimit: 9
 {{- end }}

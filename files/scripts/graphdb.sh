@@ -26,7 +26,7 @@ function backup {
   local withSystemData=$3
   local authToken=$PROVISION_USER_AUTH_TOKEN
   local repositoriesToBackup="{"
-  if [[ $withSystemData ]] ; then
+  if [[ $withSystemData = true ]] ; then
     repositoriesToBackup+="\"backupSystemData\": true"
   else
     repositoriesToBackup+="\"backupSystemData\": false"
@@ -39,12 +39,13 @@ function backup {
       repositoriesToBackup+="\"${repo}\","
     done
     repositoriesToBackup=$(echo ${repositoriesToBackup} | sed 's/.$//')
-    repositoriesToBackup+="]}"
+    repositoriesToBackup+="]"
   fi
+  repositoriesToBackup+="}"
 
   numberOfBackups=$(ls /opt/graphdb/backups/ | wc -l)
   echo "Checking count of backups in the backups folder"
-  if [[ ${numberOfBackups} -gt ${numberOfBackupsToKeep}-1 ]] ; then
+  if [[ ${numberOfBackups} -gt ${numberOfBackupsToKeep} ]] ; then
     lastBackupName=$(ls -A1 -h /opt/graphdb/backups/ | head -n1)
     echo "Maximum number of backups will be reached with the current one. Deleting the oldest one named ${lastBackupName}"
     rm /opt/graphdb/backups/${lastBackupName}
@@ -53,12 +54,14 @@ function backup {
   echo "Will backup repositories: ${repositories}"
   echo "Including system data: ${withSystemData}"
   local currentDate=$(date +'%Y-%m-%d-%H-%M')
+  echo ${repositoriesToBackup}
   HTTP_CODE=$(curl -X POST --connect-timeout 60 --retry 5 --retry-all-errors --retry-delay 10 -d "${repositoriesToBackup}" --output /opt/graphdb/backups/backup-${currentDate}.tar --header "Authorization: Basic ${authToken}" --header 'Content-Type: application/json' --write-out "%{http_code}" http://graphdb-node-0.graphdb-node:7200/rest/recovery/backup)
   if [[ ${HTTP_CODE} -ne 200 ]] ; then
     echo "Backup operation failed! Returned code ${HTTP_CODE}"
     exit 1
   else
-    echo "Backup created successfully! Located in /opt/graphdb/backups/backup-${currentDate}.tar"
+    ln -sf ./backup-${currentDate}.tar /opt/graphdb/backups/backup-latest.tar
+    echo "Backup created successfully! Located in /opt/graphdb/backups/backup-${currentDate}.tar, also available as backup-latest.tar"
     exit 0
   fi
 }
@@ -69,7 +72,7 @@ function backupCloud {
   local authToken=$PROVISION_USER_AUTH_TOKEN
   local backupPath=$5
   local repositoriesToBackup="{ \"backupOptions\": {"
-  if [[ $withSystemData ]] ; then
+  if [[ $withSystemData = true ]] ; then
     repositoriesToBackup+="\"backupSystemData\": true"
   else
     repositoriesToBackup+="\"backupSystemData\": false"
@@ -113,13 +116,13 @@ function restore {
   local removeStaleRepositories=$4
   local authToken=$PROVISION_USER_AUTH_TOKEN
   local restoreParams="params={"
-  if [[ $restoreSystemData ]] ; then
+  if [[ $restoreSystemData = true ]] ; then
     restoreParams+="\"restoreSystemData\": true"
   else
     restoreParams+="\"restoreSystemData\": false"
   fi
 
-  if [[ $removeStaleRepositories ]] ; then
+  if [[ $removeStaleRepositories = true ]] ; then
     restoreParams+=", \"removeStaleRepositories\": true"
   else
     restoreParams+=", \"removeStaleRepositories\": false"
@@ -132,8 +135,9 @@ function restore {
       restoreParams+="\"${repo}\","
     done
     restoreParams=$(echo ${restoreParams} | sed 's/.$//')
-    restoreParams+="]}"
+    restoreParams+="]"
   fi
+  restoreParams+="}"
 
   echo "Starting restore procedure"
   echo "Restoring from backup: ${backupName}"
@@ -158,13 +162,13 @@ function restoreCloud {
   local removeStaleRepositories=$4
   local authToken=$PROVISION_USER_AUTH_TOKEN
   local restoreOptions="{ \"restoreOptions\": {"
-  if [[ $restoreSystemData ]] ; then
+  if [[ $restoreSystemData = true ]] ; then
     restoreOptions+="\"restoreSystemData\": true"
   else
     restoreOptions+="\"restoreSystemData\": false"
   fi
 
-  if [[ $removeStaleRepositories ]] ; then
+  if [[ $removeStaleRepositories = true ]] ; then
     restoreOptions+=", \"removeStaleRepositories\": true"
   else
     restoreOptions+=", \"removeStaleRepositories\": false"

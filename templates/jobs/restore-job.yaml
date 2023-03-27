@@ -36,7 +36,7 @@ spec:
             - name: graphdb-utils
               mountPath: /tmp/utils
               {{- if eq .Values.graphdb.restore.type "local" }}
-            - name: gdb-restores
+            - name: graphdb-backups
               mountPath: /opt/graphdb/restore
               {{- end }}
           command: ['bash']
@@ -57,7 +57,7 @@ spec:
           emptyDir:
            sizeLimit: 10Mi
       {{- if eq $.Values.graphdb.restore.type "local" }}
-        - name: gdb-backups
+        - name: graphdb-backups
           persistentVolumeClaim:
             claimName: {{ .Values.graphdb.restore.local.persistence.backupsVolumeName }}
       {{- end }}

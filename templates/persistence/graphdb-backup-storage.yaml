@@ -15,13 +15,15 @@ spec:
   claimRef:
     name: {{ $.Release.Name }}-backup-pvc
     namespace: {{ $.Release.Namespace }}
+  hostPath:
+    path: {{ $.Values.deployment.storage }}/graphdb-backup-data
 ---
 apiVersion: {{ $.Values.versions.pvc }}
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ $.Release.Name }}-graphdb-backup-pvc
+  name: {{ $.Release.Name }}-backup-pvc
   labels:
-    name: {{ $.Release.Namespace }}-graphdb-backup-pvc
+    name: {{ $.Release.Namespace }}-backup-pvc
 spec:
   storageClassName: {{ .Values.global.storageClass }}
   volumeName: {{ $.Release.Name }}-backup-pv

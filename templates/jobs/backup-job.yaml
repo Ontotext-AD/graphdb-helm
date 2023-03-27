@@ -37,7 +37,7 @@ spec:
                 - name: graphdb-utils
                   mountPath: /tmp/utils
                 {{- if eq .Values.graphdb.backup.type "local" }}
-                - name: gdb-backups
+                - name: graphdb-backup
                   mountPath: /opt/graphdb/backups
                 {{- else }}
                 - name: cloud-config
@@ -48,7 +48,7 @@ spec:
                 - "/tmp/utils/graphdb.sh"
                 {{- if eq $.Values.graphdb.backup.type "local" }}
                 - backup
-                - {{ $.Values.graphdb.backup.local.countOfBackupsToKeep }}
+                - "{{ $.Values.graphdb.backup.local.countOfBackupsToKeep }}"
                 {{- else }}
                 - backupCloud
                 {{- end}}
@@ -59,9 +59,9 @@ spec:
               emptyDir:
                 sizeLimit: 10Mi
           {{- if eq $.Values.graphdb.backup.type "local" }}
-            - name: gdb-backups
+            - name: graphdb-backup
               persistentVolumeClaim:
-                claimName: {{ .Values.graphdb.backup.local.persistence.backupsVolumeName }}
+                claimName: {{ $.Release.Name }}-backup-pvc
           {{- end }}
             - name: graphdb-utils
               configMap:

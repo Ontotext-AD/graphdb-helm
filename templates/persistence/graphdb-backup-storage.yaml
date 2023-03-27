@@ -1,0 +1,33 @@
+{{- if and .Values.graphdb.backup.enabled ( eq .Values.graphdb.backup.type "local") }}
+apiVersion: {{ $.Values.versions.pv }}
+kind: PersistentVolume
+metadata:
+  name: {{ $.Release.Name }}-backup-pv
+  labels:
+    name: {{ $.Release.Namespace }}-backup-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: "{{ .Values.graphdb.backup.local.persistence.storage }}"
+  persistentVolumeReclaimPolicy: {{ .Values.graphdb.backup.local.persistence.reclaimPolicy }}
+  storageClassName: {{ .Values.global.storageClass }}
+  claimRef:
+    name: {{ $.Release.Name }}-backup-pvc
+    namespace: {{ $.Release.Namespace }}
+---
+apiVersion: {{ $.Values.versions.pvc }}
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $.Release.Name }}-graphdb-backup-pvc
+  labels:
+    name: {{ $.Release.Namespace }}-graphdb-backup-pvc
+spec:
+  storageClassName: {{ .Values.global.storageClass }}
+  volumeName: {{ $.Release.Name }}-backup-pv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.graphdb.backup.local.persistence.storage }}"
+{{- end }}

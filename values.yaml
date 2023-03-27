@@ -81,7 +81,7 @@ graphdb:
   clusterConfig:
     # -- Number of GraphDB nodes to be used in the cluster.
     # Set value to 1 to run a standalone GraphDB instance.
-    nodesCount: 1
+    nodesCount: 3
     # -- A secret used for secure communication amongst the nodes in the cluster.
     clusterSecret: s3cr37
     # -- Timeout for the cluster creation CURL query.
@@ -199,7 +199,7 @@ graphdb:
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
   clusterProxy:
     # -- Number of cluster proxies used to access the GraphDB cluster
-    replicas: 1
+    replicas: 3
     # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
     # -- Service type used by the graphdb-cluster-proxy service
@@ -283,37 +283,44 @@ graphdb:
       resources:
         requests:
           storage: "10Gi"
+
   backup:
-    enabled: false
+    enabled: true
     schedule: "*/3 * * * *"
-    # Currently only local and s3 are supported
-    type: local
-    # If using S3 provide a name of a secret that contains the required region, aws_access_key_id and aws_secret_access_key
-    cloudSecretConfig: s3-secret
-    backupPath: blabla.tar
     # [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
     repositories: ""
     backupSystemData: false
-    countOfBackupsToKeep: 5
-    persistence:
-      # use dynamic volume provisioning
-      volumeClaimTemplateSpec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "5Gi"
-  restore:
-    enabled: false
     # Currently only local and s3 are supported
     type: local
-    # Name of the backup.tar to restore. If using cloud restore, add bucket path too.
-    backupName: blabla.tar
-    # A secret containing the region and authentication for the cloud restore
-    cloudSecretConfig: s3-secret
+    # Configurations specific for local backups
+    local:
+      countOfBackupsToKeep: 5
+      persistence:
+        storage: "20Gi"
+        reclaimPolicy: "Retain"
+    # Configurations specific for cloud backups
+    cloud:
+      # A secret containing the region and authentication for the cloud backup
+      secretConfig: s3-secret
+      bucketName: graphdb-backup-bucket
+
+  restore:
+    enabled: false
     # [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
     repositories: ""
     restoreSystemData: false
     removeStaleRepositories: false
-    persistence:
-      backupsVolumeName: gdb-backups
+    # Currently only local and s3 are supported
+    type: local
+    # Configuration specific for restoring from local storage
+    local:
+      # Name/location of the backup file that the should be restored
+      backupName: blabla.tar
+      # Name of the volume that that has the backup
+      persistence:
+        backupsVolumeName: gdb-backups
+    # Configuration specific for restoring from cloud storage
+    cloud:
+      # A secret containing the region and authentication for the cloud restore
+      cloudSecretConfig: s3-secret
+      bucketName: graphdb-backup-bucket

@@ -21,10 +21,10 @@ function createCluster {
 }
 
 function backup {
-  local repositories=$1
-  local withSystemData=$2
-  local authToken=$3
-  local numberOfBackupsToKeep=$4
+  local numberOfBackupsToKeep=$1
+  local repositories=$2
+  local withSystemData=$3
+  local authToken=$PROVISION_USER_AUTH_TOKEN
   local repositoriesToBackup="{"
   if [[ $withSystemData ]] ; then
     repositoriesToBackup+="\"backupSystemData\": true"
@@ -66,7 +66,7 @@ function backup {
 function backupCloud {
   local repositories=$1
   local withSystemData=$2
-  local authToken=$3
+  local authToken=$PROVISION_USER_AUTH_TOKEN
   local backupPath=$5
   local repositoriesToBackup="{ \"backupOptions\": {"
   if [[ $withSystemData ]] ; then
@@ -85,9 +85,9 @@ function backupCloud {
     repositoriesToBackup+="]"
   fi
 
-  local region=$(cat /tmp/cloud-config/region)
-  local awsAccessKeyId=$(cat /tmp/cloud-config/aws_access_key_id)
-  local awsSecret=$(cat /tmp/cloud-config/aws_secret_access_key)
+  local region=$REGION
+  local awsAccessKeyId=$AWS_ACCESS_KEY_ID
+  local awsSecret=$AWS_SECRET_ACCESS_KEY
   local currentDate=$(date +'%Y-%m-%d-%H-%M')
 
   repositoriesToBackup+="}, \"bucketUri\": \"s3:///${backupPath}/graphdb-backup-${currentDate}.tar?region=${region}&AWS_ACCESS_KEY_ID=${awsAccessKeyId}&AWS_SECRET_ACCESS_KEY=${awsSecret}\" }"
@@ -111,7 +111,7 @@ function restore {
   local repositories=$2
   local restoreSystemData=$3
   local removeStaleRepositories=$4
-  local authToken=$5
+  local authToken=$PROVISION_USER_AUTH_TOKEN
   local restoreParams="params={"
   if [[ $restoreSystemData ]] ; then
     restoreParams+="\"restoreSystemData\": true"
@@ -156,7 +156,7 @@ function restoreCloud {
   local repositories=$2
   local restoreSystemData=$3
   local removeStaleRepositories=$4
-  local authToken=$5
+  local authToken=$PROVISION_USER_AUTH_TOKEN
   local restoreOptions="{ \"restoreOptions\": {"
   if [[ $restoreSystemData ]] ; then
     restoreOptions+="\"restoreSystemData\": true"

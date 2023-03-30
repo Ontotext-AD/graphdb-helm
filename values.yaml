@@ -120,12 +120,12 @@ graphdb:
     # bcrypt encrypted password. default: iHaveSuperpowers
     provisioningPassword: iHaveSuperpowers
 
-  # jobSecurityContext defines privilege and access control settings for all the job pods
+  # -- JobSecurityContext defines privilege and access control settings for all the job pods
   jobPodSecurityContext: {}
-  # jobContainerSecurityContext defines privilege and access control settings for all the job containers
+  # -- JobContainerSecurityContext defines privilege and access control settings for all the job containers
   jobSecurityContext: {}
 
-  # -- Settings for the GraphDB cluster nodes
+  # Settings for the GraphDB cluster nodes
   node:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand
@@ -182,20 +182,20 @@ graphdb:
       initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
-    # additional environment variables to be set for the graphdb nodes
+    # -- Additional environment variables to be set for the graphdb nodes
     extraEnvFrom: []
-    # additional volumes to be set for the graphdb nodes
+    # -- Additional volumes to be set for the graphdb nodes
     extraVolumes: []
-    # additional volume mounts to be set for the graphdb nodes
+    # -- Additional volume mounts to be set for the graphdb nodes
     extraVolumeMounts: []
-    # podSecurityContext defines privilege and access control settings for the node pods.
+    # -- PodSecurityContext defines privilege and access control settings for the node pods.
     podSecurityContext: {}
-    # securityContext defines privilege and access control settings for the node container running graphdb.
+    # -- SecurityContext defines privilege and access control settings for the node container running graphdb.
     securityContext: {}
-    # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
+    # -- ProvisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
     initContainerSecurityContext: {}
 
-  # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
+  # Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
   clusterProxy:
     # -- Number of cluster proxies used to access the GraphDB cluster
@@ -255,15 +255,15 @@ graphdb:
       initialDelaySeconds: 120
       timeoutSeconds: 5
       periodSeconds: 10
-    # additional environment variables to be set for each cluster proxy
+    # -- Additional environment variables to be set for each cluster proxy
     extraEnvFrom: []
-    # additional volumes to be set for each cluster proxy
+    # -- Additional volumes to be set for each cluster proxy
     extraVolumes: []
-    # additional volume mounts to be set for each cluster proxy
+    # -- Additional volume mounts to be set for each cluster proxy
     extraVolumeMounts: []
-    # podSecurityContext defines privilege and access control settings for the proxy pods.
+    # -- podSecurityContext defines privilege and access control settings for the proxy pods.
     podSecurityContext: {}
-    # securityContext defines privilege and access control settings for the proxy containers.
+    # -- securityContext defines privilege and access control settings for the proxy containers.
     securityContext: {}
 
   # GraphDB workbench configurations
@@ -284,43 +284,56 @@ graphdb:
         requests:
           storage: "10Gi"
 
+  # GraphDB automatic backup configurations
   backup:
+    # -- Enable or disable the backup cronjob
     enabled: false
-    schedule: "*/3 * * * *"
-    # [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
+    # -- Schedule for the backup cronjob
+    schedule: "0 0 * * 0"
+    # -- List of repositories to be backed up. [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
     repositories: ""
+    # -- The backup should contain system data
     backupSystemData: false
-    # Currently only local and s3 are supported
+    # -- Type of backup. Currently only local and s3 are supported
     type: local
     # Configurations specific for local backups
     local:
+      # -- Number of backups that should be kept
       countOfBackupsToKeep: 5
+      # -- Configuration for local pvc/pv
       persistence:
         storage: "20Gi"
         reclaimPolicy: "Retain"
     # Configurations specific for cloud backups
     cloud:
-      # A secret containing the region and authentication for the cloud backup
+      # -- A secret containing the region and authentication for the cloud backup.
+      # For S3 the secret should contain REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
       secretConfig: s3-secret
+      # -- Bucket name where to save the backup
       bucketName: graphdb-backup-bucket
 
   restore:
+    # -- Enable or disable the restore job
     enabled: false
-    # [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
+    # -- List of repositories to be restored. [] if you don't want to include any repositories, ["x", "y"] if you want to backup repositories x and y, "" if you want all repositories
     repositories: ""
+    # -- Whether GraphDB should restore user account data such as user accounts, saved queries, visual graphs etc. from the backup
     restoreSystemData: false
+    # -- Cleans other existing repositories on the GraphDB instance where the restore is done.
     removeStaleRepositories: false
-    # Currently only local and s3 are supported
+    # -- Type of source for the restore. Currently only local and s3 are supported
     type: local
     # Configuration specific for restoring from local storage
     local:
-      # Name/location of the backup file that the should be restored
+      # -- Name/location of the backup file that the should be restored
       backupName: backup-latest.tar
-      # Name of the volume that that has the backup
+      # -- Name of the volume claim that has the backup
       persistence:
         backupsVolumeName: gdb-helm-backup-pvc
     # Configuration specific for restoring from cloud storage
     cloud:
-      # A secret containing the region and authentication for the cloud restore
-      cloudSecretConfig: s3-secret
-      bucketName: graphdb-backup-bucket
+      # -- A secret containing the region and authentication for the cloud restore.
+      # For S3 the secret should contain REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+      SecretConfig: s3-secret
+      # -- Path to the cloud file in the format of {bucket-name}/{file}
+      filePath: graphdb-backup-bucket/backup.tar

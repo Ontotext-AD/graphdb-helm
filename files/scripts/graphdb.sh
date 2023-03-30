@@ -67,10 +67,11 @@ function backup {
 }
 
 function backupCloud {
-  local repositories=$1
-  local withSystemData=$2
+  local backupPath=$1
+  local repositories=$2
+  local withSystemData=$3
   local authToken=$PROVISION_USER_AUTH_TOKEN
-  local backupPath=$5
+
   local repositoriesToBackup="{ \"backupOptions\": {"
   if [[ $withSystemData = true ]] ; then
     repositoriesToBackup+="\"backupSystemData\": true"

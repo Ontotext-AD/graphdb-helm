@@ -27,7 +27,7 @@ spec:
                 name: graphdb-provision-user
           {{- if ne $.Values.graphdb.restore.type "local" }}
             - secretRef:
-                name: {{ $.Values.graphdb.restore.cloud.cloudSecretConfig }}
+                name: {{ $.Values.graphdb.restore.cloud.SecretConfig }}
           {{- end }}
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           volumeMounts:
@@ -47,7 +47,7 @@ spec:
             - "{{ $.Values.graphdb.restore.local.backupName }}"
           {{- else }}
             - restoreCloud
-            - "{{ $.Values.graphdb.restore.cloud.bucketName }}"
+            - "{{ $.Values.graphdb.restore.cloud.filePath }}"
           {{- end }}
             - "{{ $.Values.graphdb.restore.repositories }}"
             - "{{ $.Values.graphdb.restore.restoreSystemData }}"

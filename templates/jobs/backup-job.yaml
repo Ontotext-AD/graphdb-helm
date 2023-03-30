@@ -51,6 +51,7 @@ spec:
                 - "{{ $.Values.graphdb.backup.local.countOfBackupsToKeep }}"
                 {{- else }}
                 - backupCloud
+                - "{{ %.Values.graphdb.backup.cloud.bucketName }}"
                 {{- end}}
                 - "{{ $.Values.graphdb.backup.repositories }}"
                 - "{{ $.Values.graphdb.backup.backupSystemData }}"

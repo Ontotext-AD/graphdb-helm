@@ -58,6 +58,10 @@ spec:
             {{- with $.Values.graphdb.clusterProxy.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
+          {{- with .Values.graphdb.clusterProxy.extraEnv }}
+          env:
+            {{- tpl ( toYaml . ) $ | nindent 12 }}
+          {{- end }}
           ports:
             - name: gdb-proxy-port
               containerPort: 7200

@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 10.2.1-R1
+
+### New
+
+- Added configurations for extra env vars in the nodes and cluster proxies, see `graphdb.node.envFrom` and `graphdb.clusterProxy.extraEnv`.
+
 ## Version 10.2.1
 
 ### New

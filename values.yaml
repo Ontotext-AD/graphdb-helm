@@ -184,6 +184,8 @@ graphdb:
       periodSeconds: 10
     # additional environment variables to be set for the graphdb nodes
     extraEnvFrom: []
+    # additional environment variables to be set for the graphdb nodes
+    extraEnv: []
     # additional volumes to be set for the graphdb nodes
     extraVolumes: []
     # additional volume mounts to be set for the graphdb nodes
@@ -256,6 +258,8 @@ graphdb:
       periodSeconds: 10
     # additional environment variables to be set for each cluster proxy
     extraEnvFrom: []
+    # additional environment variables to be set for each cluster proxy
+    extraEnv: []
     # additional volumes to be set for each cluster proxy
     extraVolumes: []
     # additional volume mounts to be set for each cluster proxy

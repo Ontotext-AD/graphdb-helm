@@ -97,6 +97,10 @@ spec:
             {{- with $.Values.graphdb.node.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
+          {{- with .Values.graphdb.node.extraEnv }}
+          env:
+            {{- tpl ( toYaml . ) $ | nindent 12 }}
+          {{- end }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-node-data-dynamic-pvc

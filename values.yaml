@@ -204,6 +204,8 @@ graphdb:
     initContainerSecurityContext: {}
     # changes the maximum amount of kept revisions
     revisionHistoryLimit: 10
+    # grace period in seconds before terminating the pods
+    terminationGracePeriodSeconds: 120
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
@@ -281,6 +283,8 @@ graphdb:
     securityContext: {}
     # changes the maximum amount of kept revisions
     revisionHistoryLimit: 10
+    # grace period in seconds before terminating the pods
+    terminationGracePeriodSeconds: 30
 
   # GraphDB workbench configurations
   workbench:

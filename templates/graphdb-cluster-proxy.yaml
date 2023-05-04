@@ -36,7 +36,7 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      terminationGracePeriodSeconds: 15
+      terminationGracePeriodSeconds: {{ .Values.graphdb.clusterProxy.terminationGracePeriodSeconds }}
       setHostnameAsFQDN: true
       {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
       volumes: {{- tpl ( toYaml . ) $ | nindent 8 }}

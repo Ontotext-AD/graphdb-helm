@@ -1,5 +1,5 @@
 
-{{- define "resolveDeploymentHost" -}}
+{{- define "graphdb.resolveDeploymentHost" -}}
   {{- $global := .Values.global | default dict -}}
   {{- $globalDeployment := $global.deployment | default dict -}}
   {{- print (index $globalDeployment "host" | default (index $global "ingressHost") | default .Values.deployment.host) -}}
@@ -8,7 +8,7 @@
 {{/*
 Combined image pull secrets
 */}}
-{{- define "combinedImagePullSecrets" -}}
+{{- define "graphdb.combinedImagePullSecrets" -}}
   {{- $secrets := list -}}
 
   {{- if .Values.deployment.imagePullSecret -}}
@@ -28,7 +28,7 @@ Rendenders a volumeClaimTemplate as yaml.
 If the storage class name is not specified - 'global.storageClass' is checked and if set it is used as the storageClassName for the template.
 Otherwise it is left blank and cluster default will be used.
 */}}
-{{- define "renderVolumeClaimTemplateSpec" }}
+{{- define "graphdb.renderVolumeClaimTemplateSpec" }}
   {{- if and .globalStorageClassName (not .spec.storageClassName) }}
     {{- $spec := set .spec "storageClassName" .globalStorageClassName }}
     {{- $spec | toYaml }}
@@ -40,7 +40,7 @@ Otherwise it is left blank and cluster default will be used.
 {{/*
 Renders full name of the graphdb pod
 */}}
-{{- define "renderFullImageName" -}}
+{{- define "graphdb.renderFullImageName" -}}
   {{- $fullImageName := .image.repository -}}
 
   {{- if or .globalRegistry .image.registry -}}

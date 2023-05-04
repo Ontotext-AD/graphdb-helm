@@ -21,7 +21,7 @@ spec:
     - metadata:
         name: graphdb-cluster-proxy-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.clusterProxy.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   template:
     metadata:
@@ -57,10 +57,10 @@ spec:
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
       imagePullSecrets:
-        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: graphdb-proxy
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]
           envFrom:

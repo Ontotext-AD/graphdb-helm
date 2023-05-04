@@ -20,4 +20,4 @@ You can check their status with kubectl get pods
 WARNING: You are attempting to make a cluster without providing a license secret!
 {{ end }}
 Endpoints:
-* GraphDB workbench: {{ .Values.deployment.protocol }}://{{ include "resolveDeploymentHost" . }}{{ .Values.graphdb.workbench.subpath }}
+* GraphDB workbench: {{ .Values.deployment.protocol }}://{{ include "graphdb.resolveDeploymentHost" . }}{{ .Values.graphdb.workbench.subpath }}

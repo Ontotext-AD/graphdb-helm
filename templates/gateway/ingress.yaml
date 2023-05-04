@@ -28,11 +28,11 @@ spec:
   {{- if .Values.deployment.tls.enabled }}
   tls:
     - hosts:
-        - {{ include "resolveDeploymentHost" . | quote }}
+        - {{ include "graphdb.resolveDeploymentHost" . | quote }}
       secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
   {{- end }}
   rules:
-    - host: {{ include "resolveDeploymentHost" . | quote }}
+    - host: {{ include "graphdb.resolveDeploymentHost" . | quote }}
       http:
         paths:
           {{- if eq $.Values.graphdb.workbench.subpath "/" }}

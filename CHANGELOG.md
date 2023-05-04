@@ -13,6 +13,7 @@
 
 - Updated the templates to avoid rendering empty configurations
 - Removed unused helper template `graphdbLicenseSecret`
+- Added `graphdb` prefix in the helper templates function naming
 
 ## Version 10.2.1
 

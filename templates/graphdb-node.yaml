@@ -23,13 +23,13 @@ spec:
     - metadata:
         name: graphdb-node-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if $.Values.graphdb.import_directory_mount.enabled }}
     - metadata:
         name: graphdb-server-import-dir
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   {{- end }}
   template:
@@ -92,10 +92,10 @@ spec:
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
       imagePullSecrets:
-        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: graphdb-node
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           ports:
             - name: graphdb
@@ -146,7 +146,7 @@ spec:
       {{- if $.Values.graphdb.node.license }}
         # LICENSE PROVISION
         - name: provision-license
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
+          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
@@ -177,7 +177,7 @@ spec:
         {{- end }}
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
+          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}

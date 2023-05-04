@@ -16,12 +16,12 @@ spec:
     spec:
       restartPolicy: Never
       imagePullSecrets:
-        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       securityContext:
         {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: patch-cluster
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           envFrom:
             - secretRef:
                 name: graphdb-provision-user

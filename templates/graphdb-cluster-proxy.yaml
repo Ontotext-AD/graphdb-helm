@@ -12,6 +12,7 @@ spec:
   replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
   serviceName: graphdb-proxy
   podManagementPolicy: Parallel
+  revisionHistoryLimit: {{ .Values.graphdb.clusterProxy.revisionHistoryLimit }}
   selector:
     matchLabels:
       app: graphdb-cluster-proxy

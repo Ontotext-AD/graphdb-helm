@@ -12,6 +12,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
+  revisionHistoryLimit: {{ .Values.graphdb.node.revisionHistoryLimit }}
   selector:
     matchLabels:
       app: graphdb-node

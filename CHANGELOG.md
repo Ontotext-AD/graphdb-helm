@@ -5,6 +5,7 @@
 ### New
 
 - Added configurations for extra env vars in the nodes and cluster proxies, see `graphdb.node.envFrom` and `graphdb.clusterProxy.extraEnv`.
+- Added configurations for changing the `revisionHistoryLimit` for nodes and cluster proxies.
 
 ## Version 10.2.1
 

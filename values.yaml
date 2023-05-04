@@ -196,6 +196,8 @@ graphdb:
     securityContext: {}
     # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
     initContainerSecurityContext: {}
+    # changes the maximum amount of kept revisions
+    revisionHistoryLimit: 10
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
@@ -268,6 +270,8 @@ graphdb:
     podSecurityContext: {}
     # securityContext defines privilege and access control settings for the proxy containers.
     securityContext: {}
+    # changes the maximum amount of kept revisions
+    revisionHistoryLimit: 10
 
   # GraphDB workbench configurations
   workbench:

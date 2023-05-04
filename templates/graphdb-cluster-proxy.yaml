@@ -27,8 +27,14 @@ spec:
     metadata:
       labels:
         app: graphdb-cluster-proxy
+        {{- with .Values.graphdb.clusterProxy.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
+        {{- with .Values.graphdb.clusterProxy.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       terminationGracePeriodSeconds: 15
       setHostnameAsFQDN: true

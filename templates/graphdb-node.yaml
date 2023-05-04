@@ -4,8 +4,9 @@ apiVersion: {{ $.Values.versions.statefulset }}
 kind: StatefulSet
 metadata:
   name: graphdb-node
-  labels: {{- include "graphdb.labels" . | nindent 4 }}
+  labels:
     app: graphdb-node
+    {{- include "graphdb.labels" . | nindent 4 }}
 spec:
   replicas: {{ $.Values.graphdb.clusterConfig.nodesCount }}
   serviceName: graphdb-node
@@ -35,8 +36,14 @@ spec:
     metadata:
       labels:
         app: graphdb-node
+        {{- with .Values.graphdb.node.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
+        {{- with .Values.graphdb.node.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: 120

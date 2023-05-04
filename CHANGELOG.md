@@ -8,6 +8,10 @@
 - Added configurations for changing the `revisionHistoryLimit` for nodes and cluster proxies.
 - Added configurations for adding extra `podLabels` and `podAnnotations` for both the nodes and cluster proxies.
 
+### Improvements
+
+- Updated the templates to avoid rendering empty configurations
+
 ## Version 10.2.1
 
 ### New

@@ -39,19 +39,23 @@ spec:
       terminationGracePeriodSeconds: 15
       setHostnameAsFQDN: true
       {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
-      volumes:
-        {{- tpl ( toYaml . ) $ | nindent 8 }}
+      volumes: {{- tpl ( toYaml . ) $ | nindent 8 }}
       {{- end }}
-      nodeSelector:
-        {{- $.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8 }}
-      affinity:
-        {{- $.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8 }}
-      tolerations:
-        {{- $.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8 }}
-      topologySpreadConstraints:
-        {{- $.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8 }}
-      securityContext:
-        {{- $.Values.graphdb.clusterProxy.podSecurityContext | toYaml | nindent 8 }}
+      {{- with .Values.graphdb.clusterProxy.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.podSecurityContext }}
+      securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
       imagePullSecrets:
         {{- include "combinedImagePullSecrets" $ | nindent 8 }}
       containers:
@@ -66,8 +70,7 @@ spec:
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.graphdb.clusterProxy.extraEnv }}
-          env:
-            {{- tpl ( toYaml . ) $ | nindent 12 }}
+          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
           {{- end }}
           ports:
             - name: gdb-proxy-port
@@ -82,11 +85,21 @@ spec:
             {{- with $.Values.graphdb.clusterProxy.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-          resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
-          securityContext: {{ $.Values.graphdb.clusterProxy.securityContext | toYaml | nindent 12 }}
-          startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
-          readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}
-          livenessProbe: {{ $.Values.graphdb.clusterProxy.livenessProbe | toYaml | nindent 12 }}
+          {{- with .Values.graphdb.clusterProxy.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.startupProbe }}
+          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.readinessProbe }}
+          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.livenessProbe }}
+          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service

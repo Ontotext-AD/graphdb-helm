@@ -12,6 +12,7 @@
 ### Improvements
 
 - Updated the templates to avoid rendering empty configurations
+- Removed unused helper template `graphdbLicenseSecret`
 
 ## Version 10.2.1
 

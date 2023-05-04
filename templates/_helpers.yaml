@@ -23,11 +23,6 @@ Combined image pull secrets
   {{- toYaml $secrets -}}
 {{- end -}}
 
-{{- define "graphdbLicenseSecret"}}
-  {{- $secret := (lookup "v1" "Secret" "" "graphdb-license") | default dict }}
-  {{- toYaml $secret}}
-{{- end -}}
-
 {{/*
 Rendenders a volumeClaimTemplate as yaml.
 If the storage class name is not specified - 'global.storageClass' is checked and if set it is used as the storageClassName for the template.

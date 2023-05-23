@@ -1,6 +1,5 @@
 {{- if .Values.deployment.ingress.enabled }}
----
-apiVersion: {{ .Values.versions.ingress }}
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress

@@ -1,7 +1,7 @@
 {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
 ---
-apiVersion: {{ $.Values.versions.statefulset }}
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: gdb-proxy
@@ -101,7 +101,7 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
 ---
-apiVersion: {{ $.Values.versions.service }}
+apiVersion: v1
 kind: Service
 metadata:
   name: graphdb-cluster-proxy
@@ -118,7 +118,7 @@ spec:
       targetPort: 7200
       protocol: TCP
 ---
-apiVersion: {{ $.Values.versions.service }}
+apiVersion: v1
 kind: Service
 metadata:
   name: graphdb-proxy

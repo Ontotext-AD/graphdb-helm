@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 10.2.3
+
+### Changed
+
+- Removed `versions` field as it is not really used nor needed
+
 ## Version 10.2.2
 
 ### New

@@ -1,5 +1,5 @@
 {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
-apiVersion: {{ $.Values.versions.configmap }}
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: graphdb-cluster-proxy-configmap

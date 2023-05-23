@@ -1,6 +1,6 @@
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
 ---
-apiVersion: {{ $.Values.versions.statefulset }}
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: graphdb-node
@@ -233,7 +233,7 @@ spec:
               echo 'Done'
 
 ---
-apiVersion: {{ $.Values.versions.service }}
+apiVersion: v1
 kind: Service
 metadata:
   name: graphdb-node

@@ -10,22 +10,6 @@ global:
   storageClass: "standard"
   imageRegistry: docker.io
 
-# K8S API versions differ on Kubernetes and local Minikube installation.
-# Please, refer to: https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/
-versions:
-  api: apps/v1
-  service: v1
-  ingress: networking.k8s.io/v1
-  deployment: apps/v1
-  statefulset: apps/v1
-  secret: v1
-  configmap: v1
-  volume: v1
-  job: batch/v1
-  daemon: apps/v1
-  pvc: v1
-  pv: v1
-
 # Top lvl flat for easier maintenance
 images:
   graphdb:

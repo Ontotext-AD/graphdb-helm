@@ -12,6 +12,7 @@ spec:
   replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
   serviceName: graphdb-proxy
   podManagementPolicy: Parallel
+  revisionHistoryLimit: {{ .Values.graphdb.clusterProxy.revisionHistoryLimit }}
   selector:
     matchLabels:
       app: graphdb-cluster-proxy
@@ -20,36 +21,46 @@ spec:
     - metadata:
         name: graphdb-cluster-proxy-data-dynamic-pvc
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.clusterProxy.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
   template:
     metadata:
       labels:
         app: graphdb-cluster-proxy
+        {{- with .Values.graphdb.clusterProxy.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
+        {{- with .Values.graphdb.clusterProxy.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
-      terminationGracePeriodSeconds: 15
+      terminationGracePeriodSeconds: {{ .Values.graphdb.clusterProxy.terminationGracePeriodSeconds }}
       setHostnameAsFQDN: true
       {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
-      volumes:
-        {{- tpl ( toYaml . ) $ | nindent 8 }}
+      volumes: {{- tpl ( toYaml . ) $ | nindent 8 }}
       {{- end }}
-      nodeSelector:
-        {{- $.Values.graphdb.clusterProxy.nodeSelector | toYaml | nindent 8 }}
-      affinity:
-        {{- $.Values.graphdb.clusterProxy.affinity | toYaml | nindent 8 }}
-      tolerations:
-        {{- $.Values.graphdb.clusterProxy.tolerations | toYaml | nindent 8 }}
-      topologySpreadConstraints:
-        {{- $.Values.graphdb.clusterProxy.topologySpreadConstraints | toYaml | nindent 8 }}
-      securityContext:
-        {{- $.Values.graphdb.clusterProxy.podSecurityContext | toYaml | nindent 8 }}
+      {{- with .Values.graphdb.clusterProxy.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.graphdb.clusterProxy.podSecurityContext }}
+      securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
       imagePullSecrets:
-        {{- include "combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: graphdb-proxy
-          image: {{ include "renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]
           envFrom:
@@ -58,6 +69,9 @@ spec:
             {{- with $.Values.graphdb.clusterProxy.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
+          {{- with .Values.graphdb.clusterProxy.extraEnv }}
+          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
+          {{- end }}
           ports:
             - name: gdb-proxy-port
               containerPort: 7200
@@ -71,11 +85,21 @@ spec:
             {{- with $.Values.graphdb.clusterProxy.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-          resources: {{ $.Values.graphdb.clusterProxy.resources | toYaml | nindent 12 }}
-          securityContext: {{ $.Values.graphdb.clusterProxy.securityContext | toYaml | nindent 12 }}
-          startupProbe: {{ $.Values.graphdb.clusterProxy.startupProbe | toYaml | nindent 12 }}
-          readinessProbe: {{ $.Values.graphdb.clusterProxy.readinessProbe | toYaml | nindent 12 }}
-          livenessProbe: {{ $.Values.graphdb.clusterProxy.livenessProbe | toYaml | nindent 12 }}
+          {{- with .Values.graphdb.clusterProxy.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.startupProbe }}
+          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.readinessProbe }}
+          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.clusterProxy.livenessProbe }}
+          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
 ---
 apiVersion: {{ $.Values.versions.service }}
 kind: Service

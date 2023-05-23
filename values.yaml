@@ -35,6 +35,9 @@ images:
     repository: busybox
     tag: "1.31"
 
+# Extra labels for the deployed resources
+extraLabels: {}
+
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
   # -- Defines the policy with which components will request their image.
@@ -138,6 +141,9 @@ graphdb:
     affinity: {}
     tolerations: []
     topologySpreadConstraints: []
+    # Extra pod labels and annotations
+    podLabels: {}
+    podAnnotations: {}
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -184,6 +190,8 @@ graphdb:
       periodSeconds: 10
     # additional environment variables to be set for the graphdb nodes
     extraEnvFrom: []
+    # additional environment variables to be set for the graphdb nodes
+    extraEnv: []
     # additional volumes to be set for the graphdb nodes
     extraVolumes: []
     # additional volume mounts to be set for the graphdb nodes
@@ -194,6 +202,10 @@ graphdb:
     securityContext: {}
     # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
     initContainerSecurityContext: {}
+    # changes the maximum amount of kept revisions
+    revisionHistoryLimit: 10
+    # grace period in seconds before terminating the pods
+    terminationGracePeriodSeconds: 120
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
@@ -211,6 +223,9 @@ graphdb:
     affinity: {}
     tolerations: []
     topologySpreadConstraints: []
+    # Extra pod labels and annotations
+    podLabels: {}
+    podAnnotations: {}
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
@@ -256,6 +271,8 @@ graphdb:
       periodSeconds: 10
     # additional environment variables to be set for each cluster proxy
     extraEnvFrom: []
+    # additional environment variables to be set for each cluster proxy
+    extraEnv: []
     # additional volumes to be set for each cluster proxy
     extraVolumes: []
     # additional volume mounts to be set for each cluster proxy
@@ -264,6 +281,10 @@ graphdb:
     podSecurityContext: {}
     # securityContext defines privilege and access control settings for the proxy containers.
     securityContext: {}
+    # changes the maximum amount of kept revisions
+    revisionHistoryLimit: 10
+    # grace period in seconds before terminating the pods
+    terminationGracePeriodSeconds: 30
 
   # GraphDB workbench configurations
   workbench:

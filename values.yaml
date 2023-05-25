@@ -30,9 +30,6 @@ deployment:
   # Important: Must be created beforehand
   # imagePullSecret: ontotext
 
-  # -- The storage place where components will read/write their persistent data in case the default
-  # persistent volumes are used. They use the node's file system.
-  storage: /data
   # -- The hostname and protocol at which the graphdb will be accessible.
   # Needed to configure ingress as well as some components require it to properly render their UIs
   protocol: http

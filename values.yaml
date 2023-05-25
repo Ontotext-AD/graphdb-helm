@@ -28,7 +28,7 @@ deployment:
   imagePullPolicy: IfNotPresent
   # Secret used to pull Docker images. Uncomment to use it.
   # Important: Must be created beforehand
-  # imagePullSecret: ontotext5
+  # imagePullSecret: ontotext
 
   # -- The storage place where components will read/write their persistent data in case the default
   # persistent volumes are used. They use the node's file system.
@@ -190,6 +190,10 @@ graphdb:
     revisionHistoryLimit: 10
     # grace period in seconds before terminating the pods
     terminationGracePeriodSeconds: 120
+    # overrides the default container command, use only for troubleshooting!
+    command:
+    # overrides the default container command's arguments, use only for troubleshooting!
+    args:
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed

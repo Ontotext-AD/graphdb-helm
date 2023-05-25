@@ -97,6 +97,12 @@ spec:
         - name: graphdb-node
           image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          {{- with .Values.graphdb.node.command }}
+          command: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.node.args }}
+          args: {{ toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: graphdb
               containerPort: 7200

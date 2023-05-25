@@ -2,6 +2,10 @@
 
 ## Version 10.2.3
 
+### New
+
+- Added configurations for overriding graphdb-node's command and arguments, see `graphdb.node.command` and `graphdb.node.args`
+
 ### Changed
 
 - Removed `versions` field as it is not really used nor needed

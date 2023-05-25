@@ -120,6 +120,11 @@ spec:
             - name: graphdb-node-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- if $.Values.graphdb.node.license }}
+            - name: graphdb-license
+              mountPath: /opt/graphdb/home/conf/graphdb.license
+              subPath: graphdb.license
+            {{- end }}
             {{- if $.Values.graphdb.import_directory_mount.enabled }}
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
@@ -143,38 +148,6 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
       initContainers:
-      {{- if $.Values.graphdb.node.license }}
-        # LICENSE PROVISION
-        - name: provision-license
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
-            {{- end }}
-              mountPath: /opt/graphdb/home
-            - name: graphdb-license
-              mountPath: /tmp/license/
-          {{- with .Values.graphdb.node.initContainerSecurityContext }}
-          securityContext: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          command: ['sh', '-c']
-          args:
-            - |
-              mkdir -p /opt/graphdb/home/conf/
-              cd /opt/graphdb/home/conf/
-              [ -f graphdb.license ] && rm graphdb.license
-
-              mkdir -p /opt/graphdb/home/work/
-              cd /opt/graphdb/home/work/
-              [ -f graphdb.license ] && rm graphdb.license
-
-              echo 'Provisioning GraphDB node license'
-              cp /tmp/license/*.license ./graphdb.license
-              echo 'Done'
-        {{- end }}
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
           image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}

@@ -5,6 +5,7 @@
 ### Changed
 
 - Removed `versions` field as it is not really used nor needed
+- Removed the license provisioning init container in favor of directly mounting the license
 
 ## Version 10.2.2
 

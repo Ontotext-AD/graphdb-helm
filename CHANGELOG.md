@@ -5,6 +5,7 @@
 ### New
 
 - Added configurations for overriding graphdb-node's command and arguments, see `graphdb.node.command` and `graphdb.node.args`
+- Added configurations for Pod Disruption Budget for the GraphDB nodes, see `graphdb.pdb`
 
 ### Changed
 

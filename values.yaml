@@ -288,3 +288,10 @@ graphdb:
       resources:
         requests:
           storage: "10Gi"
+
+  # Pod Disruption Budget for GraphDB nodes
+  # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
+  pdb:
+    create: false
+    minAvailable: "51%"
+    maxUnavailable:

@@ -4,6 +4,7 @@
 
 ### New
 
+- Added function for the provisioner to be extracted from the `values.yaml`. 
 - Added configurations for extra env vars in the nodes and cluster proxies, see `graphdb.node.envFrom` and `graphdb.clusterProxy.extraEnv`.
 - Added configurations for changing the `revisionHistoryLimit` for nodes and cluster proxies.
 - Added configurations for adding extra `podLabels` and `podAnnotations` for both the nodes and cluster proxies.

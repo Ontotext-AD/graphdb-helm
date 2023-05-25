@@ -12,6 +12,7 @@
 - Removed `versions` field as it is not really used nor needed
 - Removed the license provisioning init container in favor of directly mounting the license
 - Removed unused `graphdb-node-storage` volume mount
+- Updated the resources to not set CPU limits in order to avoid CPU throttling, lowered the default CPU requirements
 
 ## Version 10.2.2
 

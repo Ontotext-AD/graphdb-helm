@@ -137,14 +137,13 @@ graphdb:
             storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to the GraphDB documentation
-    # http://graphdb.ontotext.com/documentation/requirements.html
+    # https://graphdb.ontotext.com/documentation/10.2/requirements.html
     resources:
       limits:
         memory: 2Gi
-        cpu: 2000m
       requests:
         memory: 2Gi
-        cpu: 2000m
+        cpu: 0.5
     # -- Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:
@@ -215,10 +214,9 @@ graphdb:
     resources:
       limits:
         memory: 1500Mi
-        cpu: 800m
       requests:
         memory: 1500Mi
-        cpu: 800m
+        cpu: 100m
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:

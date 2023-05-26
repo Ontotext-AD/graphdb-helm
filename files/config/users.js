@@ -13,7 +13,7 @@
       },
       "dateCreated" : 1618403171751
     },
-    "provisioner" : {
+    "{{ .Values.graphdb.security.provisioningUsername }}" : {
       "username" : "{{ .Values.graphdb.security.provisioningUsername }}",
       "password" : "{bcrypt}{{ htpasswd .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | trimPrefix (printf "%s:" .Values.graphdb.security.provisioningUsername) }}",
       "grantedAuthorities" : [ "ROLE_ADMIN" ],

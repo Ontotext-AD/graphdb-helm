@@ -1,14 +1,14 @@
 # GraphDB Helm chart release notes
 
-## Version 10.2.1-R1
+## Version 10.2.2
 
 ### New
 
-- Added function for the provisioner to be extracted from the `values.yaml`. 
 - Added configurations for extra env vars in the nodes and cluster proxies, see `graphdb.node.envFrom` and `graphdb.clusterProxy.extraEnv`.
 - Added configurations for changing the `revisionHistoryLimit` for nodes and cluster proxies.
 - Added configurations for adding extra `podLabels` and `podAnnotations` for both the nodes and cluster proxies.
 - Added configurations for `terminationGracePeriodSeconds` to both the nodes and cluster proxies.
+- Fixed an issue with setting the `provisioningUsername` to anything other than the default.
 
 ### Improvements
 

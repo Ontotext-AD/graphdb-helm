@@ -127,6 +127,8 @@ graphdb:
   jobPodSecurityContext: {}
   # jobContainerSecurityContext defines privilege and access control settings for all the job containers
   jobSecurityContext: {}
+  # jobResources defines resource requests and limits for all the job containers
+  jobResources: {}
 
   # -- Settings for the GraphDB cluster nodes
   node:
@@ -202,6 +204,8 @@ graphdb:
     securityContext: {}
     # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
     initContainerSecurityContext: {}
+    # initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
+    initContainerResources: {}
     # changes the maximum amount of kept revisions
     revisionHistoryLimit: 10
     # grace period in seconds before terminating the pods

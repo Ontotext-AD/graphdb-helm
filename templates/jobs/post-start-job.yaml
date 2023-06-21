@@ -26,6 +26,9 @@ spec:
             - secretRef:
                 name: graphdb-provision-user
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
+          {{- with .Values.graphdb.jobResources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: job-temp
               mountPath: /tmp

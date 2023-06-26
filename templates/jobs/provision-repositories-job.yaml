@@ -1,6 +1,6 @@
 {{- $configs := (.Values.graphdb.configs | default dict) }}
 {{- if $configs.provisionRepositoriesConfigMap }}
-apiVersion: {{ $.Values.versions.job }}
+apiVersion: batch/v1
 kind: Job
 metadata:
   name: provision-repositories-job

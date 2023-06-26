@@ -1,5 +1,19 @@
 # GraphDB Helm chart release notes
 
+## Version 10.2.3
+
+### New
+
+- Added configurations for overriding graphdb-node's command and arguments, see `graphdb.node.command` and `graphdb.node.args`
+- Added configurations for Pod Disruption Budget for the GraphDB nodes, see `graphdb.pdb`
+
+### Changed
+
+- Removed `versions` field as it is not really used nor needed
+- Removed the license provisioning init container in favor of directly mounting the license
+- Removed unused `graphdb-node-storage` volume mount
+- Updated the resources to not set CPU limits in order to avoid CPU throttling, lowered the default CPU requirements
+
 ## Version 10.2.2
 
 ### New

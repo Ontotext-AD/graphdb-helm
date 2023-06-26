@@ -10,22 +10,6 @@ global:
   storageClass: "standard"
   imageRegistry: docker.io
 
-# K8S API versions differ on Kubernetes and local Minikube installation.
-# Please, refer to: https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/
-versions:
-  api: apps/v1
-  service: v1
-  ingress: networking.k8s.io/v1
-  deployment: apps/v1
-  statefulset: apps/v1
-  secret: v1
-  configmap: v1
-  volume: v1
-  job: batch/v1
-  daemon: apps/v1
-  pvc: v1
-  pv: v1
-
 # Top lvl flat for easier maintenance
 images:
   graphdb:
@@ -44,11 +28,8 @@ deployment:
   imagePullPolicy: IfNotPresent
   # Secret used to pull Docker images. Uncomment to use it.
   # Important: Must be created beforehand
-  # imagePullSecret: ontotext5
+  # imagePullSecret: ontotext
 
-  # -- The storage place where components will read/write their persistent data in case the default
-  # persistent volumes are used. They use the node's file system.
-  storage: /data
   # -- The hostname and protocol at which the graphdb will be accessible.
   # Needed to configure ingress as well as some components require it to properly render their UIs
   protocol: http
@@ -156,14 +137,13 @@ graphdb:
             storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to the GraphDB documentation
-    # http://graphdb.ontotext.com/documentation/requirements.html
+    # https://graphdb.ontotext.com/documentation/10.2/requirements.html
     resources:
       limits:
         memory: 2Gi
-        cpu: 2000m
       requests:
         memory: 2Gi
-        cpu: 2000m
+        cpu: 0.5
     # -- Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster.
     startupProbe:
       httpGet:
@@ -206,6 +186,10 @@ graphdb:
     revisionHistoryLimit: 10
     # grace period in seconds before terminating the pods
     terminationGracePeriodSeconds: 120
+    # overrides the default container command, use only for troubleshooting!
+    command:
+    # overrides the default container command's arguments, use only for troubleshooting!
+    args:
 
   # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
@@ -230,10 +214,9 @@ graphdb:
     resources:
       limits:
         memory: 1500Mi
-        cpu: 800m
       requests:
         memory: 1500Mi
-        cpu: 800m
+        cpu: 100m
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -303,3 +286,10 @@ graphdb:
       resources:
         requests:
           storage: "10Gi"
+
+  # Pod Disruption Budget for GraphDB nodes
+  # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
+  pdb:
+    create: false
+    minAvailable: "51%"
+    maxUnavailable:

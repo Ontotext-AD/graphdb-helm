@@ -14,7 +14,7 @@ global:
 images:
   graphdb:
     repository: ontotext/graphdb
-    tag: "10.2.3"
+    tag: "10.3.0"
   busybox:
     repository: busybox
     tag: "1.31"

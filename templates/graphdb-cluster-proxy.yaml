@@ -115,6 +115,10 @@ metadata:
   labels:
     app: graphdb-cluster-proxy
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.clusterProxy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ $.Values.graphdb.clusterProxy.serviceType }}
   selector:
@@ -132,6 +136,10 @@ metadata:
   labels:
     app: graphdb-cluster-proxy
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.clusterProxy.headlessService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   clusterIP: None
   selector:

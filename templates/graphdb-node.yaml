@@ -215,6 +215,10 @@ metadata:
   labels:
     app: graphdb-node
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.node.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   clusterIP: None
   selector:

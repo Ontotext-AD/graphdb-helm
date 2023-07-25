@@ -125,6 +125,10 @@ graphdb:
     # Extra pod labels and annotations
     podLabels: {}
     podAnnotations: {}
+    # -- GraphDB node service configurations
+    service:
+      # Extra annotations to append to the service
+      annotations: {}
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -210,6 +214,14 @@ graphdb:
     # Extra pod labels and annotations
     podLabels: {}
     podAnnotations: {}
+    # -- GraphDB cluster proxy service configurations
+    service:
+      # Extra annotations to append to the service
+      annotations: {}
+    # -- GraphDB cluster proxy headless service configurations
+    headlessService:
+      # Extra annotations to append to the service
+      annotations: {}
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:

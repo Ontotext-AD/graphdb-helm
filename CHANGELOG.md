@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 10.3.0-R2
+
+### New
+
+- Added configurations for extra service annotations, see `graphdb.node.service.annotations`, `graphdb.clusterProxy.service.annotations`
+  and `graphdb.clusterProxy.headlessService.annotations`
+
 ## Version 10.2.3
 
 ### New

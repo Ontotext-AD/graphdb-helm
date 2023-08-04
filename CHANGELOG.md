@@ -1,6 +1,6 @@
 # GraphDB Helm chart release notes
 
-## Version 10.3.0-R2
+## Version 10.2.4
 
 ### New
 

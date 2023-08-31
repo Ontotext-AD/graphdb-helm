@@ -44,7 +44,7 @@ Renders full name of the graphdb pod
   {{- $fullImageName := .image.repository -}}
 
   {{- if or .globalRegistry .image.registry -}}
-    {{- $fullImageName = printf "%s/%s" (.globalRegistry | default .image.registry) .image.repository -}}
+    {{- $fullImageName = printf "%s/%s" ( .image.registry | default .globalRegistry) .image.repository -}}
   {{- end -}}
 
   {{- if .image.tag -}}

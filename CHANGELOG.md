@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 10.3.1-R2
+
+### Improvements
+
+- Fixed the image registry to have priority over the global registry
+
 ## Version 10.3.0-R2
 
 ### New

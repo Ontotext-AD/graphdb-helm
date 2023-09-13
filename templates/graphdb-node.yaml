@@ -1,6 +1,6 @@
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
 ---
-apiVersion: {{ $.Values.versions.statefulset }}
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: graphdb-node
@@ -97,6 +97,12 @@ spec:
         - name: graphdb-node
           image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          {{- with .Values.graphdb.node.command }}
+          command: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.graphdb.node.args }}
+          args: {{ toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: graphdb
               containerPort: 7200
@@ -116,10 +122,13 @@ spec:
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
             {{- end }}
               mountPath: /opt/graphdb/home
+            {{- if $.Values.graphdb.node.license }}
+            - name: graphdb-license
+              mountPath: /opt/graphdb/home/conf/graphdb.license
+              subPath: graphdb.license
+            {{- end }}
             {{- if $.Values.graphdb.import_directory_mount.enabled }}
             - name: graphdb-server-import-dir
               mountPath: /opt/graphdb/home/graphdb-import
@@ -143,41 +152,6 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
       initContainers:
-      {{- if $.Values.graphdb.node.license }}
-        # LICENSE PROVISION
-        - name: provision-license
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
-            {{- end }}
-              mountPath: /opt/graphdb/home
-            - name: graphdb-license
-              mountPath: /tmp/license/
-          {{- with .Values.graphdb.node.initContainerSecurityContext }}
-          securityContext: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.graphdb.node.initContainerResources }}
-          resources: {{ toYaml . | nindent 12 }}
-          {{- end }}
-          command: ['sh', '-c']
-          args:
-            - |
-              mkdir -p /opt/graphdb/home/conf/
-              cd /opt/graphdb/home/conf/
-              [ -f graphdb.license ] && rm graphdb.license
-
-              mkdir -p /opt/graphdb/home/work/
-              cd /opt/graphdb/home/work/
-              [ -f graphdb.license ] && rm graphdb.license
-
-              echo 'Provisioning GraphDB node license'
-              cp /tmp/license/*.license ./graphdb.license
-              echo 'Done'
-        {{- end }}
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
           image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
@@ -185,8 +159,6 @@ spec:
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-node-data-dynamic-pvc
-            {{- else }}
-            - name: graphdb-node-storage
             {{- end }}
               mountPath: /opt/graphdb/home
             {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
@@ -239,13 +211,17 @@ spec:
               echo 'Done'
 
 ---
-apiVersion: {{ $.Values.versions.service }}
+apiVersion: v1
 kind: Service
 metadata:
   name: graphdb-node
   labels:
     app: graphdb-node
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.node.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   clusterIP: None
   selector:
@@ -261,3 +237,23 @@ spec:
       targetPort: 7300
       protocol: TCP
     {{- end }}
+
+{{- if .Values.graphdb.pdb.create }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: graphdb-node
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.graphdb.pdb.minAvailable }}
+  minAvailable: {{ .Values.graphdb.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.graphdb.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.graphdb.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: graphdb-node
+{{- end }}

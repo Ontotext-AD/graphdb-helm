@@ -3,7 +3,7 @@
 {{- if eq $configs.logbackConfigMap "graphdb-logback-configmap" }}
 # Default configuration map for provisioning GraphDB logback settings.
 # To change it, prepare another configuration map and update "graphdb.configs.logbackConfigMap"
-apiVersion: {{ .Values.versions.configmap }}
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: graphdb-logback-configmap

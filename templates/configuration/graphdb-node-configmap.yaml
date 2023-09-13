@@ -1,4 +1,4 @@
-apiVersion: {{ $.Values.versions.configmap }}
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: graphdb-node-configmap

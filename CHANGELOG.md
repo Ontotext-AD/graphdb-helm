@@ -1,8 +1,37 @@
 # GraphDB Helm chart release notes
 
-## Version 10.2.3-R1
+## Version 10.3.4-R1
 
 - Added configurations for specifying resource values for all remaining containers, see `graphdb.node.initContainerResources` and `graphdb.jobResources`.
+
+## Version 10.3.1-R2
+
+### Improvements
+
+- Fixed the image registry to have priority over the global registry
+
+## Version 10.3.0-R2
+
+### New
+
+- Added configurations for extra service annotations, see `graphdb.node.service.annotations`, `graphdb.clusterProxy.service.annotations`
+  and `graphdb.clusterProxy.headlessService.annotations`
+
+## Version 10.2.3
+
+### New
+
+- Added configurations for overriding graphdb-node's command and arguments, see `graphdb.node.command` and `graphdb.node.args`
+- Added configurations for Pod Disruption Budget for the GraphDB nodes, see `graphdb.pdb`
+- Added `graphdb-proxy-properties-configmap.yaml` to load graphdb.properties containing the cluster node addresses into the cluster-proxy
+
+### Changed
+
+- Removed `versions` field as it is not really used nor needed
+- Removed the license provisioning init container in favor of directly mounting the license
+- Removed unused `graphdb-node-storage` volume mount
+- Removed the node addresses from the `graphdb-cluster-proxy-configmap.yaml` to prevent cluster proxy restarting on cluster scale up/down
+- Updated the resources to not set CPU limits in order to avoid CPU throttling, lowered the default CPU requirements
 
 ## Version 10.2.2
 

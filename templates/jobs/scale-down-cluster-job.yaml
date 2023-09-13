@@ -1,4 +1,4 @@
-apiVersion: {{ $.Values.versions.job }}
+apiVersion: batch/v1
 kind: Job
 metadata:
   name: scale-down-cluster-job

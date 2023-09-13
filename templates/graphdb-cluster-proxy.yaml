@@ -1,7 +1,7 @@
 {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
 {{- $configs := ($.Values.graphdb.configs | default dict) }}
 ---
-apiVersion: {{ $.Values.versions.statefulset }}
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: gdb-proxy
@@ -38,8 +38,12 @@ spec:
     spec:
       terminationGracePeriodSeconds: {{ .Values.graphdb.clusterProxy.terminationGracePeriodSeconds }}
       setHostnameAsFQDN: true
+      volumes:
+        - name: graphdb-properties
+          configMap:
+            name: graphdb-proxy-properties-configmap
       {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
-      volumes: {{- tpl ( toYaml . ) $ | nindent 8 }}
+        {{- tpl ( toYaml . ) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.graphdb.clusterProxy.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
@@ -78,6 +82,9 @@ spec:
             - name: gdb-proxy-rpc
               containerPort: 7300
           volumeMounts:
+            - name: graphdb-properties
+              mountPath: /opt/graphdb/home/conf/graphdb.properties
+              subPath: graphdb.properties
             {{- if $.Values.graphdb.clusterProxy.persistence.enablePersistence }}
             - name: graphdb-cluster-proxy-data-dynamic-pvc
               mountPath: /opt/graphdb/home
@@ -101,13 +108,17 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
 ---
-apiVersion: {{ $.Values.versions.service }}
+apiVersion: v1
 kind: Service
 metadata:
   name: graphdb-cluster-proxy
   labels:
     app: graphdb-cluster-proxy
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.clusterProxy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ $.Values.graphdb.clusterProxy.serviceType }}
   selector:
@@ -118,13 +129,17 @@ spec:
       targetPort: 7200
       protocol: TCP
 ---
-apiVersion: {{ $.Values.versions.service }}
+apiVersion: v1
 kind: Service
 metadata:
   name: graphdb-proxy
   labels:
     app: graphdb-cluster-proxy
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.clusterProxy.headlessService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   clusterIP: None
   selector:

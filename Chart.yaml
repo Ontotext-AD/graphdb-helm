@@ -1,14 +1,22 @@
 #
-# Helm chart for GraphDB
+# Official Helm chart for GraphDB
 #
 apiVersion: v2
 name: graphdb
-description: Helm chart for GraphDB
+description: GraphDB is an enterprise ready Semantic Graph Database
 type: application
-version: 10.2.2
-appVersion: 10.2.2
+version: 10.3.3
+appVersion: 10.3.3
+kubeVersion: ^1.22.0-0
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png
 maintainers:
   - name: Ontotext GraphDB team
     email: graphdb-support@ontotext.com
+sources:
+  - https://github.com/Ontotext-AD/graphdb-helm
+keywords:
+  - ontotext
+  - graphdb
+  - semantic
+  - database

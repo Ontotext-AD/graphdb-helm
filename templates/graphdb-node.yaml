@@ -122,8 +122,8 @@ spec:
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-node-data-dynamic-pvc
-            {{- end }}
               mountPath: /opt/graphdb/home
+            {{- end }}
             {{- if $.Values.graphdb.node.license }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license
@@ -159,8 +159,8 @@ spec:
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
             - name: graphdb-node-data-dynamic-pvc
-            {{- end }}
               mountPath: /opt/graphdb/home
+            {{- end }}
             {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
             - name: graphdb-settings-config
               mountPath: /tmp/graphdb-settings-configmap

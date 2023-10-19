@@ -1,5 +1,9 @@
 # GraphDB Helm chart release notes
 
+## Version 10.4.0-R2
+
+- Added configurations for specifying resource values for all remaining containers, see `graphdb.node.initContainerResources` and `graphdb.jobResources`.
+
 ## Version 10.3.1-R2
 
 ### Improvements

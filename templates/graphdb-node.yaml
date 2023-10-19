@@ -180,6 +180,9 @@ spec:
           {{- with .Values.graphdb.node.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.graphdb.node.initContainerResources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
           command: ['sh', '-c']
           args:
             - |

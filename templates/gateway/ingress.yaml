@@ -39,7 +39,7 @@ spec:
           {{- else }}
           - path: {{ $.Values.graphdb.workbench.subpath }}(/|$)(.*)
           {{- end }}
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
               {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}

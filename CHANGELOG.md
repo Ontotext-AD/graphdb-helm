@@ -1,5 +1,9 @@
 # GraphDB Helm chart release notes
 
+## Version 10.6.0
+
+- Updated the default ingress's path type to `ImplementationSpecific`
+
 ## Version 10.5.1-R2
 
 - Fixed `graphdb-cluster-proxy-configmap` to use the correct java_args configuration from [values.yaml](values.yaml).

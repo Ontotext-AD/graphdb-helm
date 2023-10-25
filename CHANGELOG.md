@@ -3,6 +3,7 @@
 ## Version 10.6.0
 
 - Updated the default ingress's path type to `ImplementationSpecific`
+- Updated graphdb.properties example file
 
 ## Version 10.5.1-R2
 

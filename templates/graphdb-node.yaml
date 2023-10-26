@@ -95,7 +95,7 @@ spec:
         {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: graphdb-node
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           {{- with .Values.graphdb.node.command }}
           command: {{ toYaml . | nindent 12 }}
@@ -154,7 +154,7 @@ spec:
       initContainers:
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
+          image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}

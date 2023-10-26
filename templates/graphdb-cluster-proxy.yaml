@@ -64,7 +64,7 @@ spec:
         {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: graphdb-proxy
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]
           envFrom:

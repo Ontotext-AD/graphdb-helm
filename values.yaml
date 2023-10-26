@@ -13,8 +13,10 @@ global:
 # Top lvl flat for easier maintenance
 images:
   graphdb:
+    registry: docker.io
     repository: ontotext/graphdb
-    tag: "10.5.1"
+    # If specified, overrides Chart.AppVersion
+    tag: ""
   busybox:
     repository: busybox
     tag: "1.31"

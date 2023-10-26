@@ -1,0 +1,7 @@
+timeout: 5m
+exit-code: 1
+severity:
+  - HIGH
+  - CRITICAL
+  - MEDIUM
+format: table

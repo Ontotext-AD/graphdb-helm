@@ -2,6 +2,12 @@
 
 ## Version 10.6.0
 
+### New
+
+- Added `graphdb.node.licenseFilename` for cases where the default filename is not "graphdb.license"
+
+### Improvements
+
 - Updated the default ingress's path type to `ImplementationSpecific`
 - Updated graphdb.properties example file
 

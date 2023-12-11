@@ -41,6 +41,7 @@ spec:
             - "/tmp/utils/update-cluster.sh"
             - "patchCluster"
             - "/tmp/cluster-config/cluster-config.json"
+            - "{{ .Values.graphdb.clusterConfig.clusterCreationTimeout }}"
       volumes:
         - name: job-temp
           emptyDir:

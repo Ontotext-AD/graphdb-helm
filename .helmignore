@@ -23,4 +23,9 @@
 .vscode/
 
 # Custom
+*.license
+.github/
 examples/
+template_output.yaml
+trivy.yaml
+values_overrides.yaml

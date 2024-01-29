@@ -1,0 +1,53 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  analyze:
+    name: Analyze the Helm chart
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - id: checkout_repository
+        name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - id: setup_helm
+        name: Setup Helm
+        # azure/setup-helm@v3.5
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78
+        with:
+          version: v3.14.0
+
+      - id: run_helm_lint
+        name: Run Helm lint
+        run: helm lint --strict .
+
+      - id: run_helm_template
+        name: Run Helm template
+        run: helm template . > template_output.yaml
+
+      - id: run_trivy_config
+        name: Run Trivy vulnerability scanner
+        # aquasecurity/trivy-action@v0.16.1
+        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca
+        with:
+          scan-type: config
+          trivy-config: trivy.yaml
+          hide-progress: false
+          # Note: Until current issues are fixed, do not fail the build
+          exit-code: '0'
+          format: sarif
+          output: trivy.sarif
+
+      - id: run_sarif_upload
+        name: Upload Trivy SARIF results
+        # github/codeql-action/upload-sarif@v2.22.9
+        uses: github/codeql-action/upload-sarif@382a50a0284c0de445104889a9d6003acb4b3c1d
+        timeout-minutes: 1
+        with:
+          sarif_file: trivy.sarif

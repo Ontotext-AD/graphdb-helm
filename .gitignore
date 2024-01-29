@@ -10,3 +10,4 @@
 
 # Helm
 values_overrides.yaml
+template_output.yaml

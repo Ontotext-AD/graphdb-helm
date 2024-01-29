@@ -48,10 +48,10 @@ spec:
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: {{ .Values.graphdb.node.terminationGracePeriodSeconds }}
       volumes:
-        {{- if $.Values.graphdb.node.license }}
+        {{- if .Values.graphdb.node.license }}
         - name: graphdb-license
           secret:
-            secretName: {{ $.Values.graphdb.node.license }}
+            secretName: {{ .Values.graphdb.node.license }}
         {{- end }}
         {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
         - name: graphdb-settings-config
@@ -95,7 +95,7 @@ spec:
         {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
         - name: graphdb-node
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           {{- with .Values.graphdb.node.command }}
           command: {{ toYaml . | nindent 12 }}
@@ -124,10 +124,10 @@ spec:
             - name: graphdb-node-data-dynamic-pvc
               mountPath: /opt/graphdb/home
             {{- end }}
-            {{- if $.Values.graphdb.node.license }}
+            {{- if .Values.graphdb.node.license }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license
-              subPath: graphdb.license
+              subPath: {{ .Values.graphdb.node.licenseFilename }}
             {{- end }}
             {{- if $.Values.graphdb.import_directory_mount.enabled }}
             - name: graphdb-server-import-dir
@@ -154,7 +154,7 @@ spec:
       initContainers:
         # PROVISION SETTINGS AND SECURITY
         - name: provision-settings
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.busybox) }}
+          image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}

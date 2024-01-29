@@ -1,5 +1,18 @@
 # GraphDB Helm chart release notes
 
+## Version 10.6.0
+
+### New
+
+- Added `graphdb.node.licenseFilename` for cases where the default filename is not "graphdb.license"
+
+### Improvements
+
+- Updated the default ingress's path type to `ImplementationSpecific`
+- Updated graphdb.properties example file
+- Templates will now use `Chart.AppVersion` by default unless `images.graphdb.tag` is specified.
+- Updated busybox image to version 1.36.1
+
 ## Version 10.5.1-R2
 
 - Fixed `graphdb-cluster-proxy-configmap` to use the correct java_args configuration from [values.yaml](values.yaml).

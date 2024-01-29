@@ -38,18 +38,18 @@ Otherwise it is left blank and cluster default will be used.
 {{- end }}
 
 {{/*
-Renders full name of the graphdb pod
+Render the container image for GraphDB
 */}}
-{{- define "graphdb.renderFullImageName" -}}
-  {{- $fullImageName := .image.repository -}}
-
-  {{- if or .globalRegistry .image.registry -}}
-    {{- $fullImageName = printf "%s/%s" ( .image.registry | default .globalRegistry) .image.repository -}}
+{{- define "graphdb.image" -}}
+  {{- $registry := .Values.images.graphdb.registry -}}
+  {{- $repository := .Values.images.graphdb.repository -}}
+  {{- $tag := .Values.images.graphdb.tag | default .Chart.AppVersion | toString -}}
+  {{- if and .Values.global .Values.global.imageRegistry -}}
+    {{- $registry = .Values.global.imageRegistry -}}
   {{- end -}}
-
-  {{- if .image.tag -}}
-    {{- printf "%s:%s" $fullImageName .image.tag -}}
+  {{- if $registry -}}
+    {{- printf "%s/%s:%s" $registry $repository $tag -}}
   {{- else -}}
-    {{- print $fullImageName -}}
+    {{- printf "%s:%s" $repository $tag -}}
   {{- end -}}
-{{- end -}}
+{{- end }}

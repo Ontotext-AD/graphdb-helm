@@ -13,11 +13,13 @@ global:
 # Top lvl flat for easier maintenance
 images:
   graphdb:
+    registry: docker.io
     repository: ontotext/graphdb
-    tag: "10.5.1"
+    # If specified, overrides Chart.AppVersion
+    tag: ""
   busybox:
     repository: busybox
-    tag: "1.31"
+    tag: "1.36.1"
 
 # Extra labels for the deployed resources
 extraLabels: {}
@@ -116,6 +118,8 @@ graphdb:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand
     license:
+    # -- File name of the GraphDB license file in the existing license secret. Default is graphdb.license
+    licenseFilename: graphdb.license
     # -- Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
     java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
     # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.

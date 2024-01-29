@@ -22,7 +22,7 @@ spec:
         {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: provision-repositories
-          image: {{ include "graphdb.renderFullImageName" (dict "globalRegistry" $.Values.global.imageRegistry "image" $.Values.images.graphdb) }}
+          image: {{ include "graphdb.image" . }}
           envFrom:
             - secretRef:
                 name: graphdb-provision-user

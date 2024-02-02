@@ -12,6 +12,7 @@
 - Updated graphdb.properties example file
 - Templates will now use `Chart.AppVersion` by default unless `images.graphdb.tag` is specified.
 - Updated busybox image to version 1.36.1
+- Use `clusterCreationTimeout` in patch cluster job as well
 
 ## Version 10.5.1-R2
 

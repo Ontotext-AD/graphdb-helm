@@ -104,7 +104,7 @@ the Minikube environment is `192.168.99.102` you should modify your hosts file w
 192.168.99.102  graphdb.local
 ```
 
-See this how-to https://www.howtogeek.com/howto/27350/beginner-geek-how-to-edit-your-hosts-file/
+See this how-to https://www.howtogeek.com/27350/beginner-geek-how-to-edit-your-hosts-file/
 about modifying the hosts file in different OS.
 
 #### Secrets

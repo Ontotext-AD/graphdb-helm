@@ -4,9 +4,10 @@ set -eu
 function patchCluster {
   local configLocation=$1
   local authToken=$PROVISION_USER_AUTH_TOKEN
+  local timeout=$2
   echo "Patching cluster"
   waitService "http://graphdb-cluster-proxy:7200/proxy/ready"
-  curl -o patchResponse.json -isSL -m 15 -X PATCH  --header "Authorization: Basic ${authToken}" --header 'Content-Type: application/json' --header 'Accept: application/json' -d @"$configLocation" 'http://graphdb-cluster-proxy:7200/rest/cluster/config'
+  curl -o patchResponse.json -isSL -m "$timeout" -X PATCH  --header "Authorization: Basic ${authToken}" --header 'Content-Type: application/json' --header 'Accept: application/json' -d @"$configLocation" 'http://graphdb-cluster-proxy:7200/rest/cluster/config'
     if grep -q 'HTTP/1.1 200' "patchResponse.json"; then
       echo "Patch successful"
     elif grep -q 'Cluster does not exist.\|HTTP/1.1 412' "patchResponse.json" ; then

@@ -186,6 +186,8 @@ graphdb:
     extraVolumes: []
     # additional volume mounts to be set for the graphdb nodes
     extraVolumeMounts: []
+    # additional init containers inserted after the provisioning init containers
+    extraInitContainers: []
     # podSecurityContext defines privilege and access control settings for the node pods.
     podSecurityContext: {}
     # securityContext defines privilege and access control settings for the node container running graphdb.
@@ -280,6 +282,8 @@ graphdb:
     extraVolumes: []
     # additional volume mounts to be set for each cluster proxy
     extraVolumeMounts: []
+    # additional init containers
+    extraInitContainers: []
     # podSecurityContext defines privilege and access control settings for the proxy pods.
     podSecurityContext: {}
     # securityContext defines privilege and access control settings for the proxy containers.

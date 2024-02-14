@@ -1,12 +1,24 @@
 # GraphDB Helm chart release notes
 
+## Version 10.6.0-R2
+
+### New
+
+- Added `graphdb.node.extraInitContainers` and `graphdb.clusterProxy.extraInitContainers` that allows for the insertion of custom init containers to
+  both GraphDB and its proxy
+- Added `graphdb.clusterConfig.transactionLogMaximumSizeGB` configuration for the cluster creation JSON configuration.
+- Added `graphdb.clusterConfig.existingClusterConfig` for providing a custom cluster creation JSON configuration.
+
+### Fixed
+
+- Fixed URLs in the [README.md](README.md) that refer to the official GraphDB documentation.
+- Fixed the cluster creation JSON configuration to use `messageSizeKB` instead of `messageSize`, see `graphdb.clusterConfig.messageSize`.
+
 ## Version 10.6.0
 
 ### New
 
 - Added `graphdb.node.licenseFilename` for cases where the default filename is not "graphdb.license"
-- Added `graphdb.node.extraInitContainers` and `graphdb.clusterProxy.extraInitContainers` that allows for the insertion of custom init containers to 
-  both GraphDB and its proxy
 
 ### Improvements
 

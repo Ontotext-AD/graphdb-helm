@@ -48,7 +48,7 @@ spec:
             sizeLimit: 10Mi
         - name: cluster-config
           configMap:
-            name: graphdb-cluster-config-configmap
+            name: {{ .Values.graphdb.clusterConfig.existingClusterConfig | default "graphdb-cluster-config-configmap" }}
         - name: graphdb-utils
           configMap:
             name: graphdb-utils-configmap

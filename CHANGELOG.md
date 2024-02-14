@@ -5,6 +5,8 @@
 ### New
 
 - Added `graphdb.node.licenseFilename` for cases where the default filename is not "graphdb.license"
+- Added `graphdb.node.extraInitContainers` and `graphdb.clusterProxy.extraInitContainers` that allows for the insertion of custom init containers to 
+  both GraphDB and its proxy
 
 ### Improvements
 

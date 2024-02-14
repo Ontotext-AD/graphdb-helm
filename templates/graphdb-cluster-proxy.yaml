@@ -62,6 +62,10 @@ spec:
       {{- end }}
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
+      {{- with .Values.graphdb.clusterProxy.extraInitContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: graphdb-proxy
           image: {{ include "graphdb.image" . }}

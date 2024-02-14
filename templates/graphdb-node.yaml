@@ -209,7 +209,9 @@ spec:
               fi
               mkdir -p /opt/graphdb/home/jdbc-driver
               echo 'Done'
-
+        {{- with .Values.graphdb.node.extraInitContainers }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

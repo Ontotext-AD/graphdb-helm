@@ -1,4 +1,4 @@
-{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- if and (gt (int $.Values.graphdb.clusterConfig.nodesCount) 1) (not .Values.graphdb.clusterConfig.existingClusterConfig) }}
 # Default configuration map for provisioning the GraphDB cluster configuration.
 # To change it, prepare another configuration map and update "graphdb.configs.clusterConfig"
 apiVersion: v1

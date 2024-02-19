@@ -73,20 +73,26 @@ graphdb:
     # -- Timeout for the cluster creation CURL query.
     # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
     clusterCreationTimeout: 60
+    # -- Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
+    # The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation
+    existingClusterConfig:
     # -- Cluster configuration parameters:
+    # Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
     # The minimum wait time in milliseconds for a heartbeat from a leader.
     electionMinTimeout: 8000
     # The variable portion of each waiting period in milliseconds for a heartbeat.
     electionRangeTimeout: 6000
     # The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.
     heartbeatInterval: 2000
-    #The size of the data blocks transferred during data replication streaming through the RPC protocol.
+    # The size in KB of the data blocks transferred during data replication streaming through the RPC protocol.
     messageSize: 64
+    # Maximum size of the transaction log in GBs. The transaction log will be automatically truncated if it becomes bigger than this value.
+    transactionLogMaximumSizeGB: 50
     # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
     verificationTimeout: 1500
 
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
-  # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/standard/configuring-graphdb.html
+  # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html
   configs:
     # Override default settings configuration
     #settingsConfigMap: graphdb-settings-configmap
@@ -147,7 +153,7 @@ graphdb:
             storage: "5Gi"
     # -- Below are minimum requirements for data sets of up to 50 million RDF triples
     # For resizing, refer according to the GraphDB documentation
-    # https://graphdb.ontotext.com/documentation/10.2/requirements.html
+    # https://graphdb.ontotext.com/documentation/10.6/requirements.html
     resources:
       limits:
         memory: 2Gi
@@ -301,7 +307,7 @@ graphdb:
 
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   # Attach additional PV which will be used as an import directory
-  # https://graphdb.ontotext.com/documentation/standard/loading-data-using-the-workbench.html#importing-server-files
+  # https://graphdb.ontotext.com/documentation/10.6/loading-data-using-the-workbench.html#importing-server-files
   import_directory_mount:
     enabled: false
     volumeClaimTemplateSpec:

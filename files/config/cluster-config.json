@@ -1,11 +1,12 @@
 {
-  "electionMinTimeout": {{ $.Values.graphdb.clusterConfig.electionMinTimeout }},
-  "electionRangeTimeout": {{ $.Values.graphdb.clusterConfig.electionRangeTimeout }},
-  "heartbeatInterval": {{ $.Values.graphdb.clusterConfig.heartbeatInterval }},
-  "messageSize": {{ $.Values.graphdb.clusterConfig.messageSize }},
-  "verificationTimeout": {{ $.Values.graphdb.clusterConfig.verificationTimeout }},
+  "electionMinTimeout": {{ .Values.graphdb.clusterConfig.electionMinTimeout | int }},
+  "electionRangeTimeout": {{ .Values.graphdb.clusterConfig.electionRangeTimeout | int }},
+  "heartbeatInterval": {{ .Values.graphdb.clusterConfig.heartbeatInterval | int }},
+  "verificationTimeout": {{ .Values.graphdb.clusterConfig.verificationTimeout | int }},
+  "messageSizeKB": {{ .Values.graphdb.clusterConfig.messageSize | int }},
+  "transactionLogMaximumSizeGB": {{ .Values.graphdb.clusterConfig.transactionLogMaximumSizeGB | quote }},
   "nodes": [
-    {{- range $i, $node_index := until ( (int $.Values.graphdb.clusterConfig.nodesCount) )}}
+    {{- range $i, $node_index := until (int .Values.graphdb.clusterConfig.nodesCount) }}
     "graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace }}.svc.cluster.local:7300"{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},
     {{- end }}
     {{- end }}

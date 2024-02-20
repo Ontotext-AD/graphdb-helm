@@ -5,8 +5,8 @@ apiVersion: v2
 name: graphdb
 description: GraphDB is an enterprise ready Semantic Graph Database
 type: application
-version: 10.6.0-R2
-appVersion: 10.6.0
+version: 10.6.1
+appVersion: 10.6.1
 kubeVersion: ^1.22.0-0
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png

@@ -32,7 +32,7 @@ spec:
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
-        {{- with .Values.graphdb.clusterProxy.podAnnotations }}
+        {{- with $.Values.graphdb.clusterProxy.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:

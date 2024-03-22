@@ -119,7 +119,7 @@ graphdb:
   # jobResources defines resource requests and limits for all the job containers
   jobResources: {}
 
-  # -- Settings for the GraphDB cluster nodes
+  # Settings for the GraphDB cluster nodes
   node:
     # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
     # Important: Must be created beforehand
@@ -211,7 +211,7 @@ graphdb:
     # overrides the default container command's arguments, use only for troubleshooting!
     args:
 
-  # -- Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
+  # Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
   # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
   clusterProxy:
     # -- Number of cluster proxies used to access the GraphDB cluster

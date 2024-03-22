@@ -20,3 +20,11 @@ keywords:
   - graphdb
   - semantic
   - database
+annotations:
+  artifacthub.io/operator: "false"
+  artifacthub.io/category: "database"
+  artifacthub.io/links: |
+    - name: Ontotext
+      url: https://www.ontotext.com/
+    - name: GraphDB Support
+      url: graphdb-support@ontotext.com

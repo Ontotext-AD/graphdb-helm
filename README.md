@@ -1,12 +1,21 @@
 # Helm charts for GraphDB
 
 [![CI](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml/badge.svg)](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml)
-![Version: 10.6.2](https://img.shields.io/badge/Version-10.6.2-informational?style=flat-square)
+![Version: 11.0.0](https://img.shields.io/badge/Version-11.0.0-informational?style=flat-square)
 ![AppVersion: 10.6.2](https://img.shields.io/badge/AppVersion-10.6.2-informational?style=flat-square)
 
 You can download the GraphDB Helm chart, including all sub-charts managed by Ontotext, from the [Ontotext Helm repository](https://maven.ontotext.com/repository/helm-public/).
 
 ## Install
+
+### Version Compatability
+
+> Important: Beginning from version 11, the Helm chart has its own release cycle and is no longer tied to the version of GraphDB!
+
+| Helm chart version | GraphDB version |
+|--------------------|-----------------|
+| 11.0.0             | 10.7.0          |
+
 ### Prerequisites
 
 #### Getting Started

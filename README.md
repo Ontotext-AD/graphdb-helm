@@ -271,7 +271,7 @@ You can install GraphDB's Helm chart from our public Helm repository as well.
 
 ### Provenance
 
-Helm can verify the origin and integrity of the Helm chart by 
+Helm can verify the origin and integrity of the Helm chart by
 
 1. Importing the public GnuPG key:
 

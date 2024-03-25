@@ -24,8 +24,13 @@
 
 # Custom
 *.license
+*.gpg
+*.pgp
 .github/
 examples/
 template_output.yaml
 trivy.yaml
-values_overrides.yaml
+values_*.yaml
+.helmignore
+*.md.gotmpl
+*.tgz

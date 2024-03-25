@@ -253,6 +253,42 @@ Endpoints:
 * GraphDB workbench: http://graphdb.local/graphdb
 ```
 
+### Repository
+
+You can install GraphDB's Helm chart from our public Helm repository as well.
+
+1. Add Ontotext repository with
+
+    ```shell
+    helm repo add ontotext https://maven.ontotext.com/repository/helm-public/
+    ```
+
+2. Install GraphDB
+
+    ```shell
+    helm install graphdb ontotext/graphdb
+    ```
+
+### Provenance
+
+Helm can verify the origin and integrity of the Helm chart by 
+
+1. Importing the public GnuPG key:
+
+    ```shell
+    gpg --keyserver keyserver.ubuntu.com --recv-keys 8E1B45AF8157DB82
+    # Helm uses the legacy gpg format
+    gpg --export > ~/.gnupg/pubring.gpg
+    ```
+
+2. Running `helm install` with the `--verify` flag, i.e.:
+
+    ```shell
+    helm install --verify graphdb ontotext/graphdb
+    ```
+
+Note that the verification works only when installing from a local tar.gz or when installing from the repository.
+
 ## Persistence
 
 By default, the Helm chart is deploying persistent volumes that store data on the host path.

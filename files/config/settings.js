@@ -2,7 +2,7 @@
   "import.server" : { },
   "import.local" : { },
   "properties" : {
-  {{- if .Values.graphdb.security.enabled }}
+  {{- if .Values.security.enabled }}
     "security.enabled" : true,
   {{- end }}
     "current.location" : ""

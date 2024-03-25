@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "graphdb.fullname.configmap.properties" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+data:
+  graphdb.properties: |-
+    ##### GraphDB configurations #####
+    # See https://graphdb.ontotext.com/documentation/ for supported properties
+    graphdb.connector.port={{ .Values.containerPorts.http }}
+    graphdb.append.request.id.headers=true
+    graphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
+    graphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
+    {{- if eq (int .Values.replicas) 1}}
+    graphdb.external-url={{ include "graphdb.external-url" . }}
+    {{- end }}
+    {{- if .Values.configuration.properties }}
+    ##### Overrides from values.yaml #####
+    {{- range $key, $val := .Values.configuration.properties -}}
+    {{- if ne $val nil }}
+    {{ $key }}={{ tpl ($val | toString) $ | quote }}
+    {{- end }}
+    {{- end -}}
+    {{- end -}}

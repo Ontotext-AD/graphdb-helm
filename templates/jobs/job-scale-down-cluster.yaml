@@ -1,0 +1,73 @@
+{{- if .Values.cluster.jobs.scaleCluster.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "graphdb.fullname.job.scale-down-cluster" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade, pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    {{- with .Values.annotations }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.jobs.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.jobs.ttlSecondsAfterFinished }}
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jobs.podSecurityContext }}
+      securityContext: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: job-temp
+          emptyDir: {{ .Values.jobs.persistence.emptyDir | toYaml | nindent 12 }}
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
+      containers:
+        - name: scale-down-cluster
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GRAPHDB_POD_NAME
+              value: {{ include "graphdb.fullname" . }}
+            - name: GRAPHDB_SERVICE_NAME
+              value: {{ include "graphdb.fullname.service.headless" . }}
+            - name: GRAPHDB_SERVICE_PORT
+              value: {{ .Values.headlessService.ports.http | quote }}
+            - name: GRAPHDB_SERVICE_RPC_PORT
+              value: {{ .Values.headlessService.ports.rpc | quote }}
+            - name: GRAPHDB_PROXY_SERVICE_NAME
+              value: {{ include "graphdb-proxy.fullname" . }}
+            - name: GRAPHDB_PROXY_SERVICE_PORT
+              value: {{ .Values.proxy.headlessService.ports.http | quote }}
+            - name: GRAPHDB_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (tpl .Values.security.provisioner.existingSecret .) | default (include "graphdb.fullname.secret.provisioning-user" .) }}
+                  key: {{ .Values.security.provisioner.tokenKey }}
+          {{- with .Values.jobs.securityContext }}
+          securityContext: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.jobs.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: job-temp
+              mountPath: /tmp
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+          command: ["bash"]
+          args:
+            - "/tmp/utils/update-cluster.sh"
+            - "removeNodes"
+            - "{{ .Values.replicas }}"
+{{- end }}

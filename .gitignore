@@ -11,3 +11,8 @@
 # Helm
 values_overrides.yaml
 template_output.yaml
+
+# Sensitive files
+*.license
+*.gpg
+*.pgp

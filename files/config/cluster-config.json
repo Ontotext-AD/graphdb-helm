@@ -1,14 +1,9 @@
 {
-  "electionMinTimeout": {{ .Values.graphdb.clusterConfig.electionMinTimeout | int }},
-  "electionRangeTimeout": {{ .Values.graphdb.clusterConfig.electionRangeTimeout | int }},
-  "heartbeatInterval": {{ .Values.graphdb.clusterConfig.heartbeatInterval | int }},
-  "verificationTimeout": {{ .Values.graphdb.clusterConfig.verificationTimeout | int }},
-  "messageSizeKB": {{ .Values.graphdb.clusterConfig.messageSize | int }},
-  "transactionLogMaximumSizeGB": {{ .Values.graphdb.clusterConfig.transactionLogMaximumSizeGB | quote }},
-  "nodes": [
-    {{- range $i, $node_index := until (int .Values.graphdb.clusterConfig.nodesCount) }}
-    "graphdb-node-{{ $node_index }}.graphdb-node.{{ $.Release.Namespace }}.svc.cluster.local:7300"{{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index }},
-    {{- end }}
-    {{- end }}
-  ]
+  "electionMinTimeout": {{ .Values.cluster.config.params.electionMinTimeout | int }},
+  "electionRangeTimeout": {{ .Values.cluster.config.params.electionRangeTimeout | int }},
+  "heartbeatInterval": {{ .Values.cluster.config.params.heartbeatInterval | int }},
+  "verificationTimeout": {{ .Values.cluster.config.params.verificationTimeout | int }},
+  "messageSizeKB": {{ .Values.cluster.config.params.messageSizeKB | int }},
+  "transactionLogMaximumSizeGB": {{ .Values.cluster.config.params.transactionLogMaximumSizeGB | quote }},
+  "nodes": {{- include "graphdb.cluster.nodes.json" . | indent 2 }}
 }

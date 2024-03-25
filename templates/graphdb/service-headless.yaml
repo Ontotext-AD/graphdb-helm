@@ -1,0 +1,34 @@
+{{- if .Values.headlessService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphdb.fullname.service.headless" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.headlessService.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.headlessService.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "graphdb.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.headlessService.ports.http }}
+      targetPort: http
+      protocol: TCP
+    {{- if gt (int .Values.replicas) 1 }}
+    - name: rpc
+      port: {{ .Values.headlessService.ports.rpc }}
+      targetPort: rpc
+      protocol: TCP
+    {{- end }}
+    {{- with .Values.headlessService.extraPorts -}}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

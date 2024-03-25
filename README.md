@@ -1,263 +1,101 @@
-# Helm charts for GraphDB
+# Helm Chart for GraphDB
 
 [![CI](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml/badge.svg)](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml)
-![Version: 10.6.4](https://img.shields.io/badge/Version-10.6.4-informational?style=flat-square)
-![AppVersion: 10.6.4](https://img.shields.io/badge/AppVersion-10.6.4-informational?style=flat-square)
+![Version: 11.0.0](https://img.shields.io/badge/Version-11.0.0-informational?style=flat-square)
+![AppVersion: 10.6.2](https://img.shields.io/badge/AppVersion-10.6.2-informational?style=flat-square)
 
-You can download the GraphDB Helm chart, including all sub-charts managed by Ontotext, from the [Ontotext Helm repository](https://maven.ontotext.com/repository/helm-public/).
+<!--
+TODO: Add ArtifactHub badge when ready
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/ontotext)](https://artifacthub.io/packages/helm/ontotext/graphdb)
+-->
 
-## Install
-### Prerequisites
+Welcome to the official [Helm](https://helm.sh/) chart repository for [GraphDB](https://www.ontotext.com/products/graphdb/)!
+This Helm chart makes it easy to deploy and manage [GraphDB](https://www.ontotext.com/products/graphdb/) on your [Kubernetes](https://kubernetes.io/) cluster.
 
-#### Getting Started
+---
 
-If this is your first time installing a Helm chart, you should read the following introductions
-before continuing:
+:warning: **Important**: Beginning from version 11, the Helm chart has its own release cycle and is no longer tied to the version of GraphDB!
+
+---
+
+## Quickstart
+
+```shell
+helm repo add ontotext https://maven.ontotext.com/repository/helm-public/
+helm install graphdb ontotext/graphdb
+```
+
+## About GraphDB
+
+<p align="center">
+  <a href="https://www.ontotext.com/products/graphdb/">
+    <picture>
+      <img src="https://www.ontotext.com/wp-content/uploads/2022/09/Logo-GraphDB.svg" alt="GraphDB logo" title="GraphDB" height="75">
+    </picture>
+  </a>
+</p>
+
+Ontotext GraphDB is a highly efficient, scalable and robust graph database with RDF and SPARQL support. With excellent enterprise features,
+integration with external search applications, compatibility with industry standards, and both community and commercial support, GraphDB is the
+preferred database choice of both small independent developers and big enterprises.
+
+<!--
+TODO: Info about the basic Helm chart features ?
+## Features
+-->
+
+## Prerequisites
+
+* Kubernetes v1.26+
+* Helm v3.8+
+
+### Getting Started
+
+If this is your first time installing a Helm chart, you should read the following introductions before continuing:
 
 - Docker https://docs.docker.com/get-started/
 - Kubernetes concepts https://kubernetes.io/docs/concepts/
-- Minikube https://kubernetes.io/docs/setup/learning-environment/minikube/
 - Helm https://helm.sh/docs/intro/quickstart/
 
-#### Binaries
+After getting familiar with the above, you need to install the following binaries on your machine:
+
 - Install Helm 3: https://helm.sh/docs/intro/install/
 - Install `kubectl`: https://kubernetes.io/docs/tasks/tools/install-kubectl/
 
-**Note**: `sudo` may be required.
+Next, you would need access to a Kubernetes cluster. You can set up a local one or use one of the cloud providers, e.g.:
 
-#### Kubernetes environment
+* Minikube https://minikube.sigs.k8s.io/docs/
+* kind https://kind.sigs.k8s.io/
+* Amazon EKS https://aws.amazon.com/eks/
+* Azure AKS https://azure.microsoft.com/en-us/products/kubernetes-service
+* Google GKE https://cloud.google.com/kubernetes-engine
 
-##### Minikube
+### GraphDB License
 
-Follow the install documentation https://kubernetes.io/docs/setup/learning-environment/minikube/
-for Minikube.
+To use GraphDB Enterprise Edition features, you need a license.
+If you have a GraphDB license, create a Secret object with a `graphdb.license` data entry:
 
-**Driver**
-
-Carefully choose the suitable Minikube driver https://minikube.sigs.k8s.io/docs/drivers/ for
-your system.
-
-**Warning**: Some of them are compatible but have know issues. For example, the `docker` driver
-does not support the ingress add-on which is required while the `none` driver goes into DNS
-resolve loop in some Linux distributions.
-
-**Resources**
-
-It's important to define resource limitations for the Minikube environment, otherwise it will
-default to limits that may not be sufficient to deploy the whole chart.
-
-The default resource limitations require around **12GB** of RAM. This is configurable per service in
-[values.yaml](values.yaml) and should be tuned for every deployment.
-
-When starting Minikube, it's preferable to define a bit more than the required amount.
-For example, to create a Minikube environment in VirtualBox with 8 CPUs and 16GB of memory, use:
-
-```bash
-minikube start --vm-driver=virtualbox --cpus=8 --memory=16000
+```shell
+kubectl create secret generic graphdb-license --from-file graphdb.license=graphdb.license
 ```
 
-**Addons**
-
-Minikube has built in services as part of its add-on system. By default, some of the required
-plugins are disabled and have to be enabled.
-
-To expose services, enable Minikube's ingress with:
-
-```bash
-minikube addons enable ingress
-```
-
-To collect metrics, enable Minikube's metrics server with:
-
-```bash
-minikube addons enable metrics-server
-```
-
-To enable Minikube's monitoring dashboard with:
-
-```bash
-minikube dashboard
-```
-
-**DNS Resolving**
-
-The chart is deployed with a Kubernetes ingress service that is configured to listen for requests
-on a specific hostname. Any other requests are not handled.
-
-This hostname is specified in [values.yaml](values.yaml) under `deployment.host`.
-By default, it's configured for `localhost` which is suitable for the `none` Minikube driver.
-In every other case you have to reconfigure it to a hostname that is DNS resolvable.
-
-Some options are:
-
-* Configure or update an existing DNS server - recommended for production deployment
-* Update your hosts file - suitable for local development
-
-To find out the IP address of the Minikube environment, use:
-
-```bash
-minikube ip
-```
-
-If you wish to access GraphDB locally on http://graphdb.local/ and the IP address of
-the Minikube environment is `192.168.99.102` you should modify your hosts file with:
-
-```
-192.168.99.102  graphdb.local
-```
-
-See this how-to https://www.howtogeek.com/27350/beginner-geek-how-to-edit-your-hosts-file/
-about modifying the hosts file in different OS.
-
-#### Secrets
-
-If you have a GraphDB license, create a secret with a `graphdb.license`
-data entry:
-
-```bash
-kubectl create secret generic graphdb-license --from-file graphdb.license
-```
-then add the secret name to the values.yaml file as `graphdb.node.license`
+Then add the secret name to the values.yaml file under the `license.existingSecret` configuration.
 
 **Note**: Secret names can differ from the given examples in the [values.yaml](values.yaml), but their configurations should be updated
 to refer to the correct ones. Note that the licenses can be set for all node instances. Please setup correctly according to the licensing agreements.
 
-#### Updating an expired GraphDB license
+## Install
 
-When the helm chart is installed the license will be provisioned through the secret set in the `graphdb.node.license` value.
-When a license expires you'll have to update the secret, so GraphDB instances don't get provisioned with the old license.
-In order NOT to restart your current GraphDB instances, you can copy your new license named `graphdb.license` in your GraphDB pods in folder `/opt/graphdb/home/work`.
-It's important to name your file exactly `graphdb.license`!
+### Version Compatability
 
-```bash
-kubectl delete secret graphdb-license
-kubectl create secret generic graphdb-license --from-file graphdb.license
-kubectl cp graphdb.license graphdb-node-0:/opt/graphdb/home/work
-```
+| Helm chart version | GraphDB version |
+|--------------------|-----------------|
+| 10.x               | 10.0 - 10.6     |
+| 11.0               | 10.7            |
 
-**Note**: If you use a standalone GraphDB you can also change it through the workbench, but if you don't update the secret next restart will provision the old license.
+### Install from Repository
 
-### Cluster migration from GraphDB 9.x to 10.0
-
-**Warning**: Before starting the migration change your master into read only mode. The process is irreversible and full backup is HIGHLY advisable. At minimum backup the PV of the worker you are planing to use for migration.
-
-The Helm chart is completely new and not backwards-compatible.
-
-1. Make all masters read only, you can use the workbench.
-2. Using the workbench disconnect all repositories of the worker which we are going to use to migrate to 10.0.
-If you've used the official GraphDB helm chart you can select any worker. In case of a custom implementation select one that can easily be scaled down.
-
- **Note**: Only the repositories that are on the worker will be migrated into the new cluster!
-3. Get the PV information of the worker, noting down the capacity and the access mode:
-   ```bash
-   kubectl get pv
-   ```
-4. Note down the resource limits of the worker node:
-   ```bash
-   kubectl get pod graphdb-worker-<selected-worker> -o yaml | grep -B 2 memory
-   ```
-5. Make sure all the important settings saved in the settings.js of the master are present in the worker's. Their only difference
-   should be the lack of locations in the worker's settings.
-   ```bash
-   kubectl cp graphdb-master-1-0:/opt/graphdb/home/work/workbench/settings.js settings_m.js
-   kubectl cp graphdb-worker-<selected-worker>:/opt/graphdb/home/work/workbench/settings.js settings_w.js
-   diff settings_m.js settings_w.js
-   ```
-   If anything other than the locations is different between the files assume that the master's file is correct and copy it to the worker:
-   ```bash
-   kubectl cp settings_m.js graphdb-worker-<selected-worker>:/opt/graphdb/home/work/workbench/settings.js
-   ```
-6. During a replication of a node GraphDB 10 can take double the storage which 9.x takes, so you might need to increase your PV size! To do this
-   we recommend checking the documentation of your cloud service provider but in general the procedure is:
-   - Make sure `allowVolumeExpansion: true` is set in your used storageClass.
-   - Request a change in volume capacity by editing your PVC's `spec.resources.requests.storage`
-   - Verify the change has taken effect with `get pvc <pvc-name> -o yaml` and checking the `status.capacity` field.
-7. Scale down the selected worker. In the official GraphDB every worker has it's' own statefulset.
-   List all the statefulsets to find the name of the worker you want to scale down:
-   ```bash
-   kubectl get statefulsets
-   ```
-   Then change the number of replicas to 0:
-   ```bash
-   kubectl scale statefulsets <stateful-set-name> --replicas=0
-   ```
-8. Once the worker is down patch the worker's PV with `"persistentVolumeReclaimPolicy":"Retain"`:
-   ```bash
-   kubectl patch pv <worker-pv-name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
-   ```
-9. Delete the worker's PVC.
-   ```bash
-   kubectl delete pvc <worker-pvc-name>
-   ```
-10. Patch the PV with `"claimRef":null` so it can go from status Released to Available:
-    ```bash
-    kubectl patch pv <worker-pv-name> -p '{"spec":{"claimRef":null}}'
-    ```
-11. Patch the PV with `claimRef` matching the PVC that will be generated by the `volumeClaimTemplates`:
-    ```bash
-    kubectl patch pv <worker-pv-name> -p '{"spec":{"claimRef":{"name":"graphdb-node-data-dynamic-pvc-graphdb-node-0"}}}'
-    ```
-12. Create a namespace for the GraphDB 10 helm chart, so we can deploy it without having to delete our 9.x cluster:
-    ```bash
-    kubectl create namespace <new-namespace-name>
-    ```
-13. Patch/Move the worker's PV to the new namespace:
-    ```bash
-    kubectl patch pv <worker-pv-name> -p '{"spec":{"claimRef":{"namespace":"<namespace-name>"}}}'
-    ```
-14. Create a secret with your license in the new namespace:
-     ```bash
-    graphdb-license --from-file graphdb.license -n <new-namespace-name>
-    ```
-15. Install the 10.0 Helm chart. Remember to edit:
-- `graphdb.node.resources.limits.memory` and `graphdb.node.resources.requests.memory` to the ones used by the old workers.
-- `graphdb.nodesCount:` The raft protocol recommends an odd amount of nodes. Set to the amount of workers you had in the old cluster.
-- `graphdb.node.persistance.volumeClaimTemplateSpec.accessModes` and `graphdb.node.persistance.volumeClaimTemplateSpec.resources.requests.storage` to the ones used by the old PVs.
-- `graphdb.clusetConfig.clusterCreationTimeout` high enough so the data from the old worker has time to replicate to all the new nodes. This depends on network speed between the nodes and the read/write performance of the storage. If the replication is expected to take more than 5 minutes add an equivalent `--timeout XXm` to the helm install command.
-- `deployment.host` to temporary address where you can test everything is working.
-
-16. Once you confirm everything has migrated and works as expected you can free up the old `deployment.host` and upgrade the new cluster to it.
-
-**Note**: If you decide to revert to 9.x and don't have a backup of the worker's PV, you won't be able to use the old PV as GraphDB 10's repositories and settings aren't backward compatible.
-Your best course of action would be to make sure it will provision a new clean PV, scale the replica back from 0, recreate the worker repositories and reconnect them to the old master repositories letting GraphDB replicate the data.
-
-### Quick Start
-
-The Helm chart includes an example repository configuration TTLs.
-
-To install the GraphDB on `graphdb.local`:
-
-```bash
-helm install --set deployment.host=graphdb.local graphdb .
-```
-
-After a few seconds, Helm will print out the result from installing GraphDB.
-You should see the following output:
-
-```
--------------------------------------------------------------------------------
-        ____                 _     ____  ____
-       / ___|_ __ __ _ _ __ | |__ |  _ \| __ )
-      | |  _| '__/ _` | '_ \| '_ \| | | |  _ \
-      | |_| | | | (_| | |_) | | | | |_| | |_) |
-       \____|_|  \__,_| .__/|_| |_|____/|____/
-                      |_|
--------------------------------------------------------------------------------
-version: 10.0.0
-GDB cluster: true
-
-** Please be patient while the chart is being deployed and services are available **
-You can check their status with kubectl get pods
-
-Endpoints:
-* GraphDB workbench: http://graphdb.local/graphdb
-```
-
-### Repository
-
-You can install GraphDB's Helm chart from our public Helm repository as well.
-
-1. Add Ontotext repository with
+1. Add Ontotext repository
 
     ```shell
     helm repo add ontotext https://maven.ontotext.com/repository/helm-public/
@@ -269,11 +107,19 @@ You can install GraphDB's Helm chart from our public Helm repository as well.
     helm install graphdb ontotext/graphdb
     ```
 
+3. Upgrade GraphDB deployment
+
+   ```shell
+   helm upgrade --install graphdb ontotext/graphdb
+   ```
+
+See [Configuration](#configuration) and [values.yaml](values.yaml) on how to customize your GraphDB deployment.
+
 ### Provenance
 
-Helm can verify the origin and integrity of the Helm chart by
+Helm can verify the origin and integrity of the Helm chart by:
 
-1. Importing the public GnuPG key:
+1. Importing the public GnuPG key for GraphDB Helm:
 
     ```shell
     gpg --keyserver keyserver.ubuntu.com --recv-keys 8E1B45AF8157DB82
@@ -287,46 +133,47 @@ Helm can verify the origin and integrity of the Helm chart by
     helm install --verify graphdb ontotext/graphdb
     ```
 
-Note that the verification works only when installing from a local tar.gz or when installing from the repository.
+**Note**: The verification works only when installing from a local tar.gz or when installing from the repository.
 
-## Persistence
+Check the official documentation for more information https://helm.sh/docs/topics/provenance/
 
-By default, the Helm chart is deploying persistent volumes that store data on the host path.
-This is useful for local Minikube deployments. However, in a cloud environment with multiple node
-cluster this would lead to rescheduling and **data loss**.
+### Uninstall
 
-See https://kubernetes.io/docs/concepts/storage/volumes/.
+To remove the deployed GraphDB, use:
 
-### Local deployment
+```shell
+helm uninstall graphdb
+```
 
-Local persistent volumes are configured with `graphdb.node.persistence` from [values.yaml](values.yaml).
+**Note**: It is important to note that this will not remove any data, so the next time it is installed, the data will be loaded by its components.
 
-### Cloud deployment
+## Upgrading
 
-For cloud deployment, you have to prepare persistent disks, storage class (or classes) and finally
-persistent volumes manifests. Once this is done, every component must be reconfigured in
-[values.yaml](values.yaml) to point to the new persistent volume and not the default one. Each
-component has a section `persistence` that has to be updated.
+The Helm chart follows [Semantic Versioning v2](https://semver.org/) so any breaking changes will be rolled out only in MAJOR versions of the chart.
 
-## API Gateway
+Please, always check out the migration guides in [UPGRADE.md](UPGRADE.md) before switching to another major version of the Helm chart.
 
-The services are proxied using nginx Ingress gateway. By default, it is configured to route:
+## Configuration
 
-- GraphDB Workbench
-- GraphDB cluster proxy if the cluster deployment is enabled
+Every component and resource is configured with sensible defaults in [values.yaml](values.yaml).
+Make sure you read it thoroughly, understand each property and the impact of changing any one of them.
 
-## Customizing
+Helm allows you to override values from [values.yaml](values.yaml) in several ways.
+See https://helm.sh/docs/chart_template_guide/values_files/.
 
-Every component in configured with sensible defaults. Some of them are applied from
-[values.yaml](values.yaml). Make sure you read it thoroughly, understand each property and the
-impact of changing any one of them.
+* Using a separate values.yaml with overrides:
+  ```shell
+  helm install graphdb ontotext/graphdb -f overrides.yaml
+  ```
 
-**Note**: If you are familiar with Kubernetes, you could modify the component's configuration
-templates directly.
+* Overriding specific values:
+  ```shell
+  helm install graphdb ontotext/graphdb --set security.enabled=true
+  ```
 
-#### Ontop repositories
+### Ontop repositories
 
-Ontop repositories require a jdbc driver. To use this type of repository, you have to provide a jdbc driver named `jdbc-driver.jar`.
+Ontop repositories require a JDBC driver. To use this type of repository, you have to provide a JDBC driver named `jdbc-driver.jar`.
 It must be located in each GraphDB instance in which you wish to use with Ontop repository, in the folder `/opt/graphdb/home/jdbc-driver`.
 The directory is part of the GraphDB home directory which is persistent, so the driver will persist after a restart or reschedule of a GraphDB pod.
 
@@ -340,23 +187,23 @@ There are 3 important configuration sections:
 
 #### GraphDB cluster configuration
 
-With the release of GraphDB 10, master nodes are no longer needed for a cluster, so the size of the cluster is controlled by just one property: `graphdb.clusterConfig.nodesCount`.
+With the release of GraphDB 10, master nodes are no longer needed for a cluster, so the size of the cluster is controlled by just one property: `replicas`.
 You will need at least three GraphDB installations to create a fully functional cluster. Remember that the Raft algorithm recommends an odd number of nodes, so a cluster of five nodes is a good choice.
 
-Note: If "1" is selected as node count, the launched node will be standalone and no instances of the cluster proxy will be deployed!
+Note: If `1` is selected as node count, the launched node will be standalone and no instances of the cluster proxy will be deployed!
 
-- The section `graphdb.clusterConfig` can be used to configure a GraphDB cluster.
+- The section `cluster.config` can be used to configure a GraphDB cluster.
 
 See more about the cluster here: https://graphdb.ontotext.com/documentation/10.0/cluster-basics.html
 
-#### Deploying GraphDB with security
+### Deploying GraphDB with security
 
-GraphDB's Helm chart supports deploying GraphDB with or without security. This can be toggled through `graphdb.security.enabled`.
+GraphDB's Helm chart supports deploying GraphDB with or without security. This can be toggled through `security.enabled`.
 If it is deployed with security enabled, a special provisioning user is used for repository provisioning, cluster linking, health checks and so on.
 Additional users can be added through the users file: `files/config/users.js`. The users are described with their roles, username and a bcrypt64 password.
 
-The file can be provisioned before GraphDB's startup with the `usersConfigMap` configmap or left to default.
-It can be overridden with other configmap containing the `users.js` file.
+The file can be provisioned before GraphDB's startup with the `security.initialUsers` configurations.
+It can be overridden with other configmap containing the `users.js` file with `security.initialUsers.existingSecret`.
 Note that the `provisioning` user is required when security is turned on!
 
 By default, if the security is turned on, GraphDB's basic security method is used. More complicated security configurations
@@ -366,47 +213,38 @@ See https://graphdb.ontotext.com/documentation/10.0/access-control.html
 
 Prior to GraphDB 10.0.0 the users and their settings were saved in the `settings.js` file.
 
-#### Provisioning additional properties and settings
+### Provisioning additional properties and settings
 
-Most of GraphDB's properties can be passed through `java_args`. Another option is to supply a `graphdb.properties` file.
-This file can be provisioned on during GraphDB's startup using `propertiesConfigMap`configmap or left to default.
-It can be overridden with other configmap containing the `graphdb.properties` file.
+Most of GraphDB's properties can be passed through `configuration.properties` or `configuration.javaArguments`.
+Another option is to supply a `graphdb.properties` file.
+This file can be provisioned on during GraphDB's startup using `configuration.extraProperties.existingConfigmap`.
 
 The `graphdb.properties` file is also used for more complex security configurations such as LDAP, Oauth, Kerberos.
 
 Some additional settings are kept in the `settings.js` file. Most of those settings are internal for GraphDB and better left managed by the client.
-The file can be provisioned before GraphDB's startup with the `settingsConfigMap` configmap or left to default.
-It can be overridden with other configmap containing the `settings.js` file.
+The file can be provisioned before GraphDB's startup with the `configuration.initialSettings.existingSecret` configuration.
 Note the `settings.js` must contain `security.enabled" : true` property when security is turned on!
 
-GraphDB uses logback to configure logging using the `logback.xml` file.
-The file can be provisioned before GraphDB's startup with the `logbackConfigMap` configmap or left to default.
-It can be overridden with other configmap containing the `logback.xml` file.
+GraphDB uses Logback to configure logging using the `logback.xml` file.
+The file can be provisioned before GraphDB's startup with the `configuration.logback.existingConfigmap` configuration.
 
 See https://graphdb.ontotext.com/documentation/10.0/configuring-graphdb.html?highlight=properties
 See https://graphdb.ontotext.com/documentation/10.0/access-control.html
 
-#### Importing data from existing persistent volume
+### Importing data from existing persistent volume
+
 GraphDB supports attaching a folder as an import directory. The directory's content s visible in the Workbench and can be imported.
-In the Helm chart you can use existing PV as an import directory. This is done through `graphdb.import_directory_mount` using a `volumeClaimTemplateSpec`.
-This way a dynamic PV/PVC can be provisioned, or you can use an existing PV. If an existing PV is used, have in mind that the dynamically provisioned PVC name is `graphdb-server-import-dir-graphdb-master-1-0`, so an appropriate `claimRef` must be added to the existing PV.
+In the Helm chart you can use existing PV as an import directory. This is done through `import.volumeMount` using a `volumeClaimTemplateSpec`.
+This way a dynamic PV/PVC can be provisioned, or you can use an existing PV with an appropriate `claimRef`.
 
 ### Networking
 
 By default, GraphDB's Helm chart comes with a default Ingress.
-The Ingress =can be disabled by switching `ingress.enabled` to false.
+The Ingress can be disabled by switching `ingress.enabled` to false.
 
 ### Cloud deployments specifics
 
-Some cloud kubernetes clusters have some specifics that should be noted. Here are some useful tips on some cloud K8s clusters:
-
-##### Google cloud
-
-In Google's k8s cluster services, the root directory is not writable. By default, GraphDB's chart uses `/data` directory to store instances data.
-If you're using Google cloud, please change this path to something else, not located on the root level.
-
-By default, the ingress used in the helm chart utilizes NGINX as ingress.class.
-The easiest way to make it work inside the GKE is by deploying a NGINX ingress controller. Information on how that can be achieved can be found here: https://cloud.google.com/community/tutorials/nginx-ingress-gke
+Some cloud Kubernetes clusters have some specifics that should be noted. Here are some useful tips on some cloud K8s clusters:
 
 ##### Microsoft Azure
 
@@ -415,32 +253,11 @@ not good enough for GraphDB, and we recommend against using it in production env
 
 See https://github.com/Azure/AKS/issues/223
 
-### values.yaml
-
-Helm allows you to override values from [values.yaml](values.yaml) in several ways.
-See https://helm.sh/docs/chart_template_guide/values_files/.
-
-- Preparing another *values.yaml*:
-
-```bash
-helm install graphdb . -f overrides.yaml
-```
-
-- Overriding specific values:
-
-```bash
-helm install graphdb . --set deployment.host=graphdb.local --set security.enabled=true
-```
-
 ### Deployment
 
 Some important properties to update according to your deployment are:
 
-* `deployment.protocol` and `deployment.host` - configure the ingress
-controller and some components on which they are accessible. The `deployment.host` must be a
-resolvable hostname and not an IP address.
-* `deployment.storage` configures components where to store their persistent data on the host system
-running the Kubernetes environment.
+* `configuration.externalUrl` - Configures the address at which the Ingress controller and GraphDB are accessible.
 
 ### Resources
 
@@ -457,124 +274,337 @@ See the Kubernetes documentation
 https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
 about defining resource limits.
 
+## Examples
+
+Checkout the [examples/](examples) folder in this repository.
+
+## Guides
+
+### Updating an expired GraphDB license
+
+When the license expires, you will have to update the Secret object and restart the GraphDB pods in order to load the new license.
+
+In avoid restarting your current GraphDB instances, you can copy the new license directly into your GraphDB containers, in the folder `/opt/graphdb/home/conf`.
+It's important to name your file exactly `graphdb.license`!
+
+```shell
+kubectl delete secret graphdb-license
+kubectl create secret generic graphdb-license --from-file graphdb.license=graphdb.license
+kubectl cp graphdb.license graphdb-pod-0:/opt/graphdb/home/conf/
+kubectl cp graphdb.license graphdb-pod-1:/opt/graphdb/home/conf/
+kubectl cp graphdb.license graphdb-pod-2:/opt/graphdb/home/conf/
+```
+
 ## Values
+
+<!--
+IMPORTANT: This is generated by helm-docs, do not attempt modifying it on hand as it will be automatically generated.
+-->
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| deployment.host | string | `"localhost"` |  |
-| deployment.imagePullPolicy | string | `"IfNotPresent"` | Defines the policy with which components will request their image. |
-| deployment.ingress | object | `{"annotations":{},"class":"nginx","enabled":true,"maxRequestSize":"512M","timeout":{"connect":5,"read":600,"send":600}}` | Ingress related configurations |
-| deployment.ingress.annotations | object | `{}` | Sets extra ingress annotations |
-| deployment.ingress.maxRequestSize | string | `"512M"` | Sets the maximum size for all requests to the underlying Nginx |
-| deployment.ingress.timeout | object | `{"connect":5,"read":600,"send":600}` | Default timeouts in seconds for the underlying Nginx. |
-| deployment.protocol | string | `"http"` | The hostname and protocol at which the graphdb will be accessible. Needed to configure ingress as well as some components require it to properly render their UIs |
-| deployment.tls.enabled | bool | `false` | Feature toggle for SSL termination. Disabled by default. If TLS is enabled, the protocol should also be updated (https) |
-| deployment.tls.secretName | string | `nil` | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment. |
-| extraLabels | object | `{}` |  |
+| affinity | object | `{}` |  |
+| annotations | object | `{}` |  |
+| args | list | `[]` |  |
+| automountServiceAccountToken | bool | `false` |  |
+| cluster.clusterCreationTimeout | int | `60` |  |
+| cluster.config.configmapKey | string | `"cluster-config.json"` |  |
+| cluster.config.existingConfigmap | string | `""` |  |
+| cluster.config.params.electionMinTimeout | int | `8000` |  |
+| cluster.config.params.electionRangeTimeout | int | `6000` |  |
+| cluster.config.params.heartbeatInterval | int | `2000` |  |
+| cluster.config.params.messageSizeKB | int | `64` |  |
+| cluster.config.params.transactionLogMaximumSizeGB | int | `50` |  |
+| cluster.config.params.verificationTimeout | int | `1500` |  |
+| cluster.jobs.createCluster.enabled | bool | `true` |  |
+| cluster.jobs.patchCluster.enabled | bool | `true` |  |
+| cluster.jobs.scaleCluster.enabled | bool | `true` |  |
+| cluster.token.existingSecret | string | `""` |  |
+| cluster.token.secret | string | `"s3cr37"` |  |
+| cluster.token.secretKey | string | `""` |  |
+| command | list | `[]` |  |
+| configuration.defaultJavaArguments | string | `"-XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops"` |  |
+| configuration.externalUrl | string | `"http://graphdb.127.0.0.1.nip.io/"` |  |
+| configuration.extraProperties.configmapKey | string | `"graphdb.properties"` |  |
+| configuration.extraProperties.existingConfigmap | string | `""` |  |
+| configuration.extraProperties.existingSecret | string | `""` |  |
+| configuration.extraProperties.secretKey | string | `"graphdb.properties"` |  |
+| configuration.initialSettings.configmapKey | string | `"settings.js"` |  |
+| configuration.initialSettings.existingConfigmap | string | `""` |  |
+| configuration.javaArguments | string | `""` |  |
+| configuration.logback.configmapKey | string | `"logback.xml"` |  |
+| configuration.logback.existingConfigmap | string | `""` |  |
+| configuration.properties | object | `{}` |  |
+| configuration.secretProperties | object | `{}` |  |
+| containerPorts.http | int | `7200` |  |
+| containerPorts.rpc | int | `7300` |  |
+| dnsConfig | object | `{}` |  |
+| dnsPolicy | string | `""` |  |
+| extraContainerPorts | object | `{}` |  |
+| extraContainers | list | `[]` |  |
+| extraEnv | list | `[]` |  |
+| extraEnvFrom | list | `[]` |  |
+| extraInitContainers | list | `[]` |  |
+| extraObjects | list | `[]` |  |
+| extraVolumeClaimTemplates | list | `[]` |  |
+| extraVolumeMounts | list | `[]` |  |
+| extraVolumes | list | `[]` |  |
+| fullnameOverride | string | `""` |  |
+| global.clusterDomain | string | `"cluster.local"` |  |
 | global.imagePullSecrets | list | `[]` |  |
-| global.imageRegistry | string | `"docker.io"` |  |
-| global.storageClass | string | `"standard"` |  |
-| graphdb.clusterConfig.clusterCreationTimeout | int | `60` | Timeout for the cluster creation CURL query. Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command. |
-| graphdb.clusterConfig.clusterSecret | string | `"s3cr37"` | A secret used for secure communication amongst the nodes in the cluster. |
-| graphdb.clusterConfig.electionMinTimeout | int | `8000` | Cluster configuration parameters: Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters The minimum wait time in milliseconds for a heartbeat from a leader. |
-| graphdb.clusterConfig.electionRangeTimeout | int | `6000` |  |
-| graphdb.clusterConfig.existingClusterConfig | string | `nil` | Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation |
-| graphdb.clusterConfig.heartbeatInterval | int | `2000` |  |
-| graphdb.clusterConfig.messageSize | int | `64` |  |
-| graphdb.clusterConfig.nodesCount | int | `1` | Number of GraphDB nodes to be used in the cluster. Set value to 1 to run a standalone GraphDB instance. |
-| graphdb.clusterConfig.transactionLogMaximumSizeGB | int | `50` |  |
-| graphdb.clusterConfig.verificationTimeout | int | `1500` |  |
-| graphdb.clusterProxy.affinity | object | `{}` |  |
-| graphdb.clusterProxy.extraEnv | list | `[]` |  |
-| graphdb.clusterProxy.extraEnvFrom | list | `[]` |  |
-| graphdb.clusterProxy.extraInitContainers | list | `[]` |  |
-| graphdb.clusterProxy.extraVolumeMounts | list | `[]` |  |
-| graphdb.clusterProxy.extraVolumes | list | `[]` |  |
-| graphdb.clusterProxy.headlessService | object | `{"annotations":{}}` | GraphDB cluster proxy headless service configurations |
-| graphdb.clusterProxy.java_args | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` | Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.clusterProxy.livenessProbe | object | `{"httpGet":{"path":"/proxy/health","port":"gdb-proxy-port"},"initialDelaySeconds":120,"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.clusterProxy.nodeSelector | object | `{}` |  |
-| graphdb.clusterProxy.persistence | object | `{"enablePersistence":true,"volumeClaimTemplateSpec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"500Mi"}}}}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.clusterProxy.podAnnotations | object | `{}` |  |
-| graphdb.clusterProxy.podLabels | object | `{}` |  |
-| graphdb.clusterProxy.podSecurityContext | object | `{}` |  |
-| graphdb.clusterProxy.readinessProbe | object | `{"httpGet":{"path":"/proxy/ready","port":"gdb-proxy-port"},"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.clusterProxy.replicas | int | `1` | Number of cluster proxies used to access the GraphDB cluster |
-| graphdb.clusterProxy.resources | object | `{"limits":{"memory":"1500Mi"},"requests":{"cpu":"100m","memory":"1500Mi"}}` | Minimum requirements for a successfully running GraphDB cluster proxy |
-| graphdb.clusterProxy.revisionHistoryLimit | int | `10` |  |
-| graphdb.clusterProxy.securityContext | object | `{}` |  |
-| graphdb.clusterProxy.service | object | `{"annotations":{}}` | GraphDB cluster proxy service configurations |
-| graphdb.clusterProxy.serviceType | string | `"LoadBalancer"` | Service type used by the graphdb-cluster-proxy service Note: If using ALB in AWS EKS this will default to being on the public internet |
-| graphdb.clusterProxy.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/proxy/ready","port":"gdb-proxy-port"},"periodSeconds":5,"timeoutSeconds":3}` | Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.clusterProxy.terminationGracePeriodSeconds | int | `30` |  |
-| graphdb.clusterProxy.tolerations | list | `[]` |  |
-| graphdb.clusterProxy.topologySpreadConstraints | list | `[]` |  |
-| graphdb.configs | string | `nil` | References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html |
-| graphdb.import_directory_mount.enabled | bool | `false` |  |
-| graphdb.import_directory_mount.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
-| graphdb.import_directory_mount.volumeClaimTemplateSpec.resources.requests.storage | string | `"10Gi"` |  |
-| graphdb.jobPodSecurityContext | object | `{}` |  |
-| graphdb.jobResources | object | `{}` |  |
-| graphdb.jobSecurityContext | object | `{}` |  |
-| graphdb.node.affinity | object | `{}` |  |
-| graphdb.node.args | string | `nil` |  |
-| graphdb.node.command | string | `nil` |  |
-| graphdb.node.extraEnv | list | `[]` |  |
-| graphdb.node.extraEnvFrom | list | `[]` |  |
-| graphdb.node.extraInitContainers | list | `[]` |  |
-| graphdb.node.extraVolumeMounts | list | `[]` |  |
-| graphdb.node.extraVolumes | list | `[]` |  |
-| graphdb.node.initContainerResources | object | `{}` |  |
-| graphdb.node.initContainerSecurityContext | object | `{}` |  |
-| graphdb.node.java_args | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` | Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.node.license | string | `nil` | Reference to a secret containing 'graphdb.license' file to be used by the nodes. Important: Must be created beforehand |
-| graphdb.node.licenseFilename | string | `"graphdb.license"` | File name of the GraphDB license file in the existing license secret. Default is graphdb.license |
-| graphdb.node.livenessProbe | object | `{"httpGet":{"path":"/protocol","port":"graphdb"},"initialDelaySeconds":60,"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB node liveness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.node.nodeSelector | object | `{}` |  |
-| graphdb.node.persistence | object | `{"volumeClaimTemplateSpec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"5Gi"}}}}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.node.podAnnotations | object | `{}` |  |
-| graphdb.node.podLabels | object | `{}` |  |
-| graphdb.node.podSecurityContext | object | `{}` |  |
-| graphdb.node.readinessProbe | object | `{"httpGet":{"path":"/protocol","port":"graphdb"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB node readiness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.node.resources | object | `{"limits":{"memory":"2Gi"},"requests":{"cpu":0.5,"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to the GraphDB documentation https://graphdb.ontotext.com/documentation/10.6/requirements.html |
-| graphdb.node.revisionHistoryLimit | int | `10` |  |
-| graphdb.node.securityContext | object | `{}` |  |
-| graphdb.node.service | object | `{"annotations":{}}` | GraphDB node service configurations |
-| graphdb.node.startupProbe | object | `{"failureThreshold":30,"httpGet":{"path":"/protocol","port":"graphdb"},"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.node.terminationGracePeriodSeconds | int | `120` |  |
-| graphdb.node.tolerations | list | `[]` |  |
-| graphdb.node.topologySpreadConstraints | list | `[]` |  |
-| graphdb.pdb.create | bool | `false` |  |
-| graphdb.pdb.maxUnavailable | string | `nil` |  |
-| graphdb.pdb.minAvailable | string | `"51%"` |  |
-| graphdb.security.enabled | bool | `false` |  |
-| graphdb.security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
-| graphdb.security.provisioningUsername | string | `"provisioner"` |  |
-| graphdb.workbench.subpath | string | `"/graphdb"` | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front) |
-| images.busybox.repository | string | `"busybox"` |  |
-| images.busybox.tag | string | `"1.36.1"` |  |
-| images.graphdb.registry | string | `"docker.io"` |  |
-| images.graphdb.repository | string | `"ontotext/graphdb"` |  |
-| images.graphdb.tag | string | `""` |  |
+| global.imageRegistry | string | `""` |  |
+| headlessService.annotations | object | `{}` |  |
+| headlessService.enabled | bool | `true` |  |
+| headlessService.extraPorts | list | `[]` |  |
+| headlessService.labels | object | `{}` |  |
+| headlessService.ports.http | int | `7200` |  |
+| headlessService.ports.rpc | int | `7300` |  |
+| image.digest | string | `""` |  |
+| image.pullPolicy | string | `"IfNotPresent"` |  |
+| image.pullSecrets | list | `[]` |  |
+| image.registry | string | `"docker.io"` |  |
+| image.repository | string | `"ontotext/graphdb"` |  |
+| image.tag | string | `""` |  |
+| import.volumeMount.enabled | bool | `false` |  |
+| import.volumeMount.volumeClaimTemplate.annotations | object | `{}` |  |
+| import.volumeMount.volumeClaimTemplate.labels | object | `{}` |  |
+| import.volumeMount.volumeClaimTemplate.spec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| import.volumeMount.volumeClaimTemplate.spec.resources.requests.storage | string | `"10Gi"` |  |
+| ingress.annotations | object | `{}` |  |
+| ingress.className | string | `""` |  |
+| ingress.enabled | bool | `true` |  |
+| ingress.extraHosts | list | `[]` |  |
+| ingress.extraTLS | list | `[]` |  |
+| ingress.host | string | `""` |  |
+| ingress.labels | object | `{}` |  |
+| ingress.path | string | `""` |  |
+| ingress.pathType | string | `"Prefix"` |  |
+| ingress.tls.enabled | bool | `false` |  |
+| ingress.tls.secretName | string | `nil` |  |
+| initContainerDataPermissions.enabled | bool | `false` |  |
+| initContainerDataPermissions.securityContext.runAsNonRoot | bool | `false` |  |
+| initContainerDataPermissions.securityContext.runAsUser | int | `0` |  |
+| initContainerResources.limits.cpu | string | `"50m"` |  |
+| initContainerResources.limits.memory | string | `"16Mi"` |  |
+| initContainerResources.requests.cpu | string | `"50m"` |  |
+| initContainerResources.requests.memory | string | `"16Mi"` |  |
+| initContainerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
+| initContainerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| initContainerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
+| initContainerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| jobs.backoffLimit | int | `10` |  |
+| jobs.persistence.emptyDir.sizeLimit | string | `"10Mi"` |  |
+| jobs.podSecurityContext.fsGroup | int | `10001` |  |
+| jobs.podSecurityContext.fsGroupChangePolicy | string | `"OnRootMismatch"` |  |
+| jobs.podSecurityContext.runAsGroup | int | `10001` |  |
+| jobs.podSecurityContext.runAsNonRoot | bool | `true` |  |
+| jobs.podSecurityContext.runAsUser | int | `10001` |  |
+| jobs.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| jobs.resources.limits.cpu | string | `"50m"` |  |
+| jobs.resources.limits.ephemeral-storage | string | `"10Mi"` |  |
+| jobs.resources.limits.memory | string | `"16Mi"` |  |
+| jobs.resources.requests.cpu | string | `"50m"` |  |
+| jobs.resources.requests.ephemeral-storage | string | `"10Mi"` |  |
+| jobs.resources.requests.memory | string | `"16Mi"` |  |
+| jobs.securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| jobs.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| jobs.securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| jobs.securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| jobs.ttlSecondsAfterFinished | int | `300` |  |
+| labels | object | `{}` |  |
+| license.existingSecret | string | `""` |  |
+| license.licenseFilename | string | `"graphdb.license"` |  |
+| livenessProbe.httpGet.path | string | `"/protocol"` |  |
+| livenessProbe.httpGet.port | string | `"http"` |  |
+| livenessProbe.initialDelaySeconds | int | `60` |  |
+| livenessProbe.periodSeconds | int | `10` |  |
+| livenessProbe.timeoutSeconds | int | `5` |  |
+| nameOverride | string | `""` |  |
+| namespaceOverride | string | `""` |  |
+| nodeSelector | object | `{}` |  |
+| persistence.emptyDir.sizeLimit | string | `"1Gi"` |  |
+| persistence.enabled | bool | `true` |  |
+| persistence.volumeClaimTemplate.annotations | object | `{}` |  |
+| persistence.volumeClaimTemplate.labels | object | `{}` |  |
+| persistence.volumeClaimTemplate.spec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| persistence.volumeClaimTemplate.spec.resources.requests.storage | string | `"5Gi"` |  |
+| podAnnotations | object | `{}` |  |
+| podDisruptionBudget.enabled | bool | `true` |  |
+| podDisruptionBudget.maxUnavailable | string | `""` |  |
+| podDisruptionBudget.minAvailable | string | `"51%"` |  |
+| podLabels | object | `{}` |  |
+| podManagementPolicy | string | `"Parallel"` |  |
+| podSecurityContext.fsGroup | int | `10001` |  |
+| podSecurityContext.fsGroupChangePolicy | string | `"OnRootMismatch"` |  |
+| podSecurityContext.runAsGroup | int | `10001` |  |
+| podSecurityContext.runAsNonRoot | bool | `true` |  |
+| podSecurityContext.runAsUser | int | `10001` |  |
+| podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| proxy.affinity | object | `{}` |  |
+| proxy.annotations | object | `{}` |  |
+| proxy.args | list | `[]` |  |
+| proxy.command | list | `[]` |  |
+| proxy.configuration.defaultJavaArguments | string | `"-XX:+UseContainerSupport -XX:MaxRAMPercentage=70"` |  |
+| proxy.configuration.extraProperties.configmapKey | string | `"graphdb.properties"` |  |
+| proxy.configuration.extraProperties.existingConfigmap | string | `""` |  |
+| proxy.configuration.extraProperties.existingSecret | string | `""` |  |
+| proxy.configuration.extraProperties.secretKey | string | `"graphdb.properties"` |  |
+| proxy.configuration.javaArguments | string | `""` |  |
+| proxy.configuration.logback.configmapKey | string | `"logback.xml"` |  |
+| proxy.configuration.logback.existingConfigmap | string | `""` |  |
+| proxy.configuration.properties | object | `{}` |  |
+| proxy.configuration.secretProperties | object | `{}` |  |
+| proxy.containerPorts.http | int | `7200` |  |
+| proxy.containerPorts.rpc | int | `7300` |  |
+| proxy.dnsConfig | object | `{}` |  |
+| proxy.dnsPolicy | string | `""` |  |
+| proxy.extraContainerPorts | object | `{}` |  |
+| proxy.extraContainers | list | `[]` |  |
+| proxy.extraEnv | list | `[]` |  |
+| proxy.extraEnvFrom | list | `[]` |  |
+| proxy.extraInitContainers | list | `[]` |  |
+| proxy.extraVolumeClaimTemplates | list | `[]` |  |
+| proxy.extraVolumeMounts | list | `[]` |  |
+| proxy.extraVolumes | list | `[]` |  |
+| proxy.fullnameOverride | string | `""` |  |
+| proxy.headlessService.annotations | object | `{}` |  |
+| proxy.headlessService.enabled | bool | `true` |  |
+| proxy.headlessService.extraPorts | list | `[]` |  |
+| proxy.headlessService.labels | object | `{}` |  |
+| proxy.headlessService.ports.http | int | `7200` |  |
+| proxy.headlessService.ports.rpc | int | `7300` |  |
+| proxy.initContainerDataPermissions.enabled | bool | `false` |  |
+| proxy.initContainerDataPermissions.securityContext.runAsNonRoot | bool | `false` |  |
+| proxy.initContainerDataPermissions.securityContext.runAsUser | int | `0` |  |
+| proxy.initContainerResources.limits.cpu | string | `"50m"` |  |
+| proxy.initContainerResources.limits.memory | string | `"16Mi"` |  |
+| proxy.initContainerResources.requests.cpu | string | `"50m"` |  |
+| proxy.initContainerResources.requests.memory | string | `"16Mi"` |  |
+| proxy.initContainerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
+| proxy.initContainerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| proxy.initContainerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
+| proxy.initContainerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| proxy.labels | object | `{}` |  |
+| proxy.livenessProbe.httpGet.path | string | `"/proxy/health"` |  |
+| proxy.livenessProbe.httpGet.port | string | `"http"` |  |
+| proxy.livenessProbe.initialDelaySeconds | int | `120` |  |
+| proxy.livenessProbe.periodSeconds | int | `10` |  |
+| proxy.livenessProbe.timeoutSeconds | int | `5` |  |
+| proxy.nameOverride | string | `""` |  |
+| proxy.nodeSelector | object | `{}` |  |
+| proxy.persistence.emptyDir.sizeLimit | string | `"500Mi"` |  |
+| proxy.persistence.enabled | bool | `true` |  |
+| proxy.persistence.volumeClaimTemplate.annotations | object | `{}` |  |
+| proxy.persistence.volumeClaimTemplate.labels | object | `{}` |  |
+| proxy.persistence.volumeClaimTemplate.spec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| proxy.persistence.volumeClaimTemplate.spec.resources.requests.storage | string | `"500Mi"` |  |
+| proxy.podAnnotations | object | `{}` |  |
+| proxy.podDisruptionBudget.enabled | bool | `true` |  |
+| proxy.podDisruptionBudget.maxUnavailable | string | `""` |  |
+| proxy.podDisruptionBudget.minAvailable | string | `"51%"` |  |
+| proxy.podLabels | object | `{}` |  |
+| proxy.podManagementPolicy | string | `"Parallel"` |  |
+| proxy.podSecurityContext.fsGroup | int | `10001` |  |
+| proxy.podSecurityContext.fsGroupChangePolicy | string | `"OnRootMismatch"` |  |
+| proxy.podSecurityContext.runAsGroup | int | `10001` |  |
+| proxy.podSecurityContext.runAsNonRoot | bool | `true` |  |
+| proxy.podSecurityContext.runAsUser | int | `10001` |  |
+| proxy.podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| proxy.readinessProbe.httpGet.path | string | `"/proxy/ready"` |  |
+| proxy.readinessProbe.httpGet.port | string | `"http"` |  |
+| proxy.readinessProbe.periodSeconds | int | `10` |  |
+| proxy.readinessProbe.timeoutSeconds | int | `5` |  |
+| proxy.replicas | int | `3` |  |
+| proxy.resources.limits.memory | string | `"1500Mi"` |  |
+| proxy.resources.requests.cpu | string | `"100m"` |  |
+| proxy.resources.requests.memory | string | `"1500Mi"` |  |
+| proxy.revisionHistoryLimit | int | `10` |  |
+| proxy.schedulerName | string | `""` |  |
+| proxy.securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| proxy.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| proxy.securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| proxy.securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| proxy.service.annotations | object | `{}` |  |
+| proxy.service.enabled | bool | `true` |  |
+| proxy.service.externalIPs | list | `[]` |  |
+| proxy.service.externalTrafficPolicy | string | `""` |  |
+| proxy.service.extraPorts | list | `[]` |  |
+| proxy.service.healthCheckNodePort | string | `""` |  |
+| proxy.service.labels | object | `{}` |  |
+| proxy.service.loadBalancerClass | string | `""` |  |
+| proxy.service.loadBalancerSourceRanges | list | `[]` |  |
+| proxy.service.nodePort | string | `""` |  |
+| proxy.service.ports.http | int | `7200` |  |
+| proxy.service.type | string | `"ClusterIP"` |  |
+| proxy.startupProbe.failureThreshold | int | `60` |  |
+| proxy.startupProbe.httpGet.path | string | `"/proxy/ready"` |  |
+| proxy.startupProbe.httpGet.port | string | `"http"` |  |
+| proxy.startupProbe.periodSeconds | int | `5` |  |
+| proxy.startupProbe.timeoutSeconds | int | `3` |  |
+| proxy.terminationGracePeriodSeconds | int | `30` |  |
+| proxy.tolerations | list | `[]` |  |
+| proxy.topologySpreadConstraints | list | `[]` |  |
+| proxy.updateStrategy.type | string | `"RollingUpdate"` |  |
+| readinessProbe.httpGet.path | string | `"/protocol"` |  |
+| readinessProbe.httpGet.port | string | `"http"` |  |
+| readinessProbe.initialDelaySeconds | int | `5` |  |
+| readinessProbe.periodSeconds | int | `10` |  |
+| readinessProbe.timeoutSeconds | int | `5` |  |
+| replicas | int | `1` |  |
+| repositories.existingConfigmap | string | `""` |  |
+| resources.limits.memory | string | `"2Gi"` |  |
+| resources.requests.cpu | string | `"500m"` |  |
+| resources.requests.memory | string | `"2Gi"` |  |
+| revisionHistoryLimit | int | `10` |  |
+| schedulerName | string | `""` |  |
+| security.admin.initialPassword | string | `""` |  |
+| security.admin.username | string | `"admin"` |  |
+| security.enabled | bool | `false` |  |
+| security.initialUsers.existingSecret | string | `""` |  |
+| security.initialUsers.secretKey | string | `"users.js"` |  |
+| security.initialUsers.users | object | `{}` |  |
+| security.provisioner.existingSecret | string | `""` |  |
+| security.provisioner.password | string | `"iHaveSuperpowers"` |  |
+| security.provisioner.tokenKey | string | `"GRAPHDB_AUTH_TOKEN"` |  |
+| security.provisioner.username | string | `"provisioner"` |  |
+| securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| service.annotations | object | `{}` |  |
+| service.enabled | bool | `true` |  |
+| service.externalIPs | list | `[]` |  |
+| service.externalTrafficPolicy | string | `""` |  |
+| service.extraPorts | list | `[]` |  |
+| service.healthCheckNodePort | string | `""` |  |
+| service.labels | object | `{}` |  |
+| service.loadBalancerClass | string | `""` |  |
+| service.loadBalancerSourceRanges | list | `[]` |  |
+| service.nodePort | string | `""` |  |
+| service.ports.http | int | `7200` |  |
+| service.type | string | `"ClusterIP"` |  |
+| serviceAccount.annotations | object | `{}` |  |
+| serviceAccount.create | bool | `false` |  |
+| serviceAccount.name | string | `""` |  |
+| startupProbe.failureThreshold | int | `30` |  |
+| startupProbe.httpGet.path | string | `"/protocol"` |  |
+| startupProbe.httpGet.port | string | `"http"` |  |
+| startupProbe.periodSeconds | int | `10` |  |
+| startupProbe.timeoutSeconds | int | `5` |  |
+| terminationGracePeriodSeconds | int | `120` |  |
+| tolerations | list | `[]` |  |
+| topologySpreadConstraints | list | `[]` |  |
+| updateStrategy.type | string | `"RollingUpdate"` |  |
 
-## Uninstall
-To remove the deployed GraphDB, use:
-
-```bash
-helm uninstall graphdb
-```
-
-**Note**: It is important to note that this will not remove any data, so the next time it
-is installed, the data will be loaded by its components.
-
-Provisioning will be skipped also.
-
-## Troubleshoot
+## Troubleshooting
 
 **Helm install hangs**
 
 If there is no output after `helm install`, it is likely that a hook cannot execute.
-Check the logs with `kubectl logs`.
+Check their logs with `kubectl logs`.
+
+Another reason could be that the default timeout of 5 minutes for Helm `install` or `upgrade` is not enough.
+You can increase the timeout by adding `--timeout 10m` (or more) to the Helm command.
 
 **Connection issues**
 
@@ -588,3 +618,11 @@ https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/.
 | Name | Email | Url |
 | ---- | ------ | --- |
 | Ontotext GraphDB team | <graphdb-support@ontotext.com> |  |
+
+## Contributing
+
+If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
+
+## License
+
+This code is released under the Apache 2.0 License. See [LICENSE](LICENSE) for more details.

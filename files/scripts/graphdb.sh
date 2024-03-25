@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
-set -eu
+
+set -o errexit
+set -o nounset
+set -o pipefail
 
 function createCluster {
   waitAllNodes $1
   local configLocation=$2
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   local timeout=$3
+
   echo "Creating cluster"
-  curl -o response.json -isSL -m $timeout -X POST --header "Authorization: Basic ${authToken}" --header 'Content-Type: application/json' --header 'Accept: */*' -d @"$configLocation" http://graphdb-node-0.graphdb-node:7200/rest/cluster/config
+  curl -o response.json -isSL -m "${timeout}" -X POST \
+       -d @"$configLocation" \
+       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header 'Content-Type: application/json' \
+       --header 'Accept: */*' \
+       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
+
   if grep -q 'HTTP/1.1 201' "response.json"; then
     echo "Cluster creation successful!"
   elif grep -q 'Cluster already exists.\|HTTP/1.1 409' "response.json" ; then
@@ -22,13 +31,12 @@ function createCluster {
 
 function waitService {
   local address=$1
-  local authToken=$PROVISION_USER_AUTH_TOKEN
 
   local attempt_counter=0
   local max_attempts=100
 
   echo "Waiting for ${address}"
-  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${authToken}" --silent --fail ${address}); do
+  until curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1
@@ -43,25 +51,32 @@ function waitService {
 function waitAllNodes {
   local node_count=$1
 
-  for (( c=$node_count; c>0; c ))
+  for (( c=node_count; c>0; c ))
   do
     c=$((c-1))
-    local node_address=http://graphdb-node-$c.graphdb-node:7200
-    waitService "${node_address}/rest/repositories"
+    waitService "http://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
   done
 }
 
 function createRepositoryFromFile {
   waitAllNodes $1
   local repositoriesConfigsLocation=$2
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   local timeout=60
-  echo "Creating repositories"
   local success=true
+
+  echo "Creating repositories"
   for filename in ${repositoriesConfigsLocation}/*.ttl; do
-    repositoryName=$(grep "rep:repositoryID" $filename | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
+    repositoryName=$(grep "rep:repositoryID" "${filename}" | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
+
     echo "Provisioning repository ${repositoryName}"
-    response=$(curl -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 -H "Authorization: Basic ${authToken}" -H 'Content-Type: multipart/form-data' -F config=@${filename}  http://graphdb-node-0.graphdb-node:7200/rest/repositories)
+    response=$(
+      curl -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
+           -F config=@"${filename}" \
+           -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+           -H 'Content-Type: multipart/form-data' \
+           "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+    )
+
     if [ -z "$response" ]; then
       echo "Successfully created repository ${repositoryName}"
     else

@@ -1,0 +1,14 @@
+#
+# This example shows how to deploy and expose GraphDB with the default Ingress resource using the NGINX Ingress Controller.
+# See https://kubernetes.github.io/ingress-nginx/
+#
+
+configuration:
+  externalUrl: http://graphdb.127.0.0.1.nip.io/
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    # Allows larger payloads to GraphDB, i.e. import from the workbench
+    nginx.ingress.kubernetes.io/proxy-body-size: 512M

@@ -1,0 +1,18 @@
+{{- if .Values.graphdb.pdb.create }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: graphdb-node
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.graphdb.pdb.minAvailable }}
+  minAvailable: {{ .Values.graphdb.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.graphdb.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.graphdb.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: graphdb-node
+{{- end }}

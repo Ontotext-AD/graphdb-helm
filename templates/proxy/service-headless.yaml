@@ -1,0 +1,22 @@
+{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-proxy
+  labels:
+    app: graphdb-cluster-proxy
+    {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.graphdb.clusterProxy.headlessService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  clusterIP: None
+  selector:
+    app: graphdb-cluster-proxy
+  ports:
+    - name: gdb-proxy-rpc
+      port: 7300
+      targetPort: 7300
+      protocol: TCP
+{{- end }}

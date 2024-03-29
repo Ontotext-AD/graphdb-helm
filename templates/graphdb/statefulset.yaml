@@ -40,7 +40,7 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-node-configmap.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
         {{- with .Values.graphdb.node.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -212,50 +212,3 @@ spec:
         {{- with .Values.graphdb.node.extraInitContainers }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: graphdb-node
-  labels:
-    app: graphdb-node
-    {{- include "graphdb.labels" . | nindent 4 }}
-  {{- with .Values.graphdb.node.service.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  clusterIP: None
-  selector:
-    app: graphdb-node
-  ports:
-    - name: graphdb
-      port: 7200
-      targetPort: 7200
-      protocol: TCP
-    {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
-    - name: rpc
-      port: 7300
-      targetPort: 7300
-      protocol: TCP
-    {{- end }}
-
-{{- if .Values.graphdb.pdb.create }}
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: graphdb-node
-  labels:
-    {{- include "graphdb.labels" . | nindent 4 }}
-spec:
-  {{- if .Values.graphdb.pdb.minAvailable }}
-  minAvailable: {{ .Values.graphdb.pdb.minAvailable }}
-  {{- end }}
-  {{- if .Values.graphdb.pdb.maxUnavailable }}
-  maxUnavailable: {{ .Values.graphdb.pdb.maxUnavailable }}
-  {{- end }}
-  selector:
-    matchLabels:
-      app: graphdb-node
-{{- end }}

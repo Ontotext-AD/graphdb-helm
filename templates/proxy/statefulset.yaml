@@ -31,7 +31,7 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/configuration/graphdb-cluster-proxy-configmap.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
         {{- with .Values.graphdb.clusterProxy.podAnnotations }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -111,46 +111,4 @@ spec:
           {{- with .Values.graphdb.clusterProxy.livenessProbe }}
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: graphdb-cluster-proxy
-  labels:
-    app: graphdb-cluster-proxy
-    {{- include "graphdb.labels" . | nindent 4 }}
-  {{- with .Values.graphdb.clusterProxy.service.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  type: {{ $.Values.graphdb.clusterProxy.serviceType }}
-  selector:
-    app: graphdb-cluster-proxy
-  ports:
-    - name: gdb-proxy-port
-      port: 7200
-      targetPort: 7200
-      protocol: TCP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: graphdb-proxy
-  labels:
-    app: graphdb-cluster-proxy
-    {{- include "graphdb.labels" . | nindent 4 }}
-  {{- with .Values.graphdb.clusterProxy.headlessService.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  clusterIP: None
-  selector:
-    app: graphdb-cluster-proxy
-  ports:
-    - name: gdb-proxy-rpc
-      port: 7300
-      targetPort: 7300
-      protocol: TCP
 {{- end }}

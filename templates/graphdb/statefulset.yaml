@@ -47,6 +47,7 @@ spec:
     spec:
       setHostnameAsFQDN: true
       terminationGracePeriodSeconds: {{ .Values.graphdb.node.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
       volumes:
         {{- if .Values.graphdb.node.license }}
         - name: graphdb-license

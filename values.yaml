@@ -323,3 +323,17 @@ graphdb:
     create: false
     minAvailable: "51%"
     maxUnavailable:
+
+  #
+  # Service account for the GraphDB nodes.
+  # GraphDB by itself has no need to communicate with the Kubernetes API but the service account tokens can be used
+  # as ODIC tokens for authentication in cloud APIs.
+  #
+  serviceAccount:
+    # - Specifies whether a service account should be created
+    create: true
+    # - The name of the service account to use.
+    # - If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # If create is true, add extra annotations to the created service account.
+    annotations: {}

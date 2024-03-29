@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 11.0.0
+
+### New
+
+- Added `graphdb.serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
+
 ## Version 10.6.0-R2
 
 ### New

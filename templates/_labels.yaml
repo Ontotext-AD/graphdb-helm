@@ -52,3 +52,14 @@ Selector labels
 app.kubernetes.io/name: {{ include "graphdb.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "graphdb.serviceAccountName" -}}
+  {{- if .Values.graphdb.serviceAccount.create }}
+    {{- default (include "graphdb.fullname" .) .Values.graphdb.serviceAccount.name }}
+  {{- else }}
+    {{- default "default" .Values.graphdb.serviceAccount.name }}
+  {{- end }}
+{{- end }}

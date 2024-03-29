@@ -6,6 +6,10 @@
 
 - Added `graphdb.serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
 
+### Breaking
+
+- Renamed `extraLabels` to just `labels`
+
 ## Version 10.6.0-R2
 
 ### New

@@ -21,8 +21,8 @@ images:
     repository: busybox
     tag: "1.36.1"
 
-# Extra labels for the deployed resources
-extraLabels: {}
+# Additional common labels for the deployed resources
+labels: {}
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:

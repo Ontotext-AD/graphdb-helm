@@ -2,13 +2,16 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: scale-up-cluster-job
+  name: {{ include "graphdb.fullname.job.scale-up-cluster" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
     "helm.sh/hook-weight": "1"
+    {{- with .Values.annotations }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- end }}
 spec:
   ttlSecondsAfterFinished: 300
   backoffLimit: 4
@@ -22,9 +25,16 @@ spec:
       containers:
         - name: scale-up-cluster
           image: {{ include "graphdb.image" . }}
+          env:
+            - name: GRAPHDB_POD_NAME
+              value: {{ include "graphdb.fullname" . }}
+            - name: GRAPHDB_SERVICE_NAME
+              value: {{ include "graphdb.fullname.service.headless" . }}
+            - name: GRAPHDB_PROXY_SERVICE_NAME
+              value: {{ include "graphdb-proxy.fullname" . }}
           envFrom:
             - secretRef:
-                name: graphdb-provision-user
+                name: {{ include "graphdb.fullname.secret.provision-user" . }}
           securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
           {{- with .Values.graphdb.jobResources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -47,5 +57,5 @@ spec:
             sizeLimit: 10Mi
         - name: graphdb-utils
           configMap:
-            name: graphdb-utils-configmap
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
 {{- end }}

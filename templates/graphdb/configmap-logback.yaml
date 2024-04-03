@@ -1,16 +1,15 @@
-{{- $configs := (.Values.graphdb.configs | default dict) }}
-{{- if $configs.logbackConfigMap }}
-{{- if eq $configs.logbackConfigMap "graphdb-logback-configmap" }}
-# Default configuration map for provisioning GraphDB logback settings.
-# To change it, prepare another configuration map and update "graphdb.configs.logbackConfigMap"
+{{- if not .Values.configuration.logback.existingConfigmap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: graphdb-logback-configmap
+  name: {{ include "graphdb.fullname.configmap.logback" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
+  {{- end }}
 data:
-  logback.xml: |-
-{{ tpl (.Files.Get "files/config/logback.xml" | indent 4) . }}
-{{- end }}
+  {{ .Values.configuration.logback.configmapKey }}: |-
+    {{- tpl ( .Files.Get "files/config/logback.xml" ) . | nindent 4 }}
 {{- end }}

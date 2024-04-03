@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress
+  name: {{ include "graphdb.fullname" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
@@ -20,8 +20,8 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     {{- end }}
     nginx.ingress.kubernetes.io/x-forwarded-prefix: {{ $.Values.graphdb.workbench.subpath | quote }}
-    {{- with .Values.deployment.ingress.annotations }}
-      {{- toYaml . | nindent 4 }}
+    {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.deployment.ingress.annotations) }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
 spec:
   {{- if .Values.deployment.tls.enabled }}
@@ -43,9 +43,9 @@ spec:
             backend:
               service:
               {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
-                name: graphdb-cluster-proxy
+                name: {{ include "graphdb-proxy.fullname" . }}
               {{- else }}
-                name: graphdb-node
+                name: {{ include "graphdb.fullname.service.headless" . }}
               {{- end }}
                 port:
                   number: 7200

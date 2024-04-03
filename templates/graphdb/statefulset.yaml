@@ -1,33 +1,34 @@
-{{- $configs := ($.Values.graphdb.configs | default dict) }}
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: graphdb-node
+  name: {{ include "graphdb.fullname" . }}
   labels:
-    app: graphdb-node
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ $.Values.graphdb.clusterConfig.nodesCount }}
-  serviceName: graphdb-node
+  serviceName: {{ include "graphdb.fullname.service.headless" . }}
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
   revisionHistoryLimit: {{ .Values.graphdb.node.revisionHistoryLimit }}
   selector:
     matchLabels:
-      app: graphdb-node
-  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") ($.Values.graphdb.import_directory_mount.enabled)}}
+      {{- include "graphdb.selectorLabels" . | nindent 6 }}
+  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") ($.Values.graphdb.import_directory_mount.enabled) }}
   volumeClaimTemplates:
     {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
     - metadata:
-        name: graphdb-node-data-dynamic-pvc
+        name: graphdb-storage
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
       spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
     {{- if $.Values.graphdb.import_directory_mount.enabled }}
     - metadata:
-        name: graphdb-server-import-dir
+        name: graphdb-server-import
       {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
       spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
     {{- end }}
@@ -35,44 +36,40 @@ spec:
   template:
     metadata:
       labels:
-        app: graphdb-node
+        {{- include "graphdb.selectorLabels" . | nindent 8 }}
         {{- with .Values.graphdb.node.podLabels }}
-          {{- toYaml . | nindent 8 }}
+          {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
         {{- with .Values.graphdb.node.podAnnotations }}
-          {{- toYaml . | nindent 8 }}
+          {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
     spec:
-      setHostnameAsFQDN: true
+      setHostnameAsFQDN: false
       terminationGracePeriodSeconds: {{ .Values.graphdb.node.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
       volumes:
+        - name: graphdb-properties
+          configMap:
+            name: {{ .Values.configuration.properties.existingConfigmap | default ( include "graphdb.fullname.configmap.properties" . ) }}
+        - name: graphdb-logback-config
+          configMap:
+            name: {{ .Values.configuration.logback.existingConfigmap | default ( include "graphdb.fullname.configmap.logback" . ) }}
         {{- if .Values.graphdb.node.license }}
         - name: graphdb-license
           secret:
             secretName: {{ .Values.graphdb.node.license }}
         {{- end }}
-        {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
-        - name: graphdb-settings-config
+        {{- if or .Values.graphdb.security.enabled .Values.provision.settings.existingConfigmap }}
+        - name: graphdb-initial-settings-config
           configMap:
-            name: {{ $configs.settingsConfigMap | default "graphdb-settings-configmap" }}
+            name: {{ .Values.provision.settings.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
         {{- end }}
-        {{- if or $configs.usersConfigMap $.Values.graphdb.security.enabled }}
-        - name: graphdb-users-config
+        {{- if or .Values.graphdb.security.enabled .Values.provision.users.existingConfigmap }}
+        - name: graphdb-initial-users-config
           configMap:
-            name: {{ $configs.usersConfigMap | default "graphdb-users-configmap" }}
-        {{- end }}
-        {{- if $configs.propertiesConfigMap }}
-        - name: graphdb-properties-config
-          configMap:
-            name: {{ $configs.propertiesConfigMap }}
-        {{- end }}
-        {{- if $configs.logbackConfigMap }}
-        - name: graphdb-logback-config
-          configMap:
-            name: {{ $configs.logbackConfigMap }}
+            name: {{ .Values.provision.users.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
         {{- end }}
         {{- with $.Values.graphdb.node.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
@@ -95,7 +92,7 @@ spec:
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
       containers:
-        - name: graphdb-node
+        - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
           {{- with .Values.graphdb.node.command }}
@@ -113,7 +110,7 @@ spec:
               {{- end }}
           envFrom:
             - configMapRef:
-                name: graphdb-node-configmap
+                name: {{ include "graphdb.fullname" . }}
             {{- with $.Values.graphdb.node.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
@@ -122,16 +119,19 @@ spec:
           {{- end }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
+            - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
+            - name: graphdb-logback-config
+              mountPath: /opt/graphdb/home/conf/logback.xml
+              subPath: {{ .Values.configuration.logback.configmapKey }}
             {{- if .Values.graphdb.node.license }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license
               subPath: {{ .Values.graphdb.node.licenseFilename }}
             {{- end }}
             {{- if $.Values.graphdb.import_directory_mount.enabled }}
-            - name: graphdb-server-import-dir
+            - name: graphdb-server-import
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
             {{- with $.Values.graphdb.node.extraVolumeMounts }}
@@ -154,29 +154,29 @@ spec:
           {{- end }}
       initContainers:
         # PROVISION SETTINGS AND SECURITY
-        - name: provision-settings
+        - name: {{ .Chart.Name }}-provision-settings
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          env:
+            - name: GRAPHDB_PUBLIC_URL
+              value: {{ include "graphdb.url.public" . }}
           volumeMounts:
             {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
-            - name: graphdb-node-data-dynamic-pvc
+            - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
-            {{- if or $configs.settingsConfigMap $.Values.graphdb.security.enabled }}
-            - name: graphdb-settings-config
-              mountPath: /tmp/graphdb-settings-configmap
+            - name: graphdb-properties
+              mountPath: /tmp/graphdb/graphdb.properties
+              subPath: {{ .Values.configuration.properties.configmapKey }}
+            {{- if or .Values.graphdb.security.enabled .Values.provision.settings.existingConfigmap }}
+            - name: graphdb-initial-settings-config
+              mountPath: /tmp/graphdb/settings.js
+              subPath: {{ .Values.provision.settings.configmapKey }}
             {{- end }}
-            {{- if or $configs.usersConfigMap $.Values.graphdb.security.enabled }}
-            - name: graphdb-users-config
-              mountPath: /tmp/graphdb-users-configmap
-            {{- end }}
-            {{- if $configs.propertiesConfigMap }}
-            - name: graphdb-properties-config
-              mountPath: /tmp/graphdb-properties-configmap
-            {{- end }}
-            {{- if $configs.logbackConfigMap }}
-            - name: graphdb-logback-config
-              mountPath: /tmp/graphdb-logback-configmap
+            {{- if or .Values.graphdb.security.enabled .Values.provision.settings.existingConfigmap }}
+            - name: graphdb-initial-users-config
+              mountPath: /tmp/graphdb/users.js
+              subPath: {{ .Values.provision.users.configmapKey }}
             {{- end }}
           {{- with .Values.graphdb.node.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
@@ -184,31 +184,31 @@ spec:
           {{- with .Values.graphdb.node.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
-          command: ['sh', '-c']
+          command: [ 'sh', '-c' ]
           args:
             - |
               set -eu
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb-users-configmap/users.js ]]; then
+              mkdir -p /opt/graphdb/home/conf/ /opt/graphdb/home/data/ /opt/graphdb/home/jdbc-driver/
+
+              echo 'Configuring graphdb.properties'
+              cat /tmp/graphdb/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              echo "Configuring GraphDB hostname: $(hostname --fqdn)"
+              echo "graphdb.vhosts=$(hostname --fqdn):7200, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.rpc.address=$(hostname --fqdn):7300" >> /opt/graphdb/home/conf/graphdb.properties
+
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
                 echo "Provisioning users with users.js file..."
-                mkdir -p /opt/graphdb/home/data ;
-                cp /tmp/graphdb-users-configmap/users.js /opt/graphdb/home/data/users.js
+                cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
               fi
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/settings.js && -f /tmp/graphdb-settings-configmap/settings.js ]]; then
+
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/settings.js && -f /tmp/graphdb/settings.js ]]; then
                 echo "Provisioning settings with settings.js file..."
-                mkdir -p /opt/graphdb/home/data ;
-                cp /tmp/graphdb-settings-configmap/settings.js /opt/graphdb/home/data/settings.js
+                cp /tmp/graphdb/settings.js /opt/graphdb/home/data/settings.js
               fi
-              if [[ -f /tmp/graphdb-properties-configmap/graphdb.properties ]]; then
-                echo "Provisioning graphdb properties file..."
-                mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb-properties-configmap/graphdb.properties /opt/graphdb/home/conf/graphdb.properties
-              fi
-              if [[ -f /tmp/graphdb-logback-configmap/logback.xml ]]; then
-                echo "Provisioning logging config file..."
-                mkdir -p /opt/graphdb/home/conf ;
-                cp /tmp/graphdb-logback-configmap/logback.xml /opt/graphdb/home/conf/logback.xml
-              fi
-              mkdir -p /opt/graphdb/home/jdbc-driver
+
               echo 'Done'
         {{- with .Values.graphdb.node.extraInitContainers }}
           {{- toYaml . | nindent 8 }}

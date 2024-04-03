@@ -2,13 +2,28 @@
 
 ## Version 11.0.0
 
+TODO: short motivational paragraph about the major version
+TODO: short info about being decoupled from GraphDB
+
 ### New
 
+- Added `annotations` for common annotations across resources
 - Added `graphdb.serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
+- Values in `labels` and `annotations` are now evaluated as templates
+- Added separate `labels` and `annotations` for the cluster proxy
+- Added GraphDB and GraphDB proxy hostnames resolution in the init containers
+
+### Updates
+
+- GraphDB properties and logback configuration configmaps are now applied by default
 
 ### Breaking
 
 - Renamed `extraLabels` to just `labels`
+- Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
+- Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
+- Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
+- Configmaps from `graphdb.configs` are now under `configuration` and with a different structure allowing better reuse of existing configmaps
 
 ## Version 10.6.0-R2
 

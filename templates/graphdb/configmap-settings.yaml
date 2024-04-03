@@ -1,15 +1,15 @@
-{{- $configs := (.Values.graphdb.configs | default dict) }}
-{{- $settingsConfigMap := $configs.settingsConfigMap | default "" }}
-{{- if or (eq $settingsConfigMap "graphdb-settings-configmap") (and (not $settingsConfigMap ) (.Values.graphdb.security.enabled)) }}
-# Default configuration map for provisioning GraphDB settings.js file.
-# To change it, prepare another configuration map and update "graphdb.configs.settingsConfigMap"
+{{- if and .Values.graphdb.security.enabled (not .Values.provision.settings.existingConfigmap) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: graphdb-settings-configmap
+  name: {{ include "graphdb.fullname.configmap.settings" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
+  {{- end }}
 data:
-  settings.js: |-
-{{ tpl (.Files.Get "files/config/settings.js" | indent 4) . }}
+  {{ .Values.provision.settings.configmapKey }}: |-
+    {{- tpl ( .Files.Get "files/config/settings.js" ) . | nindent 4 }}
 {{- end }}

@@ -470,6 +470,11 @@ about defining resource limits.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| annotations | object | `{}` |  |
+| configuration.logback.configmapKey | string | `"logback.xml"` |  |
+| configuration.logback.existingConfigmap | string | `""` |  |
+| configuration.properties.configmapKey | string | `"graphdb.properties"` |  |
+| configuration.properties.existingConfigmap | string | `""` |  |
 | deployment.host | string | `"localhost"` |  |
 | deployment.imagePullPolicy | string | `"IfNotPresent"` | Defines the policy with which components will request their image. |
 | deployment.ingress | object | `{"annotations":{},"class":"nginx","enabled":true,"maxRequestSize":"512M","timeout":{"connect":5,"read":600,"send":600}}` | Ingress related configurations |
@@ -479,7 +484,7 @@ about defining resource limits.
 | deployment.protocol | string | `"http"` | The hostname and protocol at which the graphdb will be accessible. Needed to configure ingress as well as some components require it to properly render their UIs |
 | deployment.tls.enabled | bool | `false` | Feature toggle for SSL termination. Disabled by default. If TLS is enabled, the protocol should also be updated (https) |
 | deployment.tls.secretName | string | `nil` | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment. |
-| extraLabels | object | `{}` |  |
+| fullnameOverride | string | `""` |  |
 | global.imagePullSecrets | list | `[]` |  |
 | global.imageRegistry | string | `"docker.io"` |  |
 | global.storageClass | string | `"standard"` |  |
@@ -518,7 +523,7 @@ about defining resource limits.
 | graphdb.clusterProxy.terminationGracePeriodSeconds | int | `30` |  |
 | graphdb.clusterProxy.tolerations | list | `[]` |  |
 | graphdb.clusterProxy.topologySpreadConstraints | list | `[]` |  |
-| graphdb.configs | string | `nil` | References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html |
+| graphdb.configs | object | `{"provisionRepositoriesConfigMap":""}` | References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html |
 | graphdb.import_directory_mount.enabled | bool | `false` |  |
 | graphdb.import_directory_mount.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
 | graphdb.import_directory_mount.volumeClaimTemplateSpec.resources.requests.storage | string | `"10Gi"` |  |
@@ -559,12 +564,25 @@ about defining resource limits.
 | graphdb.security.enabled | bool | `false` |  |
 | graphdb.security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
 | graphdb.security.provisioningUsername | string | `"provisioner"` |  |
+| graphdb.serviceAccount.annotations | object | `{}` |  |
+| graphdb.serviceAccount.create | bool | `true` |  |
+| graphdb.serviceAccount.name | string | `""` |  |
 | graphdb.workbench.subpath | string | `"/graphdb"` | This is the sub path at which GraphDB workbench can be opened. Should be configured in the API gateway (or any other proxy in front) |
 | images.busybox.repository | string | `"busybox"` |  |
 | images.busybox.tag | string | `"1.36.1"` |  |
 | images.graphdb.registry | string | `"docker.io"` |  |
 | images.graphdb.repository | string | `"ontotext/graphdb"` |  |
 | images.graphdb.tag | string | `""` |  |
+| labels | object | `{}` |  |
+| nameOverride | string | `""` |  |
+| provision.settings.configmapKey | string | `"settings.js"` |  |
+| provision.settings.existingConfigmap | string | `""` |  |
+| provision.users.configmapKey | string | `"users.js"` |  |
+| provision.users.existingConfigmap | string | `""` |  |
+| proxy.annotations | object | `{}` |  |
+| proxy.fullnameOverride | string | `""` |  |
+| proxy.labels | object | `{}` |  |
+| proxy.nameOverride | string | `""` |  |
 
 ## Uninstall
 To remove the deployed GraphDB, use:

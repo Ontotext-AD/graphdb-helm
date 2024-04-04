@@ -18,19 +18,19 @@ spec:
   selector:
     matchLabels:
       {{- include "graphdb.selectorLabels" . | nindent 6 }}
-  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") ($.Values.graphdb.import_directory_mount.enabled) }}
+  {{- if or .Values.graphdb.node.persistence.enabled .Values.graphdb.import_directory_mount.enabled }}
   volumeClaimTemplates:
-    {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+    {{- if .Values.graphdb.node.persistence.enabled }}
     - metadata:
         name: graphdb-storage
-      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+      spec:
+        {{- toYaml .Values.graphdb.node.persistence.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
     {{- if $.Values.graphdb.import_directory_mount.enabled }}
     - metadata:
-        name: graphdb-server-import
-      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
-      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+        name: graphdb-import
+      spec:
+        {{- toYaml .Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
   {{- end }}
   template:
@@ -120,7 +120,7 @@ spec:
           env: {{- tpl ( toYaml . ) $ | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            {{- if .Values.graphdb.node.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
@@ -163,7 +163,7 @@ spec:
             - name: GRAPHDB_PUBLIC_URL
               value: {{ include "graphdb.url.public" . }}
           volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            {{- if .Values.graphdb.node.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}

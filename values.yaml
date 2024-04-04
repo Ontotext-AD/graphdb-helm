@@ -8,7 +8,6 @@
 global:
   imageRegistry: ""
   imagePullSecrets: []
-  storageClass: "standard"
 
 # Top lvl flat for easier maintenance
 images:
@@ -166,6 +165,7 @@ graphdb:
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
+      enabled: true
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -271,7 +271,7 @@ graphdb:
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
       # enable or disable proxy persistence
-      enablePersistence: true
+      enabled: true
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -348,7 +348,7 @@ graphdb:
   #
   # Service account for the GraphDB nodes.
   # GraphDB by itself has no need to communicate with the Kubernetes API but the service account tokens can be used
-  # as ODIC tokens for authentication in cloud APIs.
+  # as ODIC federated web identity tokens for authentication in cloud APIs.
   #
   serviceAccount:
     # - Specifies whether a service account should be created

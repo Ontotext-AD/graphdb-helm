@@ -13,6 +13,7 @@ TODO: short info about being decoupled from GraphDB
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
 - Added `properties` for inserting additional GraphDB configurations in the properties configmap
 - Added `images.graphdb.sha` to optionally provide an expected SHA checksum of the image
+- Added `graphdb.node.persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
 
 ### Updates
 
@@ -30,6 +31,8 @@ TODO: short info about being decoupled from GraphDB
 - Updated `workbench.subpath` to serve GraphDB at context path `/` by default
 - Updated `deployment.imagePullSecret` to be a list, e.g. `deployment.imagePullSecrets`
 - Removed the default value from `global.imageRegistry`, the chart now uses the value from `images.graphdb.registry`
+- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer use `global.storageClass`.
+- Renamed `graphdb.clusterProxy.persistence.enablePersistence` toggle to just `enabled`
 
 ## Version 10.6.0-R2
 

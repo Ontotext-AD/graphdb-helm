@@ -20,20 +20,6 @@ Combined image pull secrets
 {{- end -}}
 
 {{/*
-Rendenders a volumeClaimTemplate as yaml.
-If the storage class name is not specified - 'global.storageClass' is checked and if set it is used as the storageClassName for the template.
-Otherwise it is left blank and cluster default will be used.
-*/}}
-{{- define "graphdb.renderVolumeClaimTemplateSpec" }}
-  {{- if and .globalStorageClassName (not .spec.storageClassName) }}
-    {{- $spec := set .spec "storageClassName" .globalStorageClassName }}
-    {{- $spec | toYaml }}
-  {{- else }}
-    {{- .spec | toYaml }}
-  {{- end }}
-{{- end }}
-
-{{/*
 Renders the container image for GraphDB
 */}}
 {{- define "graphdb.image" -}}

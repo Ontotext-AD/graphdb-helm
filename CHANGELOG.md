@@ -25,6 +25,7 @@ TODO: short info about being decoupled from GraphDB
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Configmaps from `graphdb.configs` are now under `configuration` and with a different structure allowing better reuse of existing configmaps
+- Updated `workbench.subpath` to serve GraphDB at context path `/` by default
 
 ## Version 10.6.0-R2
 

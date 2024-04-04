@@ -326,8 +326,7 @@ graphdb:
   # GraphDB workbench configurations
   workbench:
     # -- This is the sub path at which GraphDB workbench can be opened.
-    # Should be configured in the API gateway (or any other proxy in front)
-    subpath: /graphdb
+    subpath: /
 
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   # Attach additional PV which will be used as an import directory

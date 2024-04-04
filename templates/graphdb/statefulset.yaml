@@ -193,6 +193,7 @@ spec:
               echo 'Configuring graphdb.properties'
               cat /tmp/graphdb/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
               echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
 
               echo "Configuring GraphDB hostname: $(hostname --fqdn)"
               echo "graphdb.vhosts=$(hostname --fqdn):7200, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties

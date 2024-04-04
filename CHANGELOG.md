@@ -12,6 +12,7 @@ TODO: short info about being decoupled from GraphDB
 - Values in `labels` and `annotations` are now evaluated as templates
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
+- Added `properties` for inserting additional GraphDB configurations in the properties configmap
 
 ### Updates
 

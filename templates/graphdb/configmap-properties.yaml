@@ -11,5 +11,13 @@ metadata:
   {{- end }}
 data:
   {{ .Values.configuration.properties.configmapKey }}: |-
-    {{- tpl ( .Files.Get "files/config/graphdb.properties" ) . | nindent 4 }}
+    {{- tpl ( .Files.Get "files/config/graphdb.properties" | trim ) . | nindent 4 }}
+    {{- if .Values.properties }}
+    ##### Overrides from values.yaml #####
+    {{ range $key, $val := .Values.properties }}
+    {{- if ne $val nil }}
+    {{- $key }}={{ tpl ($val | toString) $ | quote }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
 {{- end }}

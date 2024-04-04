@@ -53,6 +53,9 @@ provision:
     existingConfigmap: ""
     configmapKey: "users.js"
 
+# Additional GraphDB properties to insert in the properties configmap
+properties: {}
+
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
   # -- Defines the policy with which components will request their image.

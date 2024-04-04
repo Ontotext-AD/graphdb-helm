@@ -6,7 +6,7 @@
 # See https://helm.sh/docs/chart_template_guide/values_files/
 
 global:
-  imageRegistry: docker.io
+  imageRegistry: ""
   imagePullSecrets: []
   storageClass: "standard"
 
@@ -17,9 +17,8 @@ images:
     repository: ontotext/graphdb
     # If specified, overrides Chart.AppVersion
     tag: ""
-  busybox:
-    repository: busybox
-    tag: "1.36.1"
+    # Expected SHA checksum of the used GraphDB image
+    sha: ""
 
 # Overrides the name of the chart affecting the resources names for GraphDB
 # To override the GraphDB proxy's name, use proxy.nameOverride

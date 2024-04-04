@@ -34,21 +34,23 @@ Otherwise it is left blank and cluster default will be used.
 {{- end }}
 
 {{/*
-Render the container image for GraphDB
+Renders the container image for GraphDB
 */}}
 {{- define "graphdb.image" -}}
-  {{- $registry := .Values.images.graphdb.registry -}}
   {{- $repository := .Values.images.graphdb.repository -}}
   {{- $tag := .Values.images.graphdb.tag | default .Chart.AppVersion | toString -}}
-  {{- if and .Values.global .Values.global.imageRegistry -}}
-    {{- $registry = .Values.global.imageRegistry -}}
-  {{- end -}}
+  {{- $image := printf "%s:%s" $repository $tag -}}
+  {{/* Add registry if present */}}
+  {{- $registry := .Values.global.imageRegistry | default .Values.images.graphdb.registry -}}
   {{- if $registry -}}
-    {{- printf "%s/%s:%s" $registry $repository $tag -}}
-  {{- else -}}
-    {{- printf "%s:%s" $repository $tag -}}
+    {{- $image = printf "%s/%s" $registry $image -}}
   {{- end -}}
-{{- end }}
+  {{/* Add SHA if provided */}}
+  {{- if .Values.images.graphdb.sha -}}
+    {{- $image = printf "%s@sha256:%s" $image .Values.images.graphdb.sha -}}
+  {{- end -}}
+  {{- $image -}}
+{{- end -}}
 
 {{/*
 Renders the gRPC address of each GraphDB node that is part of the cluster. Used in the cluster JSON config.

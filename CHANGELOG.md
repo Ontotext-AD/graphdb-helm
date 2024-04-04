@@ -12,11 +12,13 @@ TODO: short info about being decoupled from GraphDB
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
 - Added `properties` for inserting additional GraphDB configurations in the properties configmap
+- Added `images.graphdb.sha` to optionally provide an expected SHA checksum of the image
 
 ### Updates
 
 - GraphDB properties and logback configuration configmaps are now applied by default
 - Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
+- Removed unused busybox image configurations from `images.busybox`
 
 ### Breaking
 
@@ -27,6 +29,7 @@ TODO: short info about being decoupled from GraphDB
 - Configmaps from `graphdb.configs` are now under `configuration` and with a different structure allowing better reuse of existing configmaps
 - Updated `workbench.subpath` to serve GraphDB at context path `/` by default
 - Updated `deployment.imagePullSecret` to be a list, e.g. `deployment.imagePullSecrets`
+- Removed the default value from `global.imageRegistry`, the chart now uses the value from `images.graphdb.registry`
 
 ## Version 10.6.0-R2
 

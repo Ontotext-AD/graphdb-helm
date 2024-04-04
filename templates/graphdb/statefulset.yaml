@@ -89,8 +89,10 @@ spec:
       {{- with .Values.graphdb.node.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
-        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}

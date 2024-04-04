@@ -6,9 +6,9 @@
 # See https://helm.sh/docs/chart_template_guide/values_files/
 
 global:
+  imageRegistry: docker.io
   imagePullSecrets: []
   storageClass: "standard"
-  imageRegistry: docker.io
 
 # Top lvl flat for easier maintenance
 images:
@@ -60,9 +60,8 @@ properties: {}
 deployment:
   # -- Defines the policy with which components will request their image.
   imagePullPolicy: IfNotPresent
-  # Secret used to pull Docker images. Uncomment to use it.
-  # Important: Must be created beforehand
-  # imagePullSecret: ontotext
+  # -- Secrets used to pull Docker images.
+  imagePullSecrets: []
 
   # -- The hostname and protocol at which the graphdb will be accessible.
   # Needed to configure ingress as well as some components require it to properly render their UIs

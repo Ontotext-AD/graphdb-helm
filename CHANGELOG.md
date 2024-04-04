@@ -9,7 +9,6 @@ TODO: short info about being decoupled from GraphDB
 
 - Added `annotations` for common annotations across resources
 - Added `graphdb.serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
-- Values in `labels` and `annotations` are now evaluated as templates
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
 - Added `properties` for inserting additional GraphDB configurations in the properties configmap
@@ -17,6 +16,7 @@ TODO: short info about being decoupled from GraphDB
 ### Updates
 
 - GraphDB properties and logback configuration configmaps are now applied by default
+- Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
 
 ### Breaking
 
@@ -26,6 +26,7 @@ TODO: short info about being decoupled from GraphDB
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Configmaps from `graphdb.configs` are now under `configuration` and with a different structure allowing better reuse of existing configmaps
 - Updated `workbench.subpath` to serve GraphDB at context path `/` by default
+- Updated `deployment.imagePullSecret` to be a list, e.g. `deployment.imagePullSecrets`
 
 ## Version 10.6.0-R2
 

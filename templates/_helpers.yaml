@@ -15,18 +15,8 @@ Renders the URL address at which GraphDB would be accessed
 Combined image pull secrets
 */}}
 {{- define "graphdb.combinedImagePullSecrets" -}}
-  {{- $secrets := list -}}
-
-  {{- if .Values.deployment.imagePullSecret -}}
-    {{- $secret := dict "name" .Values.deployment.imagePullSecret -}}
-    {{- $secrets = append $secrets $secret -}}
-  {{- end -}}
-
-  {{- if and .Values.global .Values.global.imagePullSecrets -}}
-    {{- $secrets = concat $secrets .Values.global.imagePullSecrets -}}
-  {{- end -}}
-
-  {{- toYaml $secrets -}}
+  {{- $secrets := concat .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
+  {{- tpl ( toYaml $secrets ) . -}}
 {{- end -}}
 
 {{/*

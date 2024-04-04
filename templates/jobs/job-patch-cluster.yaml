@@ -18,8 +18,10 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
-        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
+      {{- end }}
       securityContext:
         {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
       containers:

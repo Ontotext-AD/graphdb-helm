@@ -36,8 +36,11 @@ Renders the container image for GraphDB
 Renders the gRPC address of each GraphDB node that is part of the cluster. Used in the cluster JSON config.
 */}}
 {{- define "graphdb.cluster.nodes.json" -}}
+  {{- $pod_name := include "graphdb.fullname" . }}
+  {{- $service_name := include "graphdb.fullname.service.headless" . }}
+  {{- $service_rpc_port := .Values.graphdb.node.headlessService.ports.rpc }}
   {{- range $i, $node_index := until (int .Values.graphdb.clusterConfig.nodesCount) -}}
-    "{{ include "graphdb.fullname" $ }}-{{ $node_index }}.{{ include "graphdb.fullname.service.headless" $ }}.{{ $.Release.Namespace }}.svc.cluster.local:7300"
+    "{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $service_rpc_port }}"
     {{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index -}}
       {{- ", \n" -}}
     {{- end -}}
@@ -48,8 +51,11 @@ Renders the gRPC address of each GraphDB node that is part of the cluster. Used 
 Renders the HTTP address of each GraphDB node that is part of the cluster, joined by a comma.
 */}}
 {{- define "graphdb-proxy.cluster.nodes" -}}
+  {{- $pod_name := include "graphdb.fullname" . }}
+  {{- $service_name := include "graphdb.fullname.service.headless" . }}
+  {{- $service_http_port := .Values.graphdb.node.headlessService.ports.http }}
   {{- range $i, $node_index := until (int $.Values.graphdb.clusterConfig.nodesCount) -}}
-    http://{{ include "graphdb.fullname" $ }}-{{ $node_index }}.{{ include "graphdb.fullname.service.headless" $ }}.{{ $.Release.Namespace }}.svc.cluster.local:7200
+    http://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $service_http_port }}
     {{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index -}}
       {{- ", " -}}
     {{- end -}}

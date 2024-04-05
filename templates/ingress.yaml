@@ -37,11 +37,13 @@ spec:
               service:
                 {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
                 name: {{ include "graphdb-proxy.fullname" . }}
+                port:
+                  number: {{ .Values.graphdb.clusterProxy.service.ports.http }}
                 {{- else }}
                 name: {{ include "graphdb.fullname.service.headless" . }}
-                {{- end }}
                 port:
-                  number: 7200
+                  number: {{ .Values.graphdb.node.headlessService.ports.http }}
+                {{- end }}
     {{- with .Values.deployment.ingress.extraHosts }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}

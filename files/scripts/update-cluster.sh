@@ -8,13 +8,13 @@ function patchCluster {
   local timeout=$2
 
   echo "Patching cluster"
-  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:7200/proxy/ready"
+  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
   curl -o patchResponse.json -isSL -m "$timeout" -X PATCH \
        --header "Authorization: Basic ${authToken}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        -d @"$configLocation" \
-       "http://${GRAPHDB_PROXY_SERVICE_NAME}:7200/rest/cluster/config"
+       "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config"
 
   if grep -q 'HTTP/1.1 200' "patchResponse.json"; then
     echo "Patch successful"
@@ -59,13 +59,13 @@ function removeNodes {
   done
 
   nodes=\{\"nodes\":\[${nodes}\]\}
-  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:7200/proxy/ready"
+  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
   curl -o clusterRemove.json -isSL -m 15 -X DELETE \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        --header "Authorization: Basic ${authToken}" \
        -d "${nodes}" \
-       "http://${GRAPHDB_PROXY_SERVICE_NAME}:7200/rest/cluster/config/node"
+       "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
   if grep -q 'HTTP/1.1 200' "clusterRemove.json"; then
     echo "Scaling down successful."
@@ -102,13 +102,13 @@ function addNodes {
   done
 
   nodes=\{\"nodes\":\[${nodes}\]\}
-  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:7200/proxy/ready"
+  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
   curl -o clusterAdd.json -isSL -m ${timeout} -X POST \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        --header "Authorization: Basic ${authToken}" \
        -d "${nodes}" \
-       "http://${GRAPHDB_PROXY_SERVICE_NAME}:7200/rest/cluster/config/node"
+       "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
   if grep -q 'HTTP/1.1 200' "clusterAdd.json"; then
     echo "Scaling successful."
@@ -128,11 +128,11 @@ function addNodes {
 
 function deleteCluster {
   local authToken=$PROVISION_USER_AUTH_TOKEN
-  waitService "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:7200/rest/repositories"
+  waitService "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
   curl -o response.json -isSL -m 15 -X DELETE \
        --header "Authorization: Basic ${authToken}" \
        --header 'Accept: */*' \
-       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:7200/rest/cluster/config?force=false"
+       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config?force=false"
 
   if grep -q 'HTTP/1.1 200' "response.json"; then
     echo "Cluster deletion successful!"
@@ -148,7 +148,7 @@ function deleteCluster {
 
 function getNodeCountInCurrentCluster {
   local authToken=$PROVISION_USER_AUTH_TOKEN
-  local node_address="http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:7200"
+  local node_address="http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}"
   waitService "${node_address}/rest/repositories"
   curl -o clusterResponse.json -isSL -m 15 -X GET \
        --header 'Content-Type: application/json' \

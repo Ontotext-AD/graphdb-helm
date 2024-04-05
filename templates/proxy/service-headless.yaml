@@ -5,6 +5,9 @@ metadata:
   name: {{ include "graphdb-proxy.fullname.service.headless" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
+    {{- with .Values.graphdb.clusterProxy.headlessService.labels }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- end }}
   {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.graphdb.clusterProxy.headlessService.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
@@ -14,8 +17,12 @@ spec:
   selector:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:
-    - name: gdb-proxy-rpc
-      port: 7300
-      targetPort: 7300
+    - name: http
+      port: {{ .Values.graphdb.clusterProxy.headlessService.ports.http }}
+      targetPort: http
+      protocol: TCP
+    - name: rpc
+      port: {{ .Values.graphdb.clusterProxy.headlessService.ports.rpc }}
+      targetPort: rpc
       protocol: TCP
 {{- end }}

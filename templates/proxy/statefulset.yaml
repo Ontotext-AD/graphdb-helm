@@ -84,10 +84,13 @@ spec:
           env: {{- tpl ( toYaml . ) $ | nindent 12 }}
           {{- end }}
           ports:
-            - name: gdb-proxy-port
-              containerPort: 7200
-            - name: gdb-proxy-rpc
-              containerPort: 7300
+            - name: http
+              containerPort: {{ .Values.proxy.containerPorts.http }}
+            - name: rpc
+              containerPort: {{ .Values.proxy.containerPorts.rpc }}
+            {{- with .Values.proxy.extraContainerPorts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             {{- if $.Values.graphdb.clusterProxy.persistence.enabled }}
             - name: graphdb-storage
@@ -118,6 +121,10 @@ spec:
           env:
             - name: GRAPHDB_PUBLIC_URL
               value: {{ include "graphdb.url.public" . }}
+            - name: GRAPHDB_PROXY_HTTP_PORT
+              value: {{ .Values.proxy.containerPorts.http | quote }}
+            - name: GRAPHDB_PROXY_RPC_PORT
+              value: {{ .Values.proxy.containerPorts.rpc | quote }}
           {{- with .Values.graphdb.node.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -145,8 +152,8 @@ spec:
 
               echo 'Configuring GraphDB cluster proxy hostnames'
               echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.rpc.address=$(hostname --fqdn):7300" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.vhosts=$(hostname --fqdn):7200, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_PROXY_RPC_PORT}" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_PROXY_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
               echo "graphdb.external-url=${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
 
               echo 'Done'

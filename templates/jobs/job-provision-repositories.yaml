@@ -32,6 +32,8 @@ spec:
               value: {{ include "graphdb.fullname" . }}
             - name: GRAPHDB_SERVICE_NAME
               value: {{ include "graphdb.fullname.service.headless" . }}
+            - name: GRAPHDB_SERVICE_PORT
+              value: {{ .Values.graphdb.node.headlessService.ports.http | quote }}
           envFrom:
             - secretRef:
                 name: {{ include "graphdb.fullname.secret.provision-user" . }}

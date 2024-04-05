@@ -18,6 +18,10 @@ TODO: short info about being decoupled from GraphDB
   - Ability to override the `host` and `path` for GraphDB from `deployment.host` and `graphdb.workbench.subpath` 
   - Changing the `pathType` 
   - Inserting additional hosts and TLS configurations with `extraHosts` and `extraTLS`
+- Added `labels` for each service resource for insertion of additional labels 
+- Added `containerPorts` and `proxy.containerPorts` for mapping the ports on which GraphDB listens on
+- Added `ports` mappings in each service 
+- Added `extraContainerPorts` and `proxy.extraContainerPorts`
 
 ### Updates
 
@@ -26,6 +30,7 @@ TODO: short info about being decoupled from GraphDB
 - Removed unused busybox image configurations from `images.busybox`
 - Updated the ingress resource to be agnostic to the ingress implementation. It will no longer assume that NGINX is the ingress controller in the
   cluster
+- Service resources and probes now refer to the target ports by their nicknames
 
 ### Breaking
 
@@ -42,6 +47,8 @@ TODO: short info about being decoupled from GraphDB
 - Renamed `graphdb.clusterProxy.persistence.enablePersistence` toggle to just `enabled`
 - Removed `maxRequestSize` and `timeout` configurations from `deployment.ingress` as they were specific to the ingress controller implementation of
   nginx
+- Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
+- Renamed `graphdb.node.service` to `headlessService`
 
 ## Version 10.6.0-R2
 

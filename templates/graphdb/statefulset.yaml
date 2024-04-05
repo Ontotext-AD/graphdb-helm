@@ -104,12 +104,15 @@ spec:
           args: {{ toYaml . | nindent 12 }}
           {{- end }}
           ports:
-            - name: graphdb
-              containerPort: 7200
-              {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
-            - name: graphdb-rpc
-              containerPort: 7300
-              {{- end }}
+            - name: http
+              containerPort: {{ .Values.containerPorts.http }}
+            {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
+            - name: rpc
+              containerPort: {{ .Values.containerPorts.rpc }}
+            {{- end }}
+            {{- with .Values.extraContainerPorts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb.fullname" . }}
@@ -162,6 +165,10 @@ spec:
           env:
             - name: GRAPHDB_PUBLIC_URL
               value: {{ include "graphdb.url.public" . }}
+            - name: GRAPHDB_HTTP_PORT
+              value: {{ .Values.containerPorts.http | quote }}
+            - name: GRAPHDB_RPC_PORT
+              value: {{ .Values.containerPorts.rpc | quote }}
           volumeMounts:
             {{- if .Values.graphdb.node.persistence.enabled }}
             - name: graphdb-storage
@@ -198,9 +205,9 @@ spec:
               echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
 
               echo "Configuring GraphDB hostname: $(hostname --fqdn)"
-              echo "graphdb.vhosts=$(hostname --fqdn):7200, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
               echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.rpc.address=$(hostname --fqdn):7300" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}" >> /opt/graphdb/home/conf/graphdb.properties
 
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
                 echo "Provisioning users with users.js file..."

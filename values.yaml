@@ -54,6 +54,14 @@ provision:
 # Additional GraphDB properties to insert in the properties configmap
 properties: {}
 
+# Ports used by the GraphDB container
+containerPorts:
+  http: 7200
+  rpc: 7300
+
+# Additional container ports to insert
+extraContainerPorts: {}
+
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
   # -- Defines the policy with which components will request their image.
@@ -167,10 +175,16 @@ graphdb:
     # Extra pod labels and annotations
     podLabels: {}
     podAnnotations: {}
-    # -- GraphDB node service configurations
-    service:
+    # -- GraphDB node headless service configurations
+    headlessService:
+      # Extra labels to append to the headless service
+      labels: {}
       # Extra annotations to append to the service
       annotations: {}
+      # Ports exposed by the service
+      ports:
+        http: 7200
+        rpc: 7300
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
@@ -195,7 +209,7 @@ graphdb:
     startupProbe:
       httpGet:
         path: /protocol
-        port: graphdb
+        port: http
       failureThreshold: 30
       timeoutSeconds: 5
       periodSeconds: 10
@@ -203,7 +217,7 @@ graphdb:
     readinessProbe:
       httpGet:
         path: /protocol
-        port: graphdb
+        port: http
       initialDelaySeconds: 5
       timeoutSeconds: 5
       periodSeconds: 10
@@ -211,7 +225,7 @@ graphdb:
     livenessProbe:
       httpGet:
         path: /protocol
-        port: graphdb
+        port: http
       initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
@@ -252,6 +266,10 @@ graphdb:
     # -- Service type used by the graphdb-cluster-proxy service
     # Note: If using ALB in AWS EKS this will default to being on the public internet
     serviceType: LoadBalancer
+    # Ports used by GraphDB proxy container
+    containerPorts:
+      http: 7200
+      rpc: 7300
     # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
     # By default, no restrictions are applied.
     nodeSelector: {}
@@ -263,12 +281,27 @@ graphdb:
     podAnnotations: {}
     # -- GraphDB cluster proxy service configurations
     service:
+      # Extra labels to append to the service
+      labels: {}
       # Extra annotations to append to the service
       annotations: {}
+      # Ports exposed by the service
+      ports:
+        http: 7200
+        rpc: 7300
+      # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
+      # If left undefined, K8S will pick a random port from the node port range of the cluster.
+      nodePort: ""
     # -- GraphDB cluster proxy headless service configurations
     headlessService:
+      # Extra labels to append to the headless service
+      labels: {}
       # Extra annotations to append to the service
       annotations: {}
+      # Ports exposed by the service
+      ports:
+        http: 7200
+        rpc: 7300
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
@@ -292,7 +325,7 @@ graphdb:
     startupProbe:
       httpGet:
         path: /proxy/ready
-        port: gdb-proxy-port
+        port: http
       failureThreshold: 60
       timeoutSeconds: 3
       periodSeconds: 5
@@ -300,14 +333,14 @@ graphdb:
     readinessProbe:
       httpGet:
         path: /proxy/ready
-        port: gdb-proxy-port
+        port: http
       timeoutSeconds: 5
       periodSeconds: 10
     # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
     livenessProbe:
       httpGet:
         path: /proxy/health
-        port: gdb-proxy-port
+        port: http
       initialDelaySeconds: 120
       timeoutSeconds: 5
       periodSeconds: 10
@@ -381,3 +414,11 @@ proxy:
 
   # Additional common annotations to add to the GraphDB proxy resources
   annotations: {}
+
+  # Ports used by GraphDB proxy and the Service components
+  containerPorts:
+    http: 7200
+    rpc: 7300
+
+  # Additional container ports to insert
+  extraContainerPorts: {}

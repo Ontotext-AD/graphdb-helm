@@ -14,12 +14,18 @@ TODO: short info about being decoupled from GraphDB
 - Added `properties` for inserting additional GraphDB configurations in the properties configmap
 - Added `images.graphdb.sha` to optionally provide an expected SHA checksum of the image
 - Added `graphdb.node.persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
+- Added new configuration options for the default ingress `deployment.ingress`:
+  - Ability to override the `host` and `path` for GraphDB from `deployment.host` and `graphdb.workbench.subpath` 
+  - Changing the `pathType` 
+  - Inserting additional hosts and TLS configurations with `extraHosts` and `extraTLS`
 
 ### Updates
 
 - GraphDB properties and logback configuration configmaps are now applied by default
 - Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
 - Removed unused busybox image configurations from `images.busybox`
+- Updated the ingress resource to be agnostic to the ingress implementation. It will no longer assume that NGINX is the ingress controller in the
+  cluster
 
 ### Breaking
 
@@ -31,8 +37,11 @@ TODO: short info about being decoupled from GraphDB
 - Updated `workbench.subpath` to serve GraphDB at context path `/` by default
 - Updated `deployment.imagePullSecret` to be a list, e.g. `deployment.imagePullSecrets`
 - Removed the default value from `global.imageRegistry`, the chart now uses the value from `images.graphdb.registry`
-- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer use `global.storageClass`.
+- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
+  use `global.storageClass`.
 - Renamed `graphdb.clusterProxy.persistence.enablePersistence` toggle to just `enabled`
+- Removed `maxRequestSize` and `timeout` configurations from `deployment.ingress` as they were specific to the ingress controller implementation of
+  nginx
 
 ## Version 10.6.0-R2
 
@@ -68,7 +77,8 @@ TODO: short info about being decoupled from GraphDB
 
 ## Version 10.4.1
 
-- Added configurations for specifying resource values for all remaining containers, see `graphdb.node.initContainerResources` and `graphdb.jobResources`.
+- Added configurations for specifying resource values for all remaining containers, see `graphdb.node.initContainerResources`
+  and `graphdb.jobResources`.
 
 ## Version 10.3.1-R2
 

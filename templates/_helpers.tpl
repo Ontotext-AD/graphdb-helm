@@ -1,14 +1,8 @@
-{{- define "graphdb.resolveDeploymentHost" -}}
-  {{- $global := .Values.global | default dict -}}
-  {{- $globalDeployment := $global.deployment | default dict -}}
-  {{- print (index $globalDeployment "host" | default (index $global "ingressHost") | default .Values.deployment.host) -}}
-{{- end }}
-
 {{/*
 Renders the URL address at which GraphDB would be accessed
 */}}
 {{- define "graphdb.url.public" -}}
-{{ $.Values.deployment.protocol }}://{{ include "graphdb.resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}
+  {{- printf "%s://%s%s" .Values.deployment.protocol .Values.deployment.host .Values.graphdb.workbench.subpath -}}
 {{- end }}
 
 {{/*

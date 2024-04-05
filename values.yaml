@@ -79,17 +79,26 @@ deployment:
 
   # -- Ingress related configurations
   ingress:
+    # -- Toggles the deployment of the default ingress
     enabled: true
-    class: nginx
+    # -- Specifies the ingress controller implementation that will deploy this ingress.
+    # Not defining this would result in using the default ingress controller in the cluster, if there is one.
+    className: ""
+    #  -- Sets extra ingress labels
+    labels: {}
     # -- Sets extra ingress annotations
     annotations: {}
-    # -- Sets the maximum size for all requests to the underlying Nginx
-    maxRequestSize: 512M
-    # -- Default timeouts in seconds for the underlying Nginx.
-    timeout:
-      connect: 5
-      read: 600
-      send: 600
+    # Overrides deployment.host
+    host: ""
+    # Overrides graphdb.workbench.subpath
+    path: ""
+    # Sets the ingress path type.
+    # If you need to use ImplementationSpecific, make sure to set any annotations needed by the implementation.
+    pathType: Prefix
+    # List of additional hostnames to append to the ingress resource
+    extraHosts: []
+    # List of additional TLS records to append to the ingress resource
+    extraTLS: []
 
 # GraphDB database configurations
 graphdb:

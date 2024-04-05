@@ -140,6 +140,8 @@ spec:
 
               echo 'Configuring graphdb.properties'
               cat /tmp/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
 
               echo 'Configuring GraphDB cluster proxy hostnames'
               echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties

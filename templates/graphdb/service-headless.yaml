@@ -1,18 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: graphdb-node
+  name: {{ include "graphdb.fullname.service.headless" . }}
   labels:
-    app: graphdb-node
     {{- include "graphdb.labels" . | nindent 4 }}
-  {{- with .Values.graphdb.node.service.annotations }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.graphdb.node.service.annotations) }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
   clusterIP: None
   selector:
-    app: graphdb-node
+    {{- include "graphdb.selectorLabels" . | nindent 4 }}
   ports:
     - name: graphdb
       port: 7200

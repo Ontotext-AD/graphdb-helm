@@ -2,9 +2,13 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: graphdb-node
+  name: {{ include "graphdb.fullname" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
+  {{- end }}
 spec:
   {{- if .Values.graphdb.pdb.minAvailable }}
   minAvailable: {{ .Values.graphdb.pdb.minAvailable }}
@@ -14,5 +18,5 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app: graphdb-node
+      {{- include "graphdb.selectorLabels" . | nindent 6 }}
 {{- end }}

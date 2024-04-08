@@ -5,6 +5,13 @@
 {{- end }}
 
 {{/*
+Renders the URL address at which GraphDB would be accessed
+*/}}
+{{- define "graphdb.url.public" -}}
+{{ $.Values.deployment.protocol }}://{{ include "graphdb.resolveDeploymentHost" $ }}{{ $.Values.graphdb.workbench.subpath }}
+{{- end }}
+
+{{/*
 Combined image pull secrets
 */}}
 {{- define "graphdb.combinedImagePullSecrets" -}}
@@ -52,3 +59,27 @@ Render the container image for GraphDB
     {{- printf "%s:%s" $repository $tag -}}
   {{- end -}}
 {{- end }}
+
+{{/*
+Renders the gRPC address of each GraphDB node that is part of the cluster. Used in the cluster JSON config.
+*/}}
+{{- define "graphdb.cluster.nodes.json" -}}
+  {{- range $i, $node_index := until (int .Values.graphdb.clusterConfig.nodesCount) -}}
+    "{{ include "graphdb.fullname" $ }}-{{ $node_index }}.{{ include "graphdb.fullname.service.headless" $ }}.{{ $.Release.Namespace }}.svc.cluster.local:7300"
+    {{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index -}}
+      {{- ", \n" -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Renders the HTTP address of each GraphDB node that is part of the cluster, joined by a comma.
+*/}}
+{{- define "graphdb-proxy.cluster.nodes" -}}
+  {{- range $i, $node_index := until (int $.Values.graphdb.clusterConfig.nodesCount) -}}
+    http://{{ include "graphdb.fullname" $ }}-{{ $node_index }}.{{ include "graphdb.fullname.service.headless" $ }}.{{ $.Release.Namespace }}.svc.cluster.local:7200
+    {{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index -}}
+      {{- ", " -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

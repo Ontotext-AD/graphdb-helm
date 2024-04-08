@@ -1,16 +1,15 @@
-{{- $configs := (.Values.graphdb.configs | default dict) }}
-{{- if $configs.propertiesConfigMap}}
-{{- if eq $configs.propertiesConfigMap "graphdb-properties-configmap" }}
-# Default configuration map for provisioning GraphDB properties.
-# To change it, prepare another configuration map and update "graphdb.configs.propertiesConfigMap"
+{{- if not .Values.configuration.properties.existingConfigmap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: graphdb-properties-configmap
+  name: {{ include "graphdb.fullname.configmap.properties" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
+  {{- end }}
 data:
-  graphdb.properties: |-
-{{ tpl (.Files.Get "files/config/graphdb.properties" | indent 4) . }}
-{{- end }}
+  {{ .Values.configuration.properties.configmapKey }}: |-
+    {{- tpl ( .Files.Get "files/config/graphdb.properties" ) . | nindent 4 }}
 {{- end }}

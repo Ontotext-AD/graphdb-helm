@@ -21,8 +21,37 @@ images:
     repository: busybox
     tag: "1.36.1"
 
-# Extra labels for the deployed resources
-extraLabels: {}
+# Overrides the name of the chart affecting the resources names for GraphDB
+# To override the GraphDB proxy's name, use proxy.nameOverride
+nameOverride: ""
+
+# Overrides the naming of all GraphDB resources, effectively removing the release name prefix. Takes precedence over nameOverride
+# To override the GraphDB proxy's full name, use proxy.fullnameOverride
+fullnameOverride: ""
+
+# Additional common labels to add to the resources
+labels: {}
+
+# Additional common annotations to add to the resources
+annotations: {}
+
+# Runtime configuration overrides
+configuration:
+  properties:
+    existingConfigmap: ""
+    configmapKey: "graphdb.properties"
+  logback:
+    existingConfigmap: ""
+    configmapKey: "logback.xml"
+
+# Initial provisioning overrides
+provision:
+  settings:
+    existingConfigmap: ""
+    configmapKey: "settings.js"
+  users:
+    existingConfigmap: ""
+    configmapKey: "users.js"
 
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
@@ -94,16 +123,8 @@ graphdb:
   # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
   # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html
   configs:
-    # Override default settings configuration
-    #settingsConfigMap: graphdb-settings-configmap
-    # Override default users configuration
-    #usersConfigMap: graphdb-users-configmap
-    # Override default properties configuration
-    #propertiesConfigMap: graphdb-properties-configmap
-    # Override default logback configuration
-    #logbackConfigMap: graphdb-logback-configmap
     # Optional configmap containing repository configuration ttl file(s). GraphDB will automatically create repositories with the provided repositories configuration files
-    # provisionRepositoriesConfigMap: graphdb-repositories-configmap
+    provisionRepositoriesConfigMap: ""
 
   security:
     # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
@@ -323,3 +344,31 @@ graphdb:
     create: false
     minAvailable: "51%"
     maxUnavailable:
+
+  #
+  # Service account for the GraphDB nodes.
+  # GraphDB by itself has no need to communicate with the Kubernetes API but the service account tokens can be used
+  # as ODIC tokens for authentication in cloud APIs.
+  #
+  serviceAccount:
+    # - Specifies whether a service account should be created
+    create: true
+    # - The name of the service account to use.
+    # - If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # If create is true, add extra annotations to the created service account.
+    annotations: {}
+
+# Configurations for the GraphDB proxy
+proxy:
+  # Overrides the name of the GraphDB proxy component
+  nameOverride: ""
+
+  # Overrides the naming of all GraphDB proxy resources, effectively removing the release name prefix. Takes precedence over proxy.nameOverride
+  fullnameOverride: ""
+
+  # Additional common labels to add to the GraphDB proxy resources
+  labels: {}
+
+  # Additional common annotations to add to the GraphDB proxy resources
+  annotations: {}

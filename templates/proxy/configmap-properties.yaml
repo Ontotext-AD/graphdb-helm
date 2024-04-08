@@ -2,10 +2,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: graphdb-proxy-properties-configmap
+  name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
   labels:
-    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- include "graphdb-proxy.labels" . | nindent 4 }}
+  {{- with .Values.proxy.annotations }}
+  annotations:
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
+  {{- end }}
 data:
   graphdb.properties: |-
-{{ tpl (.Files.Get "files/config/proxy/graphdb.properties" | indent 4) . }}
+    {{- tpl ( .Files.Get "files/config/proxy/graphdb.properties" ) . | nindent 4 }}
 {{- end }}

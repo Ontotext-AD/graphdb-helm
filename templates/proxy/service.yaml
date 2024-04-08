@@ -2,18 +2,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: graphdb-cluster-proxy
+  name: {{ include "graphdb-proxy.fullname" . }}
   labels:
-    app: graphdb-cluster-proxy
-    {{- include "graphdb.labels" . | nindent 4 }}
-  {{- with .Values.graphdb.clusterProxy.service.annotations }}
+    {{- include "graphdb-proxy.labels" . | nindent 4 }}
+  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.graphdb.clusterProxy.service.annotations) }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
   type: {{ $.Values.graphdb.clusterProxy.serviceType }}
   selector:
-    app: graphdb-cluster-proxy
+    {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:
     - name: gdb-proxy-port
       port: 7200

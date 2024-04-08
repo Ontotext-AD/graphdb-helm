@@ -46,7 +46,6 @@ spec:
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
     spec:
-      setHostnameAsFQDN: false
       terminationGracePeriodSeconds: {{ .Values.graphdb.node.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
       volumes:

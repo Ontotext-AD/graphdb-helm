@@ -33,27 +33,26 @@ Renders the container image for GraphDB
 {{- end -}}
 
 {{/*
-Renders the gRPC address of each GraphDB node that is part of the cluster. Used in the cluster JSON config.
+Renders the gRPC address of each GraphDB node that is part of the cluster as a JSON array. Used in the cluster JSON config.
 */}}
 {{- define "graphdb.cluster.nodes.json" -}}
-  {{- $pod_name := include "graphdb.fullname" . }}
-  {{- $service_name := include "graphdb.fullname.service.headless" . }}
-  {{- $service_rpc_port := .Values.graphdb.node.headlessService.ports.rpc }}
+  {{- $pod_name := include "graphdb.fullname" . -}}
+  {{- $service_name := include "graphdb.fullname.service.headless" . -}}
+  {{- $service_rpc_port := .Values.graphdb.node.headlessService.ports.rpc -}}
+  {{- $nodes := list -}}
   {{- range $i, $node_index := until (int .Values.graphdb.clusterConfig.nodesCount) -}}
-    "{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $service_rpc_port }}"
-    {{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index -}}
-      {{- ", \n" -}}
-    {{- end -}}
+    {{- $nodes = append $nodes (printf "%s-%s.%s.%s.svc.cluster.local:%s" $pod_name (toString $node_index) $service_name $.Release.Namespace (toString $service_rpc_port)) -}}
   {{- end -}}
+  {{- toPrettyJson $nodes -}}
 {{- end -}}
 
 {{/*
 Renders the HTTP address of each GraphDB node that is part of the cluster, joined by a comma.
 */}}
 {{- define "graphdb-proxy.cluster.nodes" -}}
-  {{- $pod_name := include "graphdb.fullname" . }}
-  {{- $service_name := include "graphdb.fullname.service.headless" . }}
-  {{- $service_http_port := .Values.graphdb.node.headlessService.ports.http }}
+  {{- $pod_name := include "graphdb.fullname" . -}}
+  {{- $service_name := include "graphdb.fullname.service.headless" . -}}
+  {{- $service_http_port := .Values.graphdb.node.headlessService.ports.http -}}
   {{- range $i, $node_index := until (int $.Values.graphdb.clusterConfig.nodesCount) -}}
     http://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $service_http_port }}
     {{- if gt (sub (int $.Values.graphdb.clusterConfig.nodesCount) 1 ) $node_index -}}

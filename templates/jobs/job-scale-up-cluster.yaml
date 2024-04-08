@@ -18,8 +18,10 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
-        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
+      {{- end }}
       securityContext:
         {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
       containers:
@@ -30,8 +32,12 @@ spec:
               value: {{ include "graphdb.fullname" . }}
             - name: GRAPHDB_SERVICE_NAME
               value: {{ include "graphdb.fullname.service.headless" . }}
+            - name: GRAPHDB_SERVICE_PORT
+              value: {{ .Values.graphdb.node.headlessService.ports.http | quote }}
             - name: GRAPHDB_PROXY_SERVICE_NAME
               value: {{ include "graphdb-proxy.fullname" . }}
+            - name: GRAPHDB_PROXY_SERVICE_PORT
+              value: {{ .Values.graphdb.clusterProxy.headlessService.ports.http | quote }}
           envFrom:
             - secretRef:
                 name: {{ include "graphdb.fullname.secret.provision-user" . }}

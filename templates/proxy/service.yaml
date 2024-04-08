@@ -5,6 +5,9 @@ metadata:
   name: {{ include "graphdb-proxy.fullname" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
+    {{- with .Values.graphdb.clusterProxy.service.labels }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- end }}
   {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.graphdb.clusterProxy.service.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
@@ -14,8 +17,11 @@ spec:
   selector:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:
-    - name: gdb-proxy-port
-      port: 7200
-      targetPort: 7200
+    - name: http
+      port: {{ .Values.graphdb.clusterProxy.service.ports.http }}
+      targetPort: http
       protocol: TCP
+      {{- if .Values.graphdb.clusterProxy.service.nodePort }}
+      nodePort: {{ .Values.graphdb.clusterProxy.service.nodePort }}
+      {{- end }}
 {{- end }}

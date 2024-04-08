@@ -14,7 +14,7 @@ function createCluster {
        --header "Authorization: Basic ${authToken}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: */*' \
-       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:7200/rest/cluster/config"
+       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
 
   if grep -q 'HTTP/1.1 201' "response.json"; then
     echo "Cluster creation successful!"
@@ -54,7 +54,7 @@ function waitAllNodes {
   for (( c=$node_count; c>0; c ))
   do
     c=$((c-1))
-    waitService "http://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:7200/rest/repositories"
+    waitService "http://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
   done
 }
 
@@ -75,7 +75,7 @@ function createRepositoryFromFile {
            -F config=@${filename} \
            -H "Authorization: Basic ${authToken}" \
            -H 'Content-Type: multipart/form-data' \
-           "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:7200/rest/repositories"
+           "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
     )
 
     if [ -z "$response" ]; then

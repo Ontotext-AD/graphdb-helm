@@ -9,13 +9,28 @@ TODO: short info about being decoupled from GraphDB
 
 - Added `annotations` for common annotations across resources
 - Added `graphdb.serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
-- Values in `labels` and `annotations` are now evaluated as templates
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
+- Added `properties` for inserting additional GraphDB configurations in the properties configmap
+- Added `images.graphdb.sha` to optionally provide an expected SHA checksum of the image
+- Added `graphdb.node.persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
+- Added new configuration options for the default ingress `deployment.ingress`:
+  - Ability to override the `host` and `path` for GraphDB from `deployment.host` and `graphdb.workbench.subpath` 
+  - Changing the `pathType` 
+  - Inserting additional hosts and TLS configurations with `extraHosts` and `extraTLS`
+- Added `labels` for each service resource for insertion of additional labels 
+- Added `containerPorts` and `proxy.containerPorts` for mapping the ports on which GraphDB listens on
+- Added `ports` mappings in each service 
+- Added `extraContainerPorts` and `proxy.extraContainerPorts`
 
 ### Updates
 
 - GraphDB properties and logback configuration configmaps are now applied by default
+- Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
+- Removed unused busybox image configurations from `images.busybox`
+- Updated the ingress resource to be agnostic to the ingress implementation. It will no longer assume that NGINX is the ingress controller in the
+  cluster
+- Service resources and probes now refer to the target ports by their nicknames
 
 ### Breaking
 
@@ -24,6 +39,16 @@ TODO: short info about being decoupled from GraphDB
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Configmaps from `graphdb.configs` are now under `configuration` and with a different structure allowing better reuse of existing configmaps
+- Updated `workbench.subpath` to serve GraphDB at context path `/` by default
+- Updated `deployment.imagePullSecret` to be a list, e.g. `deployment.imagePullSecrets`
+- Removed the default value from `global.imageRegistry`, the chart now uses the value from `images.graphdb.registry`
+- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
+  use `global.storageClass`.
+- Renamed `graphdb.clusterProxy.persistence.enablePersistence` toggle to just `enabled`
+- Removed `maxRequestSize` and `timeout` configurations from `deployment.ingress` as they were specific to the ingress controller implementation of
+  nginx
+- Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
+- Renamed `graphdb.node.service` to `headlessService`
 
 ## Version 10.6.0-R2
 
@@ -59,7 +84,8 @@ TODO: short info about being decoupled from GraphDB
 
 ## Version 10.4.1
 
-- Added configurations for specifying resource values for all remaining containers, see `graphdb.node.initContainerResources` and `graphdb.jobResources`.
+- Added configurations for specifying resource values for all remaining containers, see `graphdb.node.initContainerResources`
+  and `graphdb.jobResources`.
 
 ## Version 10.3.1-R2
 

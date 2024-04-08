@@ -18,19 +18,19 @@ spec:
   selector:
     matchLabels:
       {{- include "graphdb.selectorLabels" . | nindent 6 }}
-  {{- if or (hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec") ($.Values.graphdb.import_directory_mount.enabled) }}
+  {{- if or .Values.graphdb.node.persistence.enabled .Values.graphdb.import_directory_mount.enabled }}
   volumeClaimTemplates:
-    {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+    {{- if .Values.graphdb.node.persistence.enabled }}
     - metadata:
         name: graphdb-storage
-      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.node.persistence.volumeClaimTemplateSpec }}
-      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+      spec:
+        {{- toYaml .Values.graphdb.node.persistence.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
     {{- if $.Values.graphdb.import_directory_mount.enabled }}
     - metadata:
-        name: graphdb-server-import
-      {{- $spec := dict "globalStorageClassName" $.Values.global.storageClass "spec" $.Values.graphdb.import_directory_mount.volumeClaimTemplateSpec }}
-      spec: {{ include "graphdb.renderVolumeClaimTemplateSpec" $spec | nindent 8 }}
+        name: graphdb-import
+      spec:
+        {{- toYaml .Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
   {{- end }}
   template:
@@ -46,7 +46,6 @@ spec:
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
     spec:
-      setHostnameAsFQDN: false
       terminationGracePeriodSeconds: {{ .Values.graphdb.node.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
       volumes:
@@ -89,8 +88,10 @@ spec:
       {{- with .Values.graphdb.node.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
       imagePullSecrets:
-        {{- include "graphdb.combinedImagePullSecrets" $ | nindent 8 }}
+        {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}
@@ -102,12 +103,15 @@ spec:
           args: {{ toYaml . | nindent 12 }}
           {{- end }}
           ports:
-            - name: graphdb
-              containerPort: 7200
-              {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
-            - name: graphdb-rpc
-              containerPort: 7300
-              {{- end }}
+            - name: http
+              containerPort: {{ .Values.containerPorts.http }}
+            {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
+            - name: rpc
+              containerPort: {{ .Values.containerPorts.rpc }}
+            {{- end }}
+            {{- with .Values.extraContainerPorts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb.fullname" . }}
@@ -118,7 +122,7 @@ spec:
           env: {{- tpl ( toYaml . ) $ | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            {{- if .Values.graphdb.node.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
@@ -160,8 +164,12 @@ spec:
           env:
             - name: GRAPHDB_PUBLIC_URL
               value: {{ include "graphdb.url.public" . }}
+            - name: GRAPHDB_HTTP_PORT
+              value: {{ .Values.containerPorts.http | quote }}
+            - name: GRAPHDB_RPC_PORT
+              value: {{ .Values.containerPorts.rpc | quote }}
           volumeMounts:
-            {{- if hasKey $.Values.graphdb.node.persistence "volumeClaimTemplateSpec" }}
+            {{- if .Values.graphdb.node.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
@@ -193,11 +201,12 @@ spec:
               echo 'Configuring graphdb.properties'
               cat /tmp/graphdb/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
               echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
 
               echo "Configuring GraphDB hostname: $(hostname --fqdn)"
-              echo "graphdb.vhosts=$(hostname --fqdn):7200, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
               echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.rpc.address=$(hostname --fqdn):7300" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}" >> /opt/graphdb/home/conf/graphdb.properties
 
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
                 echo "Provisioning users with users.js file..."

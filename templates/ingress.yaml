@@ -5,48 +5,46 @@ metadata:
   name: {{ include "graphdb.fullname" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.deployment.ingress.labels }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- end }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.deployment.ingress.class }}
-    {{- if .Values.deployment.tls.enabled }}
-    ingress.kubernetes.io/force-ssl-redirect: "true"
-    {{- end }}
-    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.deployment.ingress.maxRequestSize }}
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: {{ .Values.deployment.ingress.timeout.connect | quote }}
-    nginx.ingress.kubernetes.io/proxy-read-timeout: {{ .Values.deployment.ingress.timeout.read | quote }}
-    nginx.ingress.kubernetes.io/proxy-send-timeout: {{ .Values.deployment.ingress.timeout.send | quote }}
-    {{- if eq $.Values.graphdb.workbench.subpath "/" }}
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    {{- else }}
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    {{- end }}
-    nginx.ingress.kubernetes.io/x-forwarded-prefix: {{ $.Values.graphdb.workbench.subpath | quote }}
     {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.deployment.ingress.annotations) }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
 spec:
-  {{- if .Values.deployment.tls.enabled }}
+  {{- with .Values.deployment.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if or .Values.deployment.tls.enabled .Values.deployment.ingress.extraTLS }}
   tls:
+    {{- if .Values.deployment.tls.enabled }}
     - hosts:
-        - {{ include "graphdb.resolveDeploymentHost" . | quote }}
+        - {{ coalesce .Values.deployment.ingress.host .Values.deployment.host }}
       secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
+    {{- end }}
+    {{- with .Values.deployment.ingress.extraTLS }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- end }}
   {{- end }}
   rules:
-    - host: {{ include "graphdb.resolveDeploymentHost" . | quote }}
+    - host: {{ coalesce .Values.deployment.ingress.host .Values.deployment.host }}
       http:
         paths:
-          {{- if eq $.Values.graphdb.workbench.subpath "/" }}
-          - path: /(.*)
-          {{- else }}
-          - path: {{ $.Values.graphdb.workbench.subpath }}(/|$)(.*)
-          {{- end }}
-            pathType: ImplementationSpecific
+          - path: {{ coalesce .Values.deployment.ingress.path .Values.graphdb.workbench.subpath }}
+            pathType: {{ .Values.deployment.ingress.pathType }}
             backend:
               service:
-              {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+                {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
                 name: {{ include "graphdb-proxy.fullname" . }}
-              {{- else }}
-                name: {{ include "graphdb.fullname.service.headless" . }}
-              {{- end }}
                 port:
-                  number: 7200
+                  number: {{ .Values.graphdb.clusterProxy.service.ports.http }}
+                {{- else }}
+                name: {{ include "graphdb.fullname.service.headless" . }}
+                port:
+                  number: {{ .Values.graphdb.node.headlessService.ports.http }}
+                {{- end }}
+    {{- with .Values.deployment.ingress.extraHosts }}
+      {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- end }}
 {{- end }}

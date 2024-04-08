@@ -6,9 +6,8 @@
 # See https://helm.sh/docs/chart_template_guide/values_files/
 
 global:
+  imageRegistry: ""
   imagePullSecrets: []
-  storageClass: "standard"
-  imageRegistry: docker.io
 
 # Top lvl flat for easier maintenance
 images:
@@ -17,9 +16,8 @@ images:
     repository: ontotext/graphdb
     # If specified, overrides Chart.AppVersion
     tag: ""
-  busybox:
-    repository: busybox
-    tag: "1.36.1"
+    # Expected SHA checksum of the used GraphDB image
+    sha: ""
 
 # Overrides the name of the chart affecting the resources names for GraphDB
 # To override the GraphDB proxy's name, use proxy.nameOverride
@@ -53,13 +51,23 @@ provision:
     existingConfigmap: ""
     configmapKey: "users.js"
 
+# Additional GraphDB properties to insert in the properties configmap
+properties: {}
+
+# Ports used by the GraphDB container
+containerPorts:
+  http: 7200
+  rpc: 7300
+
+# Additional container ports to insert
+extraContainerPorts: {}
+
 ####### DEPLOYMENT CONFIGURATIONS #######
 deployment:
   # -- Defines the policy with which components will request their image.
   imagePullPolicy: IfNotPresent
-  # Secret used to pull Docker images. Uncomment to use it.
-  # Important: Must be created beforehand
-  # imagePullSecret: ontotext
+  # -- Secrets used to pull Docker images.
+  imagePullSecrets: []
 
   # -- The hostname and protocol at which the graphdb will be accessible.
   # Needed to configure ingress as well as some components require it to properly render their UIs
@@ -79,17 +87,26 @@ deployment:
 
   # -- Ingress related configurations
   ingress:
+    # -- Toggles the deployment of the default ingress
     enabled: true
-    class: nginx
+    # -- Specifies the ingress controller implementation that will deploy this ingress.
+    # Not defining this would result in using the default ingress controller in the cluster, if there is one.
+    className: ""
+    #  -- Sets extra ingress labels
+    labels: {}
     # -- Sets extra ingress annotations
     annotations: {}
-    # -- Sets the maximum size for all requests to the underlying Nginx
-    maxRequestSize: 512M
-    # -- Default timeouts in seconds for the underlying Nginx.
-    timeout:
-      connect: 5
-      read: 600
-      send: 600
+    # Overrides deployment.host
+    host: ""
+    # Overrides graphdb.workbench.subpath
+    path: ""
+    # Sets the ingress path type.
+    # If you need to use ImplementationSpecific, make sure to set any annotations needed by the implementation.
+    pathType: Prefix
+    # List of additional hostnames to append to the ingress resource
+    extraHosts: []
+    # List of additional TLS records to append to the ingress resource
+    extraTLS: []
 
 # GraphDB database configurations
 graphdb:
@@ -158,13 +175,20 @@ graphdb:
     # Extra pod labels and annotations
     podLabels: {}
     podAnnotations: {}
-    # -- GraphDB node service configurations
-    service:
+    # -- GraphDB node headless service configurations
+    headlessService:
+      # Extra labels to append to the headless service
+      labels: {}
       # Extra annotations to append to the service
       annotations: {}
+      # Ports exposed by the service
+      ports:
+        http: 7200
+        rpc: 7300
     # -- Persistence configurations.
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
+      enabled: true
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -185,7 +209,7 @@ graphdb:
     startupProbe:
       httpGet:
         path: /protocol
-        port: graphdb
+        port: http
       failureThreshold: 30
       timeoutSeconds: 5
       periodSeconds: 10
@@ -193,7 +217,7 @@ graphdb:
     readinessProbe:
       httpGet:
         path: /protocol
-        port: graphdb
+        port: http
       initialDelaySeconds: 5
       timeoutSeconds: 5
       periodSeconds: 10
@@ -201,7 +225,7 @@ graphdb:
     livenessProbe:
       httpGet:
         path: /protocol
-        port: graphdb
+        port: http
       initialDelaySeconds: 60
       timeoutSeconds: 5
       periodSeconds: 10
@@ -242,6 +266,10 @@ graphdb:
     # -- Service type used by the graphdb-cluster-proxy service
     # Note: If using ALB in AWS EKS this will default to being on the public internet
     serviceType: LoadBalancer
+    # Ports used by GraphDB proxy container
+    containerPorts:
+      http: 7200
+      rpc: 7300
     # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
     # By default, no restrictions are applied.
     nodeSelector: {}
@@ -253,12 +281,27 @@ graphdb:
     podAnnotations: {}
     # -- GraphDB cluster proxy service configurations
     service:
+      # Extra labels to append to the service
+      labels: {}
       # Extra annotations to append to the service
       annotations: {}
+      # Ports exposed by the service
+      ports:
+        http: 7200
+        rpc: 7300
+      # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
+      # If left undefined, K8S will pick a random port from the node port range of the cluster.
+      nodePort: ""
     # -- GraphDB cluster proxy headless service configurations
     headlessService:
+      # Extra labels to append to the headless service
+      labels: {}
       # Extra annotations to append to the service
       annotations: {}
+      # Ports exposed by the service
+      ports:
+        http: 7200
+        rpc: 7300
     # -- Minimum requirements for a successfully running GraphDB cluster proxy
     resources:
       limits:
@@ -270,7 +313,7 @@ graphdb:
     # By default, Helm will use a PV that reads and writes to the host file system.
     persistence:
       # enable or disable proxy persistence
-      enablePersistence: true
+      enabled: true
       # use dynamic volume provisioning
       volumeClaimTemplateSpec:
         accessModes:
@@ -282,7 +325,7 @@ graphdb:
     startupProbe:
       httpGet:
         path: /proxy/ready
-        port: gdb-proxy-port
+        port: http
       failureThreshold: 60
       timeoutSeconds: 3
       periodSeconds: 5
@@ -290,14 +333,14 @@ graphdb:
     readinessProbe:
       httpGet:
         path: /proxy/ready
-        port: gdb-proxy-port
+        port: http
       timeoutSeconds: 5
       periodSeconds: 10
     # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
     livenessProbe:
       httpGet:
         path: /proxy/health
-        port: gdb-proxy-port
+        port: http
       initialDelaySeconds: 120
       timeoutSeconds: 5
       periodSeconds: 10
@@ -323,8 +366,7 @@ graphdb:
   # GraphDB workbench configurations
   workbench:
     # -- This is the sub path at which GraphDB workbench can be opened.
-    # Should be configured in the API gateway (or any other proxy in front)
-    subpath: /graphdb
+    subpath: /
 
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   # Attach additional PV which will be used as an import directory
@@ -348,7 +390,7 @@ graphdb:
   #
   # Service account for the GraphDB nodes.
   # GraphDB by itself has no need to communicate with the Kubernetes API but the service account tokens can be used
-  # as ODIC tokens for authentication in cloud APIs.
+  # as ODIC federated web identity tokens for authentication in cloud APIs.
   #
   serviceAccount:
     # - Specifies whether a service account should be created
@@ -372,3 +414,11 @@ proxy:
 
   # Additional common annotations to add to the GraphDB proxy resources
   annotations: {}
+
+  # Ports used by GraphDB proxy and the Service components
+  containerPorts:
+    http: 7200
+    rpc: 7300
+
+  # Additional container ports to insert
+  extraContainerPorts: {}

@@ -5,7 +5,5 @@
   "verificationTimeout": {{ .Values.graphdb.clusterConfig.verificationTimeout | int }},
   "messageSizeKB": {{ .Values.graphdb.clusterConfig.messageSize | int }},
   "transactionLogMaximumSizeGB": {{ .Values.graphdb.clusterConfig.transactionLogMaximumSizeGB | quote }},
-  "nodes": [
-    {{- include "graphdb.cluster.nodes.json" . | nindent 4 }}
-  ]
+  "nodes": {{- include "graphdb.cluster.nodes.json" . | indent 2 }}
 }

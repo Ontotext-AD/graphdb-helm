@@ -1,9 +1,9 @@
 {
-  "electionMinTimeout": {{ .Values.graphdb.clusterConfig.electionMinTimeout | int }},
-  "electionRangeTimeout": {{ .Values.graphdb.clusterConfig.electionRangeTimeout | int }},
-  "heartbeatInterval": {{ .Values.graphdb.clusterConfig.heartbeatInterval | int }},
-  "verificationTimeout": {{ .Values.graphdb.clusterConfig.verificationTimeout | int }},
-  "messageSizeKB": {{ .Values.graphdb.clusterConfig.messageSize | int }},
-  "transactionLogMaximumSizeGB": {{ .Values.graphdb.clusterConfig.transactionLogMaximumSizeGB | quote }},
+  "electionMinTimeout": {{ .Values.cluster.config.electionMinTimeout | int }},
+  "electionRangeTimeout": {{ .Values.cluster.config.electionRangeTimeout | int }},
+  "heartbeatInterval": {{ .Values.cluster.config.heartbeatInterval | int }},
+  "verificationTimeout": {{ .Values.cluster.config.verificationTimeout | int }},
+  "messageSizeKB": {{ .Values.cluster.config.messageSizeKB | int }},
+  "transactionLogMaximumSizeGB": {{ .Values.cluster.config.transactionLogMaximumSizeGB | quote }},
   "nodes": {{- include "graphdb.cluster.nodes.json" . | indent 2 }}
 }

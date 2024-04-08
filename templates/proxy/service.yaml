@@ -1,27 +1,27 @@
-{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- if gt (int $.Values.replicas) 1 }}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "graphdb-proxy.fullname" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
-    {{- with .Values.graphdb.clusterProxy.service.labels }}
+    {{- with .Values.proxy.service.labels }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.graphdb.clusterProxy.service.annotations) }}
+  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.proxy.service.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ $.Values.graphdb.clusterProxy.serviceType }}
+  type: {{ $.Values.proxy.service.type }}
   selector:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:
     - name: http
-      port: {{ .Values.graphdb.clusterProxy.service.ports.http }}
+      port: {{ .Values.proxy.service.ports.http }}
       targetPort: http
       protocol: TCP
-      {{- if .Values.graphdb.clusterProxy.service.nodePort }}
-      nodePort: {{ .Values.graphdb.clusterProxy.service.nodePort }}
+      {{- if .Values.proxy.service.nodePort }}
+      nodePort: {{ .Values.proxy.service.nodePort }}
       {{- end }}
 {{- end }}

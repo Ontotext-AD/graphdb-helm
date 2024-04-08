@@ -4,51 +4,70 @@
 
 TODO: short motivational paragraph about the major version
 TODO: short info about being decoupled from GraphDB
+TODO: short section about the most notable changes (decoupling, naming, plugins, etc.)
+
+### Breaking
+
+TODO: decide how detailed we want this to be
+
+- Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
+- Renamed `extraLabels` to just `labels`
+- Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
+- Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
+- Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration
+- Renamed `java_args` to `javaArguments`
+- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
+  use `global.storageClass`.
+- Updated the GraphDB deployment URL to be http://graphdb.127.0.0.1.nip.io/ by default
+- Removed the default value from `global.imageRegistry`, the chart now uses the value from `image.registry`
+- Updated the ingress to be agnostic to the ingress implementation. It will no longer assume that NGINX is the ingress controller in the
+  cluster and will no longer deploy NGINX specific annotations by default. Removed anything related to NGINX as configurations.
+- Moved all proxy configurations from `graphdb.clusterProxy` to just `proxy`
+  - Renamed `proxy.persistence.enablePersistence` toggle to just `enabled`
+  - Moved `proxy.serviceType` to `proxy.service.type`
+- Configmaps from `graphdb.configs` are now under `configuration`, `repositories` and `security` with a different structure allowing better reuse
+  of existing configmaps
+- Moved job related configurations from `graphdb` (e.g. `graphdb.jobResources`) to a new root section `jobs`
+- Moved `images.graphdb` configurations to just `image`
+- Moved `deployment.imagePullPolicy` to `image.pullPolicy` and `deployment.imagePullSecret` to `image.pullSecrets`
+  - Updated `imagePullSecret` to be a list, e.g. `imagePullSecrets`
+- Moved `graphdb.import_directory_mount` configurations to `import.volumeMount`
+- Moved `deployment.ingress` to just `ingress`
+  - Moved `deployment.tls` to `ingress.tls`
+- Renamed `graphdb.node.service` to `headlessService`
+- Moved `graphdb` and `graphdb.node` configurations on the root level
+  - Moved `graphdb.pdb` to `pdb`
+- Moved `graphdb.clusterConfig` configurations
+  - Moved `graphdb.clusterConfig.nodesCount` to `replicas`
+  - Moved the rest of `graphdb.clusterConfig` configurations under `cluster` and `cluster.config`
+- Moved `graphdb.security` configurations to `security`
 
 ### New
 
 - Added `annotations` for common annotations across resources
-- Added `graphdb.serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
+- Added `serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
-- Added `properties` for inserting additional GraphDB configurations in the properties configmap
-- Added `images.graphdb.sha` to optionally provide an expected SHA checksum of the image
-- Added `graphdb.node.persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
-- Added new configuration options for the default ingress `deployment.ingress`:
-  - Ability to override the `host` and `path` for GraphDB from `deployment.host` and `graphdb.workbench.subpath` 
+- Added `conpfiguration.properties` for inserting additional GraphDB configurations in the properties configmap
+- Added `image.sha` to optionally provide an expected SHA checksum of the image
+- Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
+- Added new configuration options for the default ingress `ingress`:
+  - Ability to override the `host` and `path` for GraphDB from `configuration.host` and `configuration.path` 
   - Changing the `pathType` 
   - Inserting additional hosts and TLS configurations with `extraHosts` and `extraTLS`
 - Added `labels` for each service resource for insertion of additional labels 
 - Added `containerPorts` and `proxy.containerPorts` for mapping the ports on which GraphDB listens on
 - Added `ports` mappings in each service 
 - Added `extraContainerPorts` and `proxy.extraContainerPorts`
+- Added `imagePullPolicy` to the jobs containers
 
 ### Updates
 
 - GraphDB properties and logback configuration configmaps are now applied by default
 - Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
 - Removed unused busybox image configurations from `images.busybox`
-- Updated the ingress resource to be agnostic to the ingress implementation. It will no longer assume that NGINX is the ingress controller in the
-  cluster
 - Service resources and probes now refer to the target ports by their nicknames
-
-### Breaking
-
-- Renamed `extraLabels` to just `labels`
-- Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
-- Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
-- Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
-- Configmaps from `graphdb.configs` are now under `configuration` and with a different structure allowing better reuse of existing configmaps
-- Updated `workbench.subpath` to serve GraphDB at context path `/` by default
-- Updated `deployment.imagePullSecret` to be a list, e.g. `deployment.imagePullSecrets`
-- Removed the default value from `global.imageRegistry`, the chart now uses the value from `images.graphdb.registry`
-- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
-  use `global.storageClass`.
-- Renamed `graphdb.clusterProxy.persistence.enablePersistence` toggle to just `enabled`
-- Removed `maxRequestSize` and `timeout` configurations from `deployment.ingress` as they were specific to the ingress controller implementation of
-  nginx
 - Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
-- Renamed `graphdb.node.service` to `headlessService`
 
 ## Version 10.6.0-R2
 

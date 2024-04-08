@@ -1,4 +1,4 @@
-{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- if gt (int $.Values.replicas) 1 }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -10,131 +10,82 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ $.Values.graphdb.clusterProxy.replicas }}
+  replicas: {{ $.Values.proxy.replicas }}
   serviceName: {{ include "graphdb-proxy.fullname.service.headless" . }}
   podManagementPolicy: Parallel
-  revisionHistoryLimit: {{ .Values.graphdb.clusterProxy.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.proxy.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}
-  {{- if .Values.graphdb.clusterProxy.persistence.enabled }}
+  {{- if .Values.proxy.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: graphdb-storage
       spec:
-        {{- toYaml .Values.graphdb.clusterProxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.proxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
   {{- end }}
   template:
     metadata:
       labels:
         {{- include "graphdb-proxy.selectorLabels" . | nindent 8 }}
-        {{- with .Values.graphdb.clusterProxy.podLabels }}
+        {{- with .Values.proxy.podLabels }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
-        {{- with .Values.graphdb.clusterProxy.podAnnotations }}
+        {{- with .Values.proxy.podAnnotations }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
     spec:
-      terminationGracePeriodSeconds: {{ .Values.graphdb.clusterProxy.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.proxy.terminationGracePeriodSeconds }}
       volumes:
         - name: graphdb-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
-      {{- with $.Values.graphdb.clusterProxy.extraVolumes }}
+      {{- with $.Values.proxy.extraVolumes }}
         {{- tpl ( toYaml . ) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.clusterProxy.nodeSelector }}
+      {{- with .Values.proxy.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.clusterProxy.affinity }}
+      {{- with .Values.proxy.affinity }}
       affinity: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.clusterProxy.tolerations }}
+      {{- with .Values.proxy.tolerations }}
       tolerations: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.clusterProxy.topologySpreadConstraints }}
+      {{- with .Values.proxy.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.clusterProxy.podSecurityContext }}
+      {{- with .Values.proxy.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
+      {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.clusterProxy.extraInitContainers }}
-      initContainers:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      containers:
-        - name: {{ include "graphdb-proxy.chartName" . }}
-          image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
-          envFrom:
-            - configMapRef:
-                name: {{ include "graphdb-proxy.fullname" . }}
-            {{- with $.Values.graphdb.clusterProxy.extraEnvFrom }}
-              {{- tpl ( toYaml . ) $ | nindent 12 }}
-            {{- end }}
-          {{- with .Values.graphdb.clusterProxy.extraEnv }}
-          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
-          {{- end }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.proxy.containerPorts.http }}
-            - name: rpc
-              containerPort: {{ .Values.proxy.containerPorts.rpc }}
-            {{- with .Values.proxy.extraContainerPorts }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          volumeMounts:
-            {{- if $.Values.graphdb.clusterProxy.persistence.enabled }}
-            - name: graphdb-storage
-              mountPath: /opt/graphdb/home
-            {{- end }}
-            {{- with $.Values.graphdb.clusterProxy.extraVolumeMounts }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- with .Values.graphdb.clusterProxy.resources }}
-          resources: {{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.graphdb.clusterProxy.securityContext }}
-          securityContext: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.graphdb.clusterProxy.startupProbe }}
-          startupProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.graphdb.clusterProxy.readinessProbe }}
-          readinessProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.graphdb.clusterProxy.livenessProbe }}
-          livenessProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
       initContainers:
         - name: {{ include "graphdb-proxy.chartName" . }}-provision-settings
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_PUBLIC_URL
-              value: {{ include "graphdb.url.public" . }}
+              value: {{ .Values.configuration.externalUrl }}
             - name: GRAPHDB_PROXY_HTTP_PORT
               value: {{ .Values.proxy.containerPorts.http | quote }}
             - name: GRAPHDB_PROXY_RPC_PORT
               value: {{ .Values.proxy.containerPorts.rpc | quote }}
-          {{- with .Values.graphdb.node.initContainerSecurityContext }}
+          {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.initContainerResources }}
+          {{- with .Values.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: graphdb-properties
               mountPath: /tmp/graphdb.properties
               subPath: graphdb.properties
-            {{- if $.Values.graphdb.clusterProxy.persistence.enabled }}
+            {{- if $.Values.proxy.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
@@ -156,5 +107,52 @@ spec:
               echo "graphdb.external-url=${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
 
               echo 'Done'
-
+        {{- with .Values.proxy.extraInitContainers }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: {{ include "graphdb-proxy.chartName" . }}
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "graphdb-proxy.fullname" . }}
+            {{- with $.Values.proxy.extraEnvFrom }}
+              {{- tpl ( toYaml . ) $ | nindent 12 }}
+            {{- end }}
+          {{- with .Values.proxy.extraEnv }}
+          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.proxy.containerPorts.http }}
+            - name: rpc
+              containerPort: {{ .Values.proxy.containerPorts.rpc }}
+            {{- with .Values.proxy.extraContainerPorts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            {{- if $.Values.proxy.persistence.enabled }}
+            - name: graphdb-storage
+              mountPath: /opt/graphdb/home
+            {{- end }}
+            {{- with $.Values.proxy.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.proxy.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.startupProbe }}
+          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.readinessProbe }}
+          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.livenessProbe }}
+          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
 {{- end }}

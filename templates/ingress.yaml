@@ -1,50 +1,51 @@
-{{- if .Values.deployment.ingress.enabled }}
+{{- if .Values.ingress.enabled }}
+{{- $external_url := urlParse .Values.configuration.externalUrl -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "graphdb.fullname" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
-    {{- with .Values.deployment.ingress.labels }}
+    {{- with .Values.ingress.labels }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
   annotations:
-    {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.deployment.ingress.annotations) }}
+    {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.ingress.annotations) }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
 spec:
-  {{- with .Values.deployment.ingress.className }}
+  {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}
   {{- end }}
-  {{- if or .Values.deployment.tls.enabled .Values.deployment.ingress.extraTLS }}
+  {{- if or .Values.ingress.tls.enabled .Values.ingress.extraTLS }}
   tls:
-    {{- if .Values.deployment.tls.enabled }}
+    {{- if .Values.ingress.tls.enabled }}
     - hosts:
-        - {{ coalesce .Values.deployment.ingress.host .Values.deployment.host }}
-      secretName: {{ required "TLS secret is required!" .Values.deployment.tls.secretName }}
+        - {{ coalesce .Values.ingress.host $external_url.host }}
+      secretName: {{ required "TLS secret is required!" .Values.ingress.tls.secretName }}
     {{- end }}
-    {{- with .Values.deployment.ingress.extraTLS }}
+    {{- with .Values.ingress.extraTLS }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ coalesce .Values.deployment.ingress.host .Values.deployment.host }}
+    - host: {{ coalesce .Values.ingress.host $external_url.host }}
       http:
         paths:
-          - path: {{ coalesce .Values.deployment.ingress.path .Values.graphdb.workbench.subpath }}
-            pathType: {{ .Values.deployment.ingress.pathType }}
+          - path: {{ coalesce .Values.ingress.path $external_url.path "/" }}
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
-                {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+                {{- if gt (int $.Values.replicas) 1 }}
                 name: {{ include "graphdb-proxy.fullname" . }}
                 port:
-                  number: {{ .Values.graphdb.clusterProxy.service.ports.http }}
+                  number: {{ .Values.proxy.service.ports.http }}
                 {{- else }}
                 name: {{ include "graphdb.fullname.service.headless" . }}
                 port:
-                  number: {{ .Values.graphdb.node.headlessService.ports.http }}
+                  number: {{ .Values.headlessService.ports.http }}
                 {{- end }}
-    {{- with .Values.deployment.ingress.extraHosts }}
+    {{- with .Values.ingress.extraHosts }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
 {{- end }}

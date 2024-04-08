@@ -1,4 +1,4 @@
-{{- if not .Values.configuration.logback.existingConfigmap }}
+{{- if not .Values.configuration.logbackConfig.existingConfigmap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,6 +10,6 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 data:
-  {{ .Values.configuration.logback.configmapKey }}: |-
+  {{ .Values.configuration.logbackConfig.configmapKey }}: |-
     {{- tpl ( .Files.Get "files/config/logback.xml" ) . | nindent 4 }}
 {{- end }}

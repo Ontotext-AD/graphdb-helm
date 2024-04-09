@@ -470,127 +470,168 @@ about defining resource limits.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| affinity | object | `{}` |  |
 | annotations | object | `{}` |  |
-| configuration.logback.configmapKey | string | `"logback.xml"` |  |
-| configuration.logback.existingConfigmap | string | `""` |  |
-| configuration.properties.configmapKey | string | `"graphdb.properties"` |  |
-| configuration.properties.existingConfigmap | string | `""` |  |
+| args | list | `[]` |  |
+| cluster.clusterCreationTimeout | int | `60` |  |
+| cluster.clusterSecret | string | `"s3cr37"` |  |
+| cluster.config.electionMinTimeout | int | `8000` |  |
+| cluster.config.electionRangeTimeout | int | `6000` |  |
+| cluster.config.heartbeatInterval | int | `2000` |  |
+| cluster.config.messageSizeKB | int | `64` |  |
+| cluster.config.transactionLogMaximumSizeGB | int | `50` |  |
+| cluster.config.verificationTimeout | int | `1500` |  |
+| cluster.existingConfig | string | `""` |  |
+| command | list | `[]` |  |
+| configuration.externalUrl | string | `"http://graphdb.127.0.0.1.nip.io/"` |  |
+| configuration.initialSettingsConfig.configmapKey | string | `"settings.js"` |  |
+| configuration.initialSettingsConfig.existingConfigmap | string | `""` |  |
+| configuration.javaArguments | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` |  |
+| configuration.logbackConfig.configmapKey | string | `"logback.xml"` |  |
+| configuration.logbackConfig.existingConfigmap | string | `""` |  |
+| configuration.properties | object | `{}` |  |
+| configuration.propertiesConfig.configmapKey | string | `"graphdb.properties"` |  |
+| configuration.propertiesConfig.existingConfigmap | string | `""` |  |
 | containerPorts.http | int | `7200` |  |
 | containerPorts.rpc | int | `7300` |  |
-| deployment.host | string | `"localhost"` |  |
-| deployment.imagePullPolicy | string | `"IfNotPresent"` | Defines the policy with which components will request their image. |
-| deployment.imagePullSecrets | list | `[]` | Secrets used to pull Docker images. |
-| deployment.ingress | object | `{"annotations":{},"className":"","enabled":true,"extraHosts":[],"extraTLS":[],"host":"","labels":{},"path":"","pathType":"Prefix"}` | Ingress related configurations |
-| deployment.ingress.annotations | object | `{}` | Sets extra ingress annotations |
-| deployment.ingress.className | string | `""` | Specifies the ingress controller implementation that will deploy this ingress. Not defining this would result in using the default ingress controller in the cluster, if there is one. |
-| deployment.ingress.enabled | bool | `true` | Toggles the deployment of the default ingress |
-| deployment.protocol | string | `"http"` | The hostname and protocol at which the graphdb will be accessible. Needed to configure ingress as well as some components require it to properly render their UIs |
-| deployment.tls.enabled | bool | `false` | Feature toggle for SSL termination. Disabled by default. If TLS is enabled, the protocol should also be updated (https) |
-| deployment.tls.secretName | string | `nil` | Name of a Kubernetes secret object with the key and certificate. If TLS is enabled, it's required to be provided, depending on the deployment. |
 | extraContainerPorts | object | `{}` |  |
+| extraEnv | list | `[]` |  |
+| extraEnvFrom | list | `[]` |  |
+| extraInitContainers | list | `[]` |  |
+| extraVolumeMounts | list | `[]` |  |
+| extraVolumes | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | global.imagePullSecrets | list | `[]` |  |
 | global.imageRegistry | string | `""` |  |
-| graphdb.clusterConfig.clusterCreationTimeout | int | `60` | Timeout for the cluster creation CURL query. Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command. |
-| graphdb.clusterConfig.clusterSecret | string | `"s3cr37"` | A secret used for secure communication amongst the nodes in the cluster. |
-| graphdb.clusterConfig.electionMinTimeout | int | `8000` | Cluster configuration parameters: Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters The minimum wait time in milliseconds for a heartbeat from a leader. |
-| graphdb.clusterConfig.electionRangeTimeout | int | `6000` |  |
-| graphdb.clusterConfig.existingClusterConfig | string | `nil` | Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation |
-| graphdb.clusterConfig.heartbeatInterval | int | `2000` |  |
-| graphdb.clusterConfig.messageSize | int | `64` |  |
-| graphdb.clusterConfig.nodesCount | int | `1` | Number of GraphDB nodes to be used in the cluster. Set value to 1 to run a standalone GraphDB instance. |
-| graphdb.clusterConfig.transactionLogMaximumSizeGB | int | `50` |  |
-| graphdb.clusterConfig.verificationTimeout | int | `1500` |  |
-| graphdb.clusterProxy.affinity | object | `{}` |  |
-| graphdb.clusterProxy.containerPorts.http | int | `7200` |  |
-| graphdb.clusterProxy.containerPorts.rpc | int | `7300` |  |
-| graphdb.clusterProxy.extraEnv | list | `[]` |  |
-| graphdb.clusterProxy.extraEnvFrom | list | `[]` |  |
-| graphdb.clusterProxy.extraInitContainers | list | `[]` |  |
-| graphdb.clusterProxy.extraVolumeMounts | list | `[]` |  |
-| graphdb.clusterProxy.extraVolumes | list | `[]` |  |
-| graphdb.clusterProxy.headlessService | object | `{"annotations":{},"labels":{},"ports":{"http":7200,"rpc":7300}}` | GraphDB cluster proxy headless service configurations |
-| graphdb.clusterProxy.java_args | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` | Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.clusterProxy.livenessProbe | object | `{"httpGet":{"path":"/proxy/health","port":"http"},"initialDelaySeconds":120,"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.clusterProxy.nodeSelector | object | `{}` |  |
-| graphdb.clusterProxy.persistence | object | `{"enabled":true,"volumeClaimTemplateSpec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"500Mi"}}}}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.clusterProxy.podAnnotations | object | `{}` |  |
-| graphdb.clusterProxy.podLabels | object | `{}` |  |
-| graphdb.clusterProxy.podSecurityContext | object | `{}` |  |
-| graphdb.clusterProxy.readinessProbe | object | `{"httpGet":{"path":"/proxy/ready","port":"http"},"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.clusterProxy.replicas | int | `1` | Number of cluster proxies used to access the GraphDB cluster |
-| graphdb.clusterProxy.resources | object | `{"limits":{"memory":"1500Mi"},"requests":{"cpu":"100m","memory":"1500Mi"}}` | Minimum requirements for a successfully running GraphDB cluster proxy |
-| graphdb.clusterProxy.revisionHistoryLimit | int | `10` |  |
-| graphdb.clusterProxy.securityContext | object | `{}` |  |
-| graphdb.clusterProxy.service | object | `{"annotations":{},"labels":{},"nodePort":"","ports":{"http":7200,"rpc":7300}}` | GraphDB cluster proxy service configurations |
-| graphdb.clusterProxy.serviceType | string | `"LoadBalancer"` | Service type used by the graphdb-cluster-proxy service Note: If using ALB in AWS EKS this will default to being on the public internet |
-| graphdb.clusterProxy.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/proxy/ready","port":"http"},"periodSeconds":5,"timeoutSeconds":3}` | Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.clusterProxy.terminationGracePeriodSeconds | int | `30` |  |
-| graphdb.clusterProxy.tolerations | list | `[]` |  |
-| graphdb.clusterProxy.topologySpreadConstraints | list | `[]` |  |
-| graphdb.configs | object | `{"provisionRepositoriesConfigMap":""}` | References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html |
-| graphdb.import_directory_mount.enabled | bool | `false` |  |
-| graphdb.import_directory_mount.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
-| graphdb.import_directory_mount.volumeClaimTemplateSpec.resources.requests.storage | string | `"10Gi"` |  |
-| graphdb.jobPodSecurityContext | object | `{}` |  |
-| graphdb.jobResources | object | `{}` |  |
-| graphdb.jobSecurityContext | object | `{}` |  |
-| graphdb.node.affinity | object | `{}` |  |
-| graphdb.node.args | string | `nil` |  |
-| graphdb.node.command | string | `nil` |  |
-| graphdb.node.extraEnv | list | `[]` |  |
-| graphdb.node.extraEnvFrom | list | `[]` |  |
-| graphdb.node.extraInitContainers | list | `[]` |  |
-| graphdb.node.extraVolumeMounts | list | `[]` |  |
-| graphdb.node.extraVolumes | list | `[]` |  |
-| graphdb.node.headlessService | object | `{"annotations":{},"labels":{},"ports":{"http":7200,"rpc":7300}}` | GraphDB node headless service configurations |
-| graphdb.node.initContainerResources | object | `{}` |  |
-| graphdb.node.initContainerSecurityContext | object | `{}` |  |
-| graphdb.node.java_args | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` | Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value |
-| graphdb.node.license | string | `nil` | Reference to a secret containing 'graphdb.license' file to be used by the nodes. Important: Must be created beforehand |
-| graphdb.node.licenseFilename | string | `"graphdb.license"` | File name of the GraphDB license file in the existing license secret. Default is graphdb.license |
-| graphdb.node.livenessProbe | object | `{"httpGet":{"path":"/protocol","port":"http"},"initialDelaySeconds":60,"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB node liveness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.node.nodeSelector | object | `{}` |  |
-| graphdb.node.persistence | object | `{"enabled":true,"volumeClaimTemplateSpec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"5Gi"}}}}` | Persistence configurations. By default, Helm will use a PV that reads and writes to the host file system. |
-| graphdb.node.podAnnotations | object | `{}` |  |
-| graphdb.node.podLabels | object | `{}` |  |
-| graphdb.node.podSecurityContext | object | `{}` |  |
-| graphdb.node.readinessProbe | object | `{"httpGet":{"path":"/protocol","port":"http"},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB node readiness probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.node.resources | object | `{"limits":{"memory":"2Gi"},"requests":{"cpu":0.5,"memory":"2Gi"}}` | Below are minimum requirements for data sets of up to 50 million RDF triples For resizing, refer according to the GraphDB documentation https://graphdb.ontotext.com/documentation/10.6/requirements.html |
-| graphdb.node.revisionHistoryLimit | int | `10` |  |
-| graphdb.node.securityContext | object | `{}` |  |
-| graphdb.node.startupProbe | object | `{"failureThreshold":30,"httpGet":{"path":"/protocol","port":"http"},"periodSeconds":10,"timeoutSeconds":5}` | Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster. |
-| graphdb.node.terminationGracePeriodSeconds | int | `120` |  |
-| graphdb.node.tolerations | list | `[]` |  |
-| graphdb.node.topologySpreadConstraints | list | `[]` |  |
-| graphdb.pdb.create | bool | `false` |  |
-| graphdb.pdb.maxUnavailable | string | `nil` |  |
-| graphdb.pdb.minAvailable | string | `"51%"` |  |
-| graphdb.security.enabled | bool | `false` |  |
-| graphdb.security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
-| graphdb.security.provisioningUsername | string | `"provisioner"` |  |
-| graphdb.serviceAccount.annotations | object | `{}` |  |
-| graphdb.serviceAccount.create | bool | `true` |  |
-| graphdb.serviceAccount.name | string | `""` |  |
-| graphdb.workbench.subpath | string | `"/"` | This is the sub path at which GraphDB workbench can be opened. |
-| images.graphdb.registry | string | `"docker.io"` |  |
-| images.graphdb.repository | string | `"ontotext/graphdb"` |  |
-| images.graphdb.sha | string | `""` |  |
-| images.graphdb.tag | string | `""` |  |
+| headlessService.annotations | object | `{}` |  |
+| headlessService.labels | object | `{}` |  |
+| headlessService.ports.http | int | `7200` |  |
+| headlessService.ports.rpc | int | `7300` |  |
+| image.pullPolicy | string | `"IfNotPresent"` |  |
+| image.pullSecrets | list | `[]` |  |
+| image.registry | string | `"docker.io"` |  |
+| image.repository | string | `"ontotext/graphdb"` |  |
+| image.sha | string | `""` |  |
+| image.tag | string | `""` |  |
+| import.volumeMount.enabled | bool | `false` |  |
+| import.volumeMount.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| import.volumeMount.volumeClaimTemplateSpec.resources.requests.storage | string | `"10Gi"` |  |
+| ingress.annotations | object | `{}` |  |
+| ingress.className | string | `""` |  |
+| ingress.enabled | bool | `true` |  |
+| ingress.extraHosts | list | `[]` |  |
+| ingress.extraTLS | list | `[]` |  |
+| ingress.host | string | `""` |  |
+| ingress.labels | object | `{}` |  |
+| ingress.path | string | `""` |  |
+| ingress.pathType | string | `"Prefix"` |  |
+| ingress.tls.enabled | bool | `false` |  |
+| ingress.tls.secretName | string | `nil` |  |
+| initContainerResources | object | `{}` |  |
+| initContainerSecurityContext | object | `{}` |  |
+| jobs.podSecurityContext | object | `{}` |  |
+| jobs.resources | object | `{}` |  |
+| jobs.securityContext | object | `{}` |  |
 | labels | object | `{}` |  |
+| license.existingSecret | string | `""` |  |
+| license.licenseFilename | string | `"graphdb.license"` |  |
+| livenessProbe.httpGet.path | string | `"/protocol"` |  |
+| livenessProbe.httpGet.port | string | `"http"` |  |
+| livenessProbe.initialDelaySeconds | int | `60` |  |
+| livenessProbe.periodSeconds | int | `10` |  |
+| livenessProbe.timeoutSeconds | int | `5` |  |
 | nameOverride | string | `""` |  |
-| properties | object | `{}` |  |
-| provision.settings.configmapKey | string | `"settings.js"` |  |
-| provision.settings.existingConfigmap | string | `""` |  |
-| provision.users.configmapKey | string | `"users.js"` |  |
-| provision.users.existingConfigmap | string | `""` |  |
+| nodeSelector | object | `{}` |  |
+| pdb.create | bool | `false` |  |
+| pdb.maxUnavailable | string | `nil` |  |
+| pdb.minAvailable | string | `"51%"` |  |
+| persistence.enabled | bool | `true` |  |
+| persistence.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| persistence.volumeClaimTemplateSpec.resources.requests.storage | string | `"5Gi"` |  |
+| podAnnotations | object | `{}` |  |
+| podLabels | object | `{}` |  |
+| podSecurityContext | object | `{}` |  |
+| proxy.affinity | object | `{}` |  |
 | proxy.annotations | object | `{}` |  |
+| proxy.configuration.javaArguments | string | `"-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"` |  |
 | proxy.containerPorts.http | int | `7200` |  |
 | proxy.containerPorts.rpc | int | `7300` |  |
 | proxy.extraContainerPorts | object | `{}` |  |
+| proxy.extraEnv | list | `[]` |  |
+| proxy.extraEnvFrom | list | `[]` |  |
+| proxy.extraInitContainers | list | `[]` |  |
+| proxy.extraVolumeMounts | list | `[]` |  |
+| proxy.extraVolumes | list | `[]` |  |
 | proxy.fullnameOverride | string | `""` |  |
+| proxy.headlessService.annotations | object | `{}` |  |
+| proxy.headlessService.labels | object | `{}` |  |
+| proxy.headlessService.ports.http | int | `7200` |  |
+| proxy.headlessService.ports.rpc | int | `7300` |  |
 | proxy.labels | object | `{}` |  |
+| proxy.livenessProbe.httpGet.path | string | `"/proxy/health"` |  |
+| proxy.livenessProbe.httpGet.port | string | `"http"` |  |
+| proxy.livenessProbe.initialDelaySeconds | int | `120` |  |
+| proxy.livenessProbe.periodSeconds | int | `10` |  |
+| proxy.livenessProbe.timeoutSeconds | int | `5` |  |
 | proxy.nameOverride | string | `""` |  |
+| proxy.nodeSelector | object | `{}` |  |
+| proxy.persistence.enabled | bool | `true` |  |
+| proxy.persistence.volumeClaimTemplateSpec.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| proxy.persistence.volumeClaimTemplateSpec.resources.requests.storage | string | `"500Mi"` |  |
+| proxy.podAnnotations | object | `{}` |  |
+| proxy.podLabels | object | `{}` |  |
+| proxy.podSecurityContext | object | `{}` |  |
+| proxy.readinessProbe.httpGet.path | string | `"/proxy/ready"` |  |
+| proxy.readinessProbe.httpGet.port | string | `"http"` |  |
+| proxy.readinessProbe.periodSeconds | int | `10` |  |
+| proxy.readinessProbe.timeoutSeconds | int | `5` |  |
+| proxy.replicas | int | `1` |  |
+| proxy.resources.limits.memory | string | `"1500Mi"` |  |
+| proxy.resources.requests.cpu | string | `"100m"` |  |
+| proxy.resources.requests.memory | string | `"1500Mi"` |  |
+| proxy.revisionHistoryLimit | int | `10` |  |
+| proxy.securityContext | object | `{}` |  |
+| proxy.service.annotations | object | `{}` |  |
+| proxy.service.labels | object | `{}` |  |
+| proxy.service.nodePort | string | `""` |  |
+| proxy.service.ports.http | int | `7200` |  |
+| proxy.service.type | string | `"LoadBalancer"` |  |
+| proxy.startupProbe.failureThreshold | int | `60` |  |
+| proxy.startupProbe.httpGet.path | string | `"/proxy/ready"` |  |
+| proxy.startupProbe.httpGet.port | string | `"http"` |  |
+| proxy.startupProbe.periodSeconds | int | `5` |  |
+| proxy.startupProbe.timeoutSeconds | int | `3` |  |
+| proxy.terminationGracePeriodSeconds | int | `30` |  |
+| proxy.tolerations | list | `[]` |  |
+| proxy.topologySpreadConstraints | list | `[]` |  |
+| readinessProbe.httpGet.path | string | `"/protocol"` |  |
+| readinessProbe.httpGet.port | string | `"http"` |  |
+| readinessProbe.initialDelaySeconds | int | `5` |  |
+| readinessProbe.periodSeconds | int | `10` |  |
+| readinessProbe.timeoutSeconds | int | `5` |  |
+| replicas | int | `1` |  |
+| repositories.repositoriesConfigmap | string | `""` |  |
+| resources.limits.memory | string | `"2Gi"` |  |
+| resources.requests.cpu | float | `0.5` |  |
+| resources.requests.memory | string | `"2Gi"` |  |
+| revisionHistoryLimit | int | `10` |  |
+| security.enabled | bool | `false` |  |
+| security.initialUsersConfig.configmapKey | string | `"users.js"` |  |
+| security.initialUsersConfig.existingConfigmap | string | `""` |  |
+| security.provisioningPassword | string | `"iHaveSuperpowers"` |  |
+| security.provisioningUsername | string | `"provisioner"` |  |
+| securityContext | object | `{}` |  |
+| serviceAccount.annotations | object | `{}` |  |
+| serviceAccount.create | bool | `false` |  |
+| serviceAccount.name | string | `""` |  |
+| startupProbe.failureThreshold | int | `30` |  |
+| startupProbe.httpGet.path | string | `"/protocol"` |  |
+| startupProbe.httpGet.port | string | `"http"` |  |
+| startupProbe.periodSeconds | int | `10` |  |
+| startupProbe.timeoutSeconds | int | `5` |  |
+| terminationGracePeriodSeconds | int | `120` |  |
+| tolerations | list | `[]` |  |
+| topologySpreadConstraints | list | `[]` |  |
 
 ## Uninstall
 To remove the deployed GraphDB, use:

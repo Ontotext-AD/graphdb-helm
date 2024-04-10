@@ -9,103 +9,103 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ $.Values.graphdb.clusterConfig.nodesCount }}
+  replicas: {{ $.Values.replicas }}
   serviceName: {{ include "graphdb.fullname.service.headless" . }}
   updateStrategy:
     type: RollingUpdate
   podManagementPolicy: Parallel
-  revisionHistoryLimit: {{ .Values.graphdb.node.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "graphdb.selectorLabels" . | nindent 6 }}
-  {{- if or .Values.graphdb.node.persistence.enabled .Values.graphdb.import_directory_mount.enabled }}
+  {{- if or .Values.persistence.enabled .Values.import.volumeMount.enabled }}
   volumeClaimTemplates:
-    {{- if .Values.graphdb.node.persistence.enabled }}
+    {{- if .Values.persistence.enabled }}
     - metadata:
         name: graphdb-storage
       spec:
-        {{- toYaml .Values.graphdb.node.persistence.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.persistence.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
-    {{- if $.Values.graphdb.import_directory_mount.enabled }}
+    {{- if $.Values.import.volumeMount.enabled }}
     - metadata:
         name: graphdb-import
       spec:
-        {{- toYaml .Values.graphdb.import_directory_mount.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.import.volumeMount.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
   {{- end }}
   template:
     metadata:
       labels:
         {{- include "graphdb.selectorLabels" . | nindent 8 }}
-        {{- with .Values.graphdb.node.podLabels }}
+        {{- with .Values.podLabels }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
-        {{- with .Values.graphdb.node.podAnnotations }}
+        {{- with .Values.podAnnotations }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
     spec:
-      terminationGracePeriodSeconds: {{ .Values.graphdb.node.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
       volumes:
         - name: graphdb-properties
           configMap:
-            name: {{ .Values.configuration.properties.existingConfigmap | default ( include "graphdb.fullname.configmap.properties" . ) }}
+            name: {{ .Values.configuration.propertiesConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.properties" . ) }}
         - name: graphdb-logback-config
           configMap:
-            name: {{ .Values.configuration.logback.existingConfigmap | default ( include "graphdb.fullname.configmap.logback" . ) }}
-        {{- if .Values.graphdb.node.license }}
+            name: {{ .Values.configuration.propertiesConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.logback" . ) }}
+        {{- if .Values.license.existingSecret }}
         - name: graphdb-license
           secret:
-            secretName: {{ .Values.graphdb.node.license }}
+            secretName: {{ .Values.license.existingSecret }}
         {{- end }}
-        {{- if or .Values.graphdb.security.enabled .Values.provision.settings.existingConfigmap }}
+        {{- if or .Values.security.enabled .Values.configuration.initialSettingsConfig.existingConfigmap }}
         - name: graphdb-initial-settings-config
           configMap:
-            name: {{ .Values.provision.settings.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
+            name: {{ .Values.configuration.initialSettingsConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
         {{- end }}
-        {{- if or .Values.graphdb.security.enabled .Values.provision.users.existingConfigmap }}
+        {{- if or .Values.security.enabled .Values.security.initialUsersConfig.existingConfigmap }}
         - name: graphdb-initial-users-config
           configMap:
-            name: {{ .Values.provision.users.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
+            name: {{ .Values.security.initialUsersConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
         {{- end }}
-        {{- with $.Values.graphdb.node.extraVolumes }}
+        {{- with $.Values.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
-      {{- with .Values.graphdb.node.nodeSelector }}
+      {{- with .Values.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.node.affinity }}
+      {{- with .Values.affinity }}
       affinity: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.node.tolerations }}
+      {{- with .Values.tolerations }}
       tolerations: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.node.topologySpreadConstraints }}
+      {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.graphdb.node.podSecurityContext }}
+      {{- with .Values.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
+      {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
-          {{- with .Values.graphdb.node.command }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          {{- with .Values.command }}
           command: {{ toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.args }}
+          {{- with .Values.args }}
           args: {{ toYaml . | nindent 12 }}
           {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.containerPorts.http }}
-            {{- if gt (int (.Values.graphdb.clusterConfig.nodesCount)) 1 }}
+            {{- if gt (int (.Values.replicas)) 1 }}
             - name: rpc
               containerPort: {{ .Values.containerPorts.rpc }}
             {{- end }}
@@ -115,81 +115,81 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb.fullname" . }}
-            {{- with $.Values.graphdb.node.extraEnvFrom }}
+            {{- with $.Values.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
-          {{- with .Values.graphdb.node.extraEnv }}
+          {{- with .Values.extraEnv }}
           env: {{- tpl ( toYaml . ) $ | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if .Values.graphdb.node.persistence.enabled }}
+            {{- if .Values.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
             - name: graphdb-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
-              subPath: {{ .Values.configuration.logback.configmapKey }}
-            {{- if .Values.graphdb.node.license }}
+              subPath: {{ .Values.configuration.logbackConfig.configmapKey }}
+            {{- if .Values.license.existingSecret }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license
-              subPath: {{ .Values.graphdb.node.licenseFilename }}
+              subPath: {{ .Values.license.licenseFilename }}
             {{- end }}
-            {{- if $.Values.graphdb.import_directory_mount.enabled }}
+            {{- if $.Values.import.volumeMount.enabled }}
             - name: graphdb-server-import
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
-            {{- with $.Values.graphdb.node.extraVolumeMounts }}
+            {{- with $.Values.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.graphdb.node.resources }}
+          {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.securityContext }}
+          {{- with .Values.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.startupProbe }}
+          {{- with .Values.startupProbe }}
           startupProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.readinessProbe }}
+          {{- with .Values.readinessProbe }}
           readinessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.livenessProbe }}
+          {{- with .Values.livenessProbe }}
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
       initContainers:
         # PROVISION SETTINGS AND SECURITY
         - name: {{ .Chart.Name }}-provision-settings
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.deployment.imagePullPolicy }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_PUBLIC_URL
-              value: {{ include "graphdb.url.public" . }}
+              value: {{ .Values.configuration.externalUrl }}
             - name: GRAPHDB_HTTP_PORT
               value: {{ .Values.containerPorts.http | quote }}
             - name: GRAPHDB_RPC_PORT
               value: {{ .Values.containerPorts.rpc | quote }}
           volumeMounts:
-            {{- if .Values.graphdb.node.persistence.enabled }}
+            {{- if .Values.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
             - name: graphdb-properties
               mountPath: /tmp/graphdb/graphdb.properties
-              subPath: {{ .Values.configuration.properties.configmapKey }}
-            {{- if or .Values.graphdb.security.enabled .Values.provision.settings.existingConfigmap }}
+              subPath: {{ .Values.configuration.propertiesConfig.configmapKey }}
+            {{- if or .Values.security.enabled .Values.configuration.initialSettingsConfig.existingConfigmap }}
             - name: graphdb-initial-settings-config
               mountPath: /tmp/graphdb/settings.js
-              subPath: {{ .Values.provision.settings.configmapKey }}
+              subPath: {{ .Values.configuration.initialSettingsConfig.configmapKey }}
             {{- end }}
-            {{- if or .Values.graphdb.security.enabled .Values.provision.settings.existingConfigmap }}
+            {{- if or .Values.security.enabled .Values.security.initialUsersConfig.existingConfigmap }}
             - name: graphdb-initial-users-config
               mountPath: /tmp/graphdb/users.js
-              subPath: {{ .Values.provision.users.configmapKey }}
+              subPath: {{ .Values.security.initialUsersConfig.configmapKey }}
             {{- end }}
-          {{- with .Values.graphdb.node.initContainerSecurityContext }}
+          {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.graphdb.node.initContainerResources }}
+          {{- with .Values.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           command: [ 'sh', '-c' ]
@@ -219,6 +219,6 @@ spec:
               fi
 
               echo 'Done'
-        {{- with .Values.graphdb.node.extraInitContainers }}
+        {{- with .Values.extraInitContainers }}
           {{- toYaml . | nindent 8 }}
         {{- end }}

@@ -57,9 +57,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "graphdb.serviceAccountName" -}}
-  {{- if .Values.graphdb.serviceAccount.create }}
-    {{- default (include "graphdb.fullname" .) .Values.graphdb.serviceAccount.name }}
+  {{- if .Values.serviceAccount.create }}
+    {{- default (include "graphdb.fullname" .) .Values.serviceAccount.name }}
   {{- else }}
-    {{- default "default" .Values.graphdb.serviceAccount.name }}
+    {{- default "default" .Values.serviceAccount.name }}
   {{- end }}
 {{- end }}

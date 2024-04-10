@@ -13,9 +13,9 @@
       },
       "dateCreated" : 1618403171751
     },
-    "{{ .Values.graphdb.security.provisioningUsername }}" : {
-      "username" : "{{ .Values.graphdb.security.provisioningUsername }}",
-      "password" : "{bcrypt}{{ htpasswd .Values.graphdb.security.provisioningUsername .Values.graphdb.security.provisioningPassword | trimPrefix (printf "%s:" .Values.graphdb.security.provisioningUsername) }}",
+    "{{ .Values.security.provisioningUsername }}" : {
+      "username" : "{{ .Values.security.provisioningUsername }}",
+      "password" : "{bcrypt}{{ htpasswd .Values.security.provisioningUsername .Values.security.provisioningPassword | trimPrefix (printf "%s:" .Values.security.provisioningUsername) }}",
       "grantedAuthorities" : [ "ROLE_ADMIN" ],
       "appSettings" : {
         "DEFAULT_INFERENCE" : true,

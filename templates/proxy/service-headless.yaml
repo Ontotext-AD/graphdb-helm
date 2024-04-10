@@ -1,14 +1,14 @@
-{{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+{{- if gt (int $.Values.replicas) 1 }}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "graphdb-proxy.fullname.service.headless" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
-    {{- with .Values.graphdb.clusterProxy.headlessService.labels }}
+    {{- with .Values.proxy.headlessService.labels }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.graphdb.clusterProxy.headlessService.annotations) }}
+  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.proxy.headlessService.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
@@ -18,11 +18,11 @@ spec:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:
     - name: http
-      port: {{ .Values.graphdb.clusterProxy.headlessService.ports.http }}
+      port: {{ .Values.proxy.headlessService.ports.http }}
       targetPort: http
       protocol: TCP
     - name: rpc
-      port: {{ .Values.graphdb.clusterProxy.headlessService.ports.rpc }}
+      port: {{ .Values.proxy.headlessService.ports.rpc }}
       targetPort: rpc
       protocol: TCP
 {{- end }}

@@ -1,4 +1,4 @@
-{{- if .Values.graphdb.pdb.create }}
+{{- if .Values.pdb.create }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -10,11 +10,11 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.graphdb.pdb.minAvailable }}
-  minAvailable: {{ .Values.graphdb.pdb.minAvailable }}
+  {{- if .Values.pdb.minAvailable }}
+  minAvailable: {{ .Values.pdb.minAvailable }}
   {{- end }}
-  {{- if .Values.graphdb.pdb.maxUnavailable }}
-  maxUnavailable: {{ .Values.graphdb.pdb.maxUnavailable }}
+  {{- if .Values.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
   {{- end }}
   selector:
     matchLabels:

@@ -1,4 +1,4 @@
-{{- if .Values.graphdb.configs.provisionRepositoriesConfigMap }}
+{{- if .Values.repositories.repositoriesConfigmap }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,27 +18,28 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      {{- if or .Values.global.imagePullSecrets .Values.deployment.imagePullSecrets }}
+      {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- $.Values.graphdb.jobPodSecurityContext | toYaml | nindent 8 }}
+        {{- $.Values.jobs.podSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: provision-repositories
           image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_POD_NAME
               value: {{ include "graphdb.fullname" . }}
             - name: GRAPHDB_SERVICE_NAME
               value: {{ include "graphdb.fullname.service.headless" . }}
             - name: GRAPHDB_SERVICE_PORT
-              value: {{ .Values.graphdb.node.headlessService.ports.http | quote }}
+              value: {{ .Values.headlessService.ports.http | quote }}
           envFrom:
             - secretRef:
                 name: {{ include "graphdb.fullname.secret.provision-user" . }}
-          securityContext: {{- $.Values.graphdb.jobSecurityContext | toYaml | nindent 12 }}
-          {{- with .Values.graphdb.jobResources }}
+          securityContext: {{- $.Values.jobs.securityContext | toYaml | nindent 12 }}
+          {{- with .Values.jobs.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
@@ -52,7 +53,7 @@ spec:
           args:
             - "/tmp/utils/graphdb.sh"
             - "createRepositoryFromFile"
-            - "{{ .Values.graphdb.clusterConfig.nodesCount }}"
+            - "{{ .Values.replicas }}"
             - "/tmp/repositories-config"
       volumes:
         - name: job-temp
@@ -60,7 +61,7 @@ spec:
             sizeLimit: 10Mi
         - name: repositories-config
           configMap:
-            name: {{ .Values.graphdb.configs.provisionRepositoriesConfigMap }}
+            name: {{ .Values.repositories.repositoriesConfigmap }}
         - name: graphdb-utils
           configMap:
             name: {{ include "graphdb.fullname.configmap.utils" . }}

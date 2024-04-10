@@ -4,10 +4,10 @@ metadata:
   name: {{ include "graphdb.fullname.service.headless" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
-    {{- with .Values.graphdb.node.headlessService.labels }}
+    {{- with .Values.headlessService.labels }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.graphdb.node.headlessService.annotations) }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.headlessService.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
@@ -17,12 +17,12 @@ spec:
     {{- include "graphdb.selectorLabels" . | nindent 4 }}
   ports:
     - name: http
-      port: {{ .Values.graphdb.node.headlessService.ports.http }}
+      port: {{ .Values.headlessService.ports.http }}
       targetPort: http
       protocol: TCP
-    {{- if gt (int $.Values.graphdb.clusterConfig.nodesCount) 1 }}
+    {{- if gt (int $.Values.replicas) 1 }}
     - name: rpc
-      port: {{ .Values.graphdb.node.headlessService.ports.rpc }}
+      port: {{ .Values.headlessService.ports.rpc }}
       targetPort: rpc
       protocol: TCP
     {{- end }}

@@ -1,23 +1,24 @@
-#
-# Main configuration file
-#
-# To override single property use --set
-# To override multiple, provide another values-override.yaml with the -f flag
-# See https://helm.sh/docs/chart_template_guide/values_files/
+###############################################################################
+# Main configuration file                                                     #
+# To override single property use --set                                       #
+# To override multiple, provide another values-override.yaml with the -f flag #
+# See https://helm.sh/docs/chart_template_guide/values_files/                 #
+###############################################################################
+
+#########################
+# Global Configurations #
+#########################
 
 global:
+  # Overrides image.registry
   imageRegistry: ""
+  # Inserts additional pull secret references together along with any from image.pullSecrets
   imagePullSecrets: []
 
-# Top lvl flat for easier maintenance
-images:
-  graphdb:
-    registry: docker.io
-    repository: ontotext/graphdb
-    # If specified, overrides Chart.AppVersion
-    tag: ""
-    # Expected SHA checksum of the used GraphDB image
-    sha: ""
+###############################
+#   Metadata Configurations   #
+# Naming and labels overrides #
+###############################
 
 # Overrides the name of the chart affecting the resources names for GraphDB
 # To override the GraphDB proxy's name, use proxy.nameOverride
@@ -33,97 +34,102 @@ labels: {}
 # Additional common annotations to add to the resources
 annotations: {}
 
-# Runtime configuration overrides
+################################
+# GraphDB Image Configurations #
+################################
+
+image:
+  registry: docker.io
+  repository: ontotext/graphdb
+  # If specified, overrides Chart.AppVersion
+  tag: ""
+  # Expected SHA checksum of the used GraphDB image
+  sha: ""
+  # Defines the policy for pulling images
+  pullPolicy: IfNotPresent
+  # Secrets for pulling GraphDB's Docker image from secured registries.
+  pullSecrets: []
+
+##########################
+# Scaling Configurations #
+##########################
+
+# Number of GraphDB nodes to be deployed as part of the StatefulSet.
+# Set value to 1 to run a standalone GraphDB instance or to more to form a GraphDB cluster.
+replicas: 1
+
+##########################
+# GraphDB Configurations #
+##########################
+
+license:
+  # Reference to a secret containing 'graphdb.license' file to be mounted in the GraphDB instances.
+  existingSecret: ""
+  # File name of the GraphDB license file in the existing license secret. Default is graphdb.license
+  licenseFilename: graphdb.license
+
 configuration:
-  properties:
+  # The public URL at which GraphDB will be accessed.
+  # This configures both GraphDB address resolving and the default Ingress resource as well.
+  #
+  # Note: When deploying on a context path different from /, you need to properly configure the Ingress according to the requirements of the
+  # Ingress controller implementation.
+  externalUrl: http://graphdb.127.0.0.1.nip.io/
+
+  # GraphDB properties to insert in the default graphdb.properties configmap
+  properties: {}
+
+  # Java arguments with which node instances will be launched.
+  # GraphDB configuration properties can also be passed here in the format -Dproperty=value
+  # Takes precedence over configurations in graphdb.properties
+  javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+
+  propertiesConfig:
     existingConfigmap: ""
     configmapKey: "graphdb.properties"
-  logback:
+
+  logbackConfig:
     existingConfigmap: ""
     configmapKey: "logback.xml"
 
-# Initial provisioning overrides
-provision:
-  settings:
+  initialSettingsConfig:
     existingConfigmap: ""
     configmapKey: "settings.js"
-  users:
+
+###################################
+# GraphDB Security Configurations #
+###################################
+
+security:
+  # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
+  enabled: false
+
+  initialUsersConfig:
     existingConfigmap: ""
     configmapKey: "users.js"
 
-# Additional GraphDB properties to insert in the properties configmap
-properties: {}
+  # TODO: I dont like them here... could think of users: { provisioner: { username, password } } or smth else
+  provisioningUsername: provisioner
+  # bcrypt encrypted password. default: iHaveSuperpowers
+  provisioningPassword: iHaveSuperpowers
 
-# Ports used by the GraphDB container
-containerPorts:
-  http: 7200
-  rpc: 7300
+##################################
+# GraphDB Cluster Configurations #
+##################################
 
-# Additional container ports to insert
-extraContainerPorts: {}
-
-####### DEPLOYMENT CONFIGURATIONS #######
-deployment:
-  # -- Defines the policy with which components will request their image.
-  imagePullPolicy: IfNotPresent
-  # -- Secrets used to pull Docker images.
-  imagePullSecrets: []
-
-  # -- The hostname and protocol at which the graphdb will be accessible.
-  # Needed to configure ingress as well as some components require it to properly render their UIs
-  protocol: http
-  # Important: This should be a resolvable hostname, not an IP address!
-  host: localhost
-
-  # Configures SSL termination on ingress level.
-  # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
-  tls:
-    # -- Feature toggle for SSL termination. Disabled by default.
-    # If TLS is enabled, the protocol should also be updated (https)
-    enabled: false
-    # -- Name of a Kubernetes secret object with the key and certificate.
-    # If TLS is enabled, it's required to be provided, depending on the deployment.
-    secretName:
-
-  # -- Ingress related configurations
-  ingress:
-    # -- Toggles the deployment of the default ingress
-    enabled: true
-    # -- Specifies the ingress controller implementation that will deploy this ingress.
-    # Not defining this would result in using the default ingress controller in the cluster, if there is one.
-    className: ""
-    #  -- Sets extra ingress labels
-    labels: {}
-    # -- Sets extra ingress annotations
-    annotations: {}
-    # Overrides deployment.host
-    host: ""
-    # Overrides graphdb.workbench.subpath
-    path: ""
-    # Sets the ingress path type.
-    # If you need to use ImplementationSpecific, make sure to set any annotations needed by the implementation.
-    pathType: Prefix
-    # List of additional hostnames to append to the ingress resource
-    extraHosts: []
-    # List of additional TLS records to append to the ingress resource
-    extraTLS: []
-
-# GraphDB database configurations
-graphdb:
-  clusterConfig:
-    # -- Number of GraphDB nodes to be used in the cluster.
-    # Set value to 1 to run a standalone GraphDB instance.
-    nodesCount: 1
-    # -- A secret used for secure communication amongst the nodes in the cluster.
-    clusterSecret: s3cr37
-    # -- Timeout for the cluster creation CURL query.
-    # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
-    clusterCreationTimeout: 60
-    # -- Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
-    # The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation
-    existingClusterConfig:
-    # -- Cluster configuration parameters:
-    # Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
+cluster:
+  # A secret used for secure communication amongst the nodes in the cluster.
+  clusterSecret: s3cr37
+  # Timeout for the cluster creation CURL query.
+  # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
+  clusterCreationTimeout: 60
+  # Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
+  # The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation
+  # This setting overrides the values under cluster.config
+  existingConfig: ""
+  # Cluster configuration parameters:
+  # Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
+  config:
     # The minimum wait time in milliseconds for a heartbeat from a leader.
     electionMinTimeout: 8000
     # The variable portion of each waiting period in milliseconds for a heartbeat.
@@ -131,247 +137,230 @@ graphdb:
     # The interval in milliseconds between each heartbeat that is sent to follower nodes by the leader.
     heartbeatInterval: 2000
     # The size in KB of the data blocks transferred during data replication streaming through the RPC protocol.
-    messageSize: 64
+    messageSizeKB: 64
     # Maximum size of the transaction log in GBs. The transaction log will be automatically truncated if it becomes bigger than this value.
     transactionLogMaximumSizeGB: 50
     # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
     verificationTimeout: 1500
 
-  # -- References to configuration maps containing settings.js, users.js, graphdb.properties, and logback.xml files to overwrite
-  # the default GraphDB configuration. For reference see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html
-  configs:
-    # Optional configmap containing repository configuration ttl file(s). GraphDB will automatically create repositories with the provided repositories configuration files
-    provisionRepositoriesConfigMap: ""
+##########################
+# Ingress Configurations #
+##########################
 
-  security:
-    # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
+ingress:
+  # Toggles the deployment of the default ingress
+  enabled: true
+  # Specifies the ingress controller implementation that will deploy this ingress.
+  # Not defining this would result in using the default ingress controller in the cluster, if there is one.
+  className: ""
+  # Sets extra ingress labels
+  labels: {}
+  # Sets extra ingress annotations
+  annotations: {}
+  # If set, overrides the host from configuration.externalUrl
+  host: ""
+  # If set, overrides the context path from configuration.externalUrl
+  path: ""
+  # Sets the ingress path type.
+  # If you need to use ImplementationSpecific, make sure to set any annotations needed by the controller implementation.
+  pathType: Prefix
+  # Configures SSL termination on ingress level.
+  # See https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
+  tls:
+    # Feature toggle for SSL termination. Disabled by default.
+    # If TLS is enabled, the deployment.protocol should also be updated (https)
     enabled: false
-    provisioningUsername: provisioner
-    # bcrypt encrypted password. default: iHaveSuperpowers
-    provisioningPassword: iHaveSuperpowers
+    # Name of a Kubernetes secret object with the key and certificate.
+    # If TLS is enabled, it's required to be provided, depending on the deployment.
+    secretName:
+  # List of additional hostnames to append to the ingress resource
+  extraHosts: []
+  # List of additional TLS records to append to the ingress resource
+  extraTLS: []
 
-  # jobSecurityContext defines privilege and access control settings for all the job pods
-  jobPodSecurityContext: {}
-  # jobContainerSecurityContext defines privilege and access control settings for all the job containers
-  jobSecurityContext: {}
-  # jobResources defines resource requests and limits for all the job containers
-  jobResources: {}
+##########################
+# Service Configurations #
+##########################
 
-  # Settings for the GraphDB cluster nodes
-  node:
-    # -- Reference to a secret containing 'graphdb.license' file to be used by the nodes.
-    # Important: Must be created beforehand
-    license:
-    # -- File name of the GraphDB license file in the existing license secret. Default is graphdb.license
-    licenseFilename: graphdb.license
-    # -- Java arguments with which node instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
-    # By default, no restrictions are applied.
-    nodeSelector: {}
-    affinity: {}
-    tolerations: []
-    topologySpreadConstraints: []
-    # Extra pod labels and annotations
-    podLabels: {}
-    podAnnotations: {}
-    # -- GraphDB node headless service configurations
-    headlessService:
-      # Extra labels to append to the headless service
-      labels: {}
-      # Extra annotations to append to the service
-      annotations: {}
-      # Ports exposed by the service
-      ports:
-        http: 7200
-        rpc: 7300
-    # -- Persistence configurations.
-    # By default, Helm will use a PV that reads and writes to the host file system.
-    persistence:
-      enabled: true
-      # use dynamic volume provisioning
-      volumeClaimTemplateSpec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "5Gi"
-    # -- Below are minimum requirements for data sets of up to 50 million RDF triples
-    # For resizing, refer according to the GraphDB documentation
-    # https://graphdb.ontotext.com/documentation/10.6/requirements.html
+headlessService:
+  # Extra labels to append to the headless service
+  labels: {}
+  # Extra annotations to append to the service
+  annotations: {}
+  # Ports exposed by the service
+  ports:
+    http: 7200
+    rpc: 7300
+
+##############################
+# Persistence Configurations #
+##############################
+
+persistence:
+  enabled: true
+  volumeClaimTemplateSpec:
+    accessModes: [ "ReadWriteOnce" ]
     resources:
-      limits:
-        memory: 2Gi
       requests:
-        memory: 2Gi
-        cpu: 0.5
-    # -- Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster.
-    startupProbe:
-      httpGet:
-        path: /protocol
-        port: http
-      failureThreshold: 30
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # -- Configurations for the GraphDB node readiness probe. Misconfigured probe can lead to a failing cluster.
-    readinessProbe:
-      httpGet:
-        path: /protocol
-        port: http
-      initialDelaySeconds: 5
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # -- Configurations for the GraphDB node liveness probe. Misconfigured probe can lead to a failing cluster.
-    livenessProbe:
-      httpGet:
-        path: /protocol
-        port: http
-      initialDelaySeconds: 60
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # additional environment variables to be set for the graphdb nodes
-    extraEnvFrom: []
-    # additional environment variables to be set for the graphdb nodes
-    extraEnv: []
-    # additional volumes to be set for the graphdb nodes
-    extraVolumes: []
-    # additional volume mounts to be set for the graphdb nodes
-    extraVolumeMounts: []
-    # additional init containers inserted after the provisioning init containers
-    extraInitContainers: []
-    # podSecurityContext defines privilege and access control settings for the node pods.
-    podSecurityContext: {}
-    # securityContext defines privilege and access control settings for the node container running graphdb.
-    securityContext: {}
-    # provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
-    initContainerSecurityContext: {}
-    # initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
-    initContainerResources: {}
-    # changes the maximum amount of kept revisions
-    revisionHistoryLimit: 10
-    # grace period in seconds before terminating the pods
-    terminationGracePeriodSeconds: 120
-    # overrides the default container command, use only for troubleshooting!
-    command:
-    # overrides the default container command's arguments, use only for troubleshooting!
-    args:
+        storage: "5Gi"
 
-  # Settings for the GraphDB cluster proxy used to communicate with the GraphDB cluster
-  # Note: If there is no cluster (graphdb.clusterConfig.nodesCount is set to 1) no proxy will be deployed
-  clusterProxy:
-    # -- Number of cluster proxies used to access the GraphDB cluster
-    replicas: 1
-    # -- Java arguments with which the cluster proxy instances will be launched. GraphDB configuration properties can also be passed here in the format -Dprop=value
-    java_args: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
-    # -- Service type used by the graphdb-cluster-proxy service
-    # Note: If using ALB in AWS EKS this will default to being on the public internet
-    serviceType: LoadBalancer
-    # Ports used by GraphDB proxy container
-    containerPorts:
-      http: 7200
-      rpc: 7300
-    # Node scheduling options such as nodeSelector, affinity, tolerations, topologySpreadConstraints can be set here for ALL nodes.
-    # By default, no restrictions are applied.
-    nodeSelector: {}
-    affinity: {}
-    tolerations: []
-    topologySpreadConstraints: []
-    # Extra pod labels and annotations
-    podLabels: {}
-    podAnnotations: {}
-    # -- GraphDB cluster proxy service configurations
-    service:
-      # Extra labels to append to the service
-      labels: {}
-      # Extra annotations to append to the service
-      annotations: {}
-      # Ports exposed by the service
-      ports:
-        http: 7200
-        rpc: 7300
-      # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
-      # If left undefined, K8S will pick a random port from the node port range of the cluster.
-      nodePort: ""
-    # -- GraphDB cluster proxy headless service configurations
-    headlessService:
-      # Extra labels to append to the headless service
-      labels: {}
-      # Extra annotations to append to the service
-      annotations: {}
-      # Ports exposed by the service
-      ports:
-        http: 7200
-        rpc: 7300
-    # -- Minimum requirements for a successfully running GraphDB cluster proxy
-    resources:
-      limits:
-        memory: 1500Mi
-      requests:
-        memory: 1500Mi
-        cpu: 100m
-    # -- Persistence configurations.
-    # By default, Helm will use a PV that reads and writes to the host file system.
-    persistence:
-      # enable or disable proxy persistence
-      enabled: true
-      # use dynamic volume provisioning
-      volumeClaimTemplateSpec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "500Mi"
-    # -- Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
-    startupProbe:
-      httpGet:
-        path: /proxy/ready
-        port: http
-      failureThreshold: 60
-      timeoutSeconds: 3
-      periodSeconds: 5
-    # -- Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
-    readinessProbe:
-      httpGet:
-        path: /proxy/ready
-        port: http
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # -- Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
-    livenessProbe:
-      httpGet:
-        path: /proxy/health
-        port: http
-      initialDelaySeconds: 120
-      timeoutSeconds: 5
-      periodSeconds: 10
-    # additional environment variables to be set for each cluster proxy
-    extraEnvFrom: []
-    # additional environment variables to be set for each cluster proxy
-    extraEnv: []
-    # additional volumes to be set for each cluster proxy
-    extraVolumes: []
-    # additional volume mounts to be set for each cluster proxy
-    extraVolumeMounts: []
-    # additional init containers
-    extraInitContainers: []
-    # podSecurityContext defines privilege and access control settings for the proxy pods.
-    podSecurityContext: {}
-    # securityContext defines privilege and access control settings for the proxy containers.
-    securityContext: {}
-    # changes the maximum amount of kept revisions
-    revisionHistoryLimit: 10
-    # grace period in seconds before terminating the pods
-    terminationGracePeriodSeconds: 30
+##############################
+# Statefulset Configurations #
+##############################
 
-  # GraphDB workbench configurations
-  workbench:
-    # -- This is the sub path at which GraphDB workbench can be opened.
-    subpath: /
+# changes the maximum amount of kept revisions
+revisionHistoryLimit: 10
 
-  # WARNING: Setting enabled to true in most cloud providers will result in an error
+# grace period in seconds before terminating the pods
+terminationGracePeriodSeconds: 120
+
+# overrides the default container command, use only for troubleshooting!
+command: []
+
+# overrides the default container command's arguments, use only for troubleshooting!
+args: []
+
+# Ports used by the GraphDB container
+containerPorts:
+  http: 7200
+  rpc: 7300
+
+# Extra pod labels to insert
+podLabels: {}
+
+# Extra pod annotations to insert
+podAnnotations: {}
+
+###################################
+# Security Context Configurations #
+###################################
+
+# podSecurityContext defines privilege and access control settings for the node pods.
+podSecurityContext: {}
+
+# securityContext defines privilege and access control settings for the node container running graphdb.
+securityContext: {}
+
+# provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
+initContainerSecurityContext: {}
+
+#############################
+# Scheduling Configurations #
+#############################
+
+nodeSelector: {}
+
+affinity: {}
+
+tolerations: []
+
+topologySpreadConstraints: []
+
+##########################
+# Resource Configuration #
+##########################
+
+# Below are minimum requirements for data sets of up to 50 million RDF triples
+# For resizing, refer according to the GraphDB documentation
+# https://graphdb.ontotext.com/documentation/10.6/requirements.html
+resources:
+  limits:
+    memory: 2Gi
+  requests:
+    memory: 2Gi
+    cpu: 0.5
+
+# initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
+initContainerResources: {}
+
+#########################
+# Probes Configurations #
+#########################
+
+# Configurations for the GraphDB node startup probe. Misconfigured probe can lead to a failing cluster.
+startupProbe:
+  httpGet:
+    path: /protocol
+    port: http
+  failureThreshold: 30
+  timeoutSeconds: 5
+  periodSeconds: 10
+
+# Configurations for the GraphDB node readiness probe. Misconfigured probe can lead to a failing cluster.
+readinessProbe:
+  httpGet:
+    path: /protocol
+    port: http
+  initialDelaySeconds: 5
+  timeoutSeconds: 5
+  periodSeconds: 10
+
+# Configurations for the GraphDB node liveness probe. Misconfigured probe can lead to a failing cluster.
+livenessProbe:
+  httpGet:
+    path: /protocol
+    port: http
+  initialDelaySeconds: 60
+  timeoutSeconds: 5
+  periodSeconds: 10
+
+#########################################
+# Additional Statefulset Configurations #
+#########################################
+
+# additional environment variables to be set for the graphdb nodes
+extraEnvFrom: []
+
+# additional environment variables to be set for the graphdb nodes
+extraEnv: []
+
+# additional volumes to be set for the graphdb nodes
+extraVolumes: []
+
+# additional volume mounts to be set for the graphdb nodes
+extraVolumeMounts: []
+
+# additional init containers inserted after the provisioning init containers
+extraInitContainers: []
+
+# Additional container ports to expose
+extraContainerPorts: {}
+
+########################################
+# Pod Disruption Budget Configurations #
+########################################
+
+# See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
+pdb:
+  create: false
+  minAvailable: "51%"
+  maxUnavailable:
+
+##################################
+# Service Account Configurations #
+##################################
+
+# GraphDB by itself has no need to communicate with the Kubernetes API but the service account tokens can be used
+# as ODIC federated web identity tokens for authentication in cloud APIs.
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  # If create is true, add extra annotations to the created service account.
+  annotations: {}
+
+############################################
+#       GraphDB Import Configurations      #
+# Settings for importing data into GraphDB #
+############################################
+
+import:
   # Attach additional PV which will be used as an import directory
   # https://graphdb.ontotext.com/documentation/10.6/loading-data-using-the-workbench.html#importing-server-files
-  import_directory_mount:
+  # WARNING: Setting enabled to true in most cloud providers will result in an error
+  volumeMount:
     enabled: false
     volumeClaimTemplateSpec:
       accessModes:
@@ -380,28 +369,33 @@ graphdb:
         requests:
           storage: "10Gi"
 
-  # Pod Disruption Budget for GraphDB nodes
-  # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
-  pdb:
-    create: false
-    minAvailable: "51%"
-    maxUnavailable:
+#######################################
+## Custom Repositories Configurations #
+#######################################
 
-  #
-  # Service account for the GraphDB nodes.
-  # GraphDB by itself has no need to communicate with the Kubernetes API but the service account tokens can be used
-  # as ODIC federated web identity tokens for authentication in cloud APIs.
-  #
-  serviceAccount:
-    # - Specifies whether a service account should be created
-    create: true
-    # - The name of the service account to use.
-    # - If not set and create is true, a name is generated using the fullname template
-    name: ""
-    # If create is true, add extra annotations to the created service account.
-    annotations: {}
+repositories:
+  # Optional configmap containing repository configuration ttl file(s).
+  # GraphDB will automatically create repositories with the provided repositories configuration files
+  repositoriesConfigmap: ""
 
-# Configurations for the GraphDB proxy
+######################################################################################
+#                                Job Configurations                                  #
+# Common settings for Job resources servicing and automating GraphDB and the cluster #
+######################################################################################
+
+jobs:
+  # podSecurityContext defines privilege and access control settings for all the job pods
+  podSecurityContext: {}
+  # securityContext defines privilege and access control settings for all the job containers
+  securityContext: {}
+  # resources defines resource requests and limits for all the job containers
+  resources: {}
+
+###############################################################################
+#                    GraphDB Cluster Proxy Configurations                     #
+# Settings for the cluster proxy used to communicate with the GraphDB cluster #
+###############################################################################
+
 proxy:
   # Overrides the name of the GraphDB proxy component
   nameOverride: ""
@@ -415,10 +409,167 @@ proxy:
   # Additional common annotations to add to the GraphDB proxy resources
   annotations: {}
 
+  ################################
+  # GraphDB Proxy Configurations #
+  ################################
+
+  configuration:
+    # Java arguments with which the cluster proxy instances will be launched.
+    # GraphDB configuration properties can also be passed here in the format -Dprop=value
+    javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+
+  ##########################
+  # Service Configurations #
+  ##########################
+
+  # GraphDB cluster proxy service configurations
+  service:
+    # Extra labels to append to the service
+    labels: {}
+    # Extra annotations to append to the service
+    annotations: {}
+    # Service type used by the graphdb-cluster-proxy service
+    # Note: If using ALB in AWS EKS this will default to being on the public internet
+    type: LoadBalancer
+    # Ports exposed by the service
+    ports:
+      http: 7200
+    # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
+    # If left undefined, K8S will pick a random port from the node port range of the cluster.
+    nodePort: ""
+
+  # GraphDB cluster proxy headless service configurations
+  headlessService:
+    # Extra labels to append to the headless service
+    labels: {}
+    # Extra annotations to append to the service
+    annotations: {}
+    # Ports exposed by the service
+    ports:
+      http: 7200
+      rpc: 7300
+
+  ##############################
+  # Persistence Configurations #
+  ##############################
+
+  # Persistence for storing GraphDB proxy log files.
+  # See https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  persistence:
+    # Enables or disables the proxy's persistence
+    enabled: true
+    volumeClaimTemplateSpec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: "500Mi"
+
+  ##############################
+  # Statefulset Configurations #
+  ##############################
+
+  # Number of cluster proxies used to access the GraphDB cluster
+  replicas: 1
+
+  # Changes the maximum amount of kept revisions
+  revisionHistoryLimit: 10
+
+  # Grace period in seconds before terminating the pods
+  terminationGracePeriodSeconds: 30
+
   # Ports used by GraphDB proxy and the Service components
   containerPorts:
     http: 7200
     rpc: 7300
 
-  # Additional container ports to insert
+  # Extra pod labels to insert
+  podLabels: {}
+
+  # Extra pod annotations to insert
+  podAnnotations: {}
+
+  ###################################
+  # Security Context Configurations #
+  ###################################
+
+  # The podSecurityContext defines privilege and access control settings for the proxy pods.
+  podSecurityContext: {}
+
+  # The securityContext defines privilege and access control settings for the proxy containers.
+  securityContext: {}
+
+  #############################
+  # Scheduling Configurations #
+  #############################
+
+  nodeSelector: {}
+
+  affinity: {}
+
+  tolerations: []
+
+  topologySpreadConstraints: []
+
+  ##########################
+  # Resource Configuration #
+  ##########################
+
+  # Minimum requirements for a successfully running GraphDB cluster proxy
+  resources:
+    limits:
+      memory: 1500Mi
+    requests:
+      memory: 1500Mi
+      cpu: 100m
+
+  #########################
+  # Probes Configurations #
+  #########################
+
+  # Configurations for the GraphDB cluster proxy startup probe. Misconfigured probe can lead to a failing cluster.
+  startupProbe:
+    httpGet:
+      path: /proxy/ready
+      port: http
+    failureThreshold: 60
+    timeoutSeconds: 3
+    periodSeconds: 5
+
+  # Configurations for the GraphDB cluster proxy readiness probe. Misconfigured probe can lead to a failing cluster.
+  readinessProbe:
+    httpGet:
+      path: /proxy/ready
+      port: http
+    timeoutSeconds: 5
+    periodSeconds: 10
+
+  # Configurations for the GraphDB cluster proxy liveness probe. Misconfigured probe can lead to a failing cluster.
+  livenessProbe:
+    httpGet:
+      path: /proxy/health
+      port: http
+    initialDelaySeconds: 120
+    timeoutSeconds: 5
+    periodSeconds: 10
+
+  #########################################
+  # Additional Statefulset Configurations #
+  #########################################
+
+  # Additional environment variables to be set for each cluster proxy
+  extraEnvFrom: []
+
+  # Additional environment variables to be set for each cluster proxy
+  extraEnv: []
+
+  # Additional volumes to be set for each cluster proxy
+  extraVolumes: []
+
+  # Additional volume mounts to be set for each cluster proxy
+  extraVolumeMounts: []
+
+  # Additional init containers to be set for each cluster proxy
+  extraInitContainers: []
+
+  # Additional container ports to expose for each cluster proxy
   extraContainerPorts: {}

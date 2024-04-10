@@ -1,4 +1,4 @@
-{{- if and .Values.graphdb.security.enabled (not .Values.provision.users.existingConfigmap) }}
+{{- if and .Values.security.enabled (not .Values.security.initialUsersConfig.existingConfigmap) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,6 +10,6 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 data:
-  {{ .Values.provision.users.configmapKey }}: |-
+  {{ .Values.security.initialUsersConfig.configmapKey }}: |-
     {{- tpl ( .Files.Get "files/config/users.js" ) . | nindent 4 }}
 {{- end }}

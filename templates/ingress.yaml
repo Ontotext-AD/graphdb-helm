@@ -36,7 +36,7 @@ spec:
             pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
-                {{- if gt (int $.Values.replicas) 1 }}
+                {{- if gt (int .Values.replicas) 1 }}
                 name: {{ include "graphdb-proxy.fullname" . }}
                 port:
                   number: {{ .Values.proxy.service.ports.http }}

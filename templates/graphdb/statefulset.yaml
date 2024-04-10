@@ -9,7 +9,7 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ $.Values.replicas }}
+  replicas: {{ .Values.replicas }}
   serviceName: {{ include "graphdb.fullname.service.headless" . }}
   updateStrategy:
     type: RollingUpdate
@@ -26,7 +26,7 @@ spec:
       spec:
         {{- toYaml .Values.persistence.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
-    {{- if $.Values.import.volumeMount.enabled }}
+    {{- if .Values.import.volumeMount.enabled }}
     - metadata:
         name: graphdb-import
       spec:
@@ -41,7 +41,7 @@ spec:
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print .Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
@@ -70,7 +70,7 @@ spec:
           configMap:
             name: {{ .Values.security.initialUsersConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
         {{- end }}
-        {{- with $.Values.extraVolumes }}
+        {{- with .Values.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
@@ -95,7 +95,7 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- with .Values.command }}
           command: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -115,7 +115,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb.fullname" . }}
-            {{- with $.Values.extraEnvFrom }}
+            {{- with .Values.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.extraEnv }}
@@ -134,11 +134,11 @@ spec:
               mountPath: /opt/graphdb/home/conf/graphdb.license
               subPath: {{ .Values.license.licenseFilename }}
             {{- end }}
-            {{- if $.Values.import.volumeMount.enabled }}
+            {{- if .Values.import.volumeMount.enabled }}
             - name: graphdb-server-import
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
-            {{- with $.Values.extraVolumeMounts }}
+            {{- with .Values.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with .Values.resources }}
@@ -160,7 +160,7 @@ spec:
         # PROVISION SETTINGS AND SECURITY
         - name: {{ .Chart.Name }}-provision-settings
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_PUBLIC_URL
               value: {{ .Values.configuration.externalUrl }}

@@ -20,7 +20,7 @@ spec:
       port: {{ .Values.headlessService.ports.http }}
       targetPort: http
       protocol: TCP
-    {{- if gt (int $.Values.replicas) 1 }}
+    {{- if gt (int .Values.replicas) 1 }}
     - name: rpc
       port: {{ .Values.headlessService.ports.rpc }}
       targetPort: rpc

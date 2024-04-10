@@ -23,11 +23,11 @@ spec:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- $.Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+        {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: scale-up-cluster
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_POD_NAME
               value: {{ include "graphdb.fullname" . }}
@@ -42,7 +42,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "graphdb.fullname.secret.provision-user" . }}
-          securityContext: {{- $.Values.jobs.securityContext | toYaml | nindent 12 }}
+          securityContext: {{- .Values.jobs.securityContext | toYaml | nindent 12 }}
           {{- with .Values.jobs.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -56,7 +56,7 @@ spec:
             - "/tmp/utils/update-cluster.sh"
             - "addNodes"
             - "{{ .Values.replicas }}"
-            - "{{ $.Release.Namespace }}"
+            - "{{ .Release.Namespace }}"
             - "{{ .Values.cluster.clusterCreationTimeout }}"
       volumes:
         - name: job-temp

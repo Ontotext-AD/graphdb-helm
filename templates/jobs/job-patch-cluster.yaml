@@ -1,4 +1,4 @@
-{{- if gt (int .Values.replicas) 1 }}
+{{- if and .Values.cluster.jobs.patchCluster.enabled (gt (int .Values.replicas) 1) }}
 apiVersion: batch/v1
 kind: Job
 metadata:

@@ -21,4 +21,4 @@ data:
     {{- if gt (int .Values.replicas) 1 }}
     -Dgraphdb.auth.token.secret={{ .Values.cluster.clusterSecret | quote }}
     {{- end }}
-    {{ default .Values.configuration.javaArguments}}
+    {{ .Values.configuration.javaArguments }}

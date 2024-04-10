@@ -1,3 +1,4 @@
+{{- if .Values.cluster.jobs.scaleCluster.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -62,3 +63,4 @@ spec:
         - name: graphdb-utils
           configMap:
             name: {{ include "graphdb.fullname.configmap.utils" . }}
+{{- end }}

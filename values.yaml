@@ -142,6 +142,17 @@ cluster:
     transactionLogMaximumSizeGB: 50
     # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
     verificationTimeout: 1500
+  # Jobs configurations for to the cluster automation
+  jobs:
+    createCluster:
+      # Enables or disables the cluster creation Job
+      enabled: true
+    patchCluster:
+      # Enables or disables the Job for patching the cluster configuration
+      enabled: true
+    scaleCluster:
+      # Enables or disables the Jobs for scaling up or down the cluster
+      enabled: true
 
 ##########################
 # Ingress Configurations #
@@ -183,6 +194,8 @@ ingress:
 ##########################
 
 headlessService:
+  # Enables or disables the headless Service deployment
+  enabled: true
   # Extra labels to append to the headless service
   labels: {}
   # Extra annotations to append to the service
@@ -424,6 +437,8 @@ proxy:
 
   # GraphDB cluster proxy service configurations
   service:
+    # Enables or disables the Service deployment
+    enabled: true
     # Extra labels to append to the service
     labels: {}
     # Extra annotations to append to the service
@@ -440,6 +455,8 @@ proxy:
 
   # GraphDB cluster proxy headless service configurations
   headlessService:
+    # Enables or disables the headless Service deployment
+    enabled: true
     # Extra labels to append to the headless service
     labels: {}
     # Extra annotations to append to the service

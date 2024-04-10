@@ -60,6 +60,13 @@ TODO: decide how detailed we want this to be
 - Added `ports` mappings in each service 
 - Added `extraContainerPorts` and `proxy.extraContainerPorts`
 - Added `imagePullPolicy` to the jobs containers
+- Added feature toggles
+  - `cluster.jobs.createCluster.enabled`
+  - `cluster.jobs.patchCluster.enabled`
+  - `cluster.jobs.scaleCluster.enabled`
+  - `headlessService.enabled`
+  - `proxy.service.enabled`
+  - `proxy.headlessService.enabled`
 
 ### Updates
 

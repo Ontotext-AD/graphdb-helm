@@ -1,0 +1,194 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-custom-logback-config
+data:
+  logback.xml: |-
+    <configuration debug="false" scan="true" scanPeriod="30 seconds">
+        <jmxConfigurator/>
+
+        <!-- Try to guess the logs destination based on the application server or fallback to a default logs directory(embedded mode)
+        NOTE: We are using a really old version of logback so we have to use p().isEmpty instead of isDefined -->
+
+        <if condition='p("logDestinationDirectory").isEmpty()'>
+            <then>
+                <!-- catalina.base if we are running on tomcat -->
+                <if condition='!p("catalina.base").isEmpty()'>
+                    <then>
+                        <property name="logDestinationDirectory" value="${catalina.base}/logs/graphdb"/>
+                    </then>
+                    <else>
+                        <!-- jetty.base if we are running on tomcat -->
+                        <if condition='!p("jetty.base").isEmpty()'>
+                            <then>
+                                <property name="logDestinationDirectory" value="${jetty.base}/logs/graphdb"/>
+                            </then>
+                            <else>
+                                <!-- we are running in embedded mode -->
+                                <property name="logDestinationDirectory" value="logs"/>
+                            </else>
+                        </if>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+        <property name="defaultPattern" value="[%-5p] %d{ISO8601} [%t | %c{5}]%X{headers} %m%n%ex"/>
+        <property name="encoding" value="UTF-8"/>
+
+        <!-- Properties for log keeping based on age and size. By default logs will be kept for 30 days with no size limit-->
+        <!-- Sets the maximum age of kept logs in days. Set to 0 for no limit -->
+        <property name="keepLogDays" value="30"/>
+        <!-- Sets the maximum size of every log kept. Accepts values like 500KB, 200MB, 1GB etc. Set to 0 for no limit
+         NOTE: This sets the size limit per each different log type. If you want more control change the totalSizeCap of each log separately-->
+        <property name="logMaxSize" value="0"/>
+        <!-- This attribute sets the maximum size that an individual log file can reach before Logback triggers a rollover.
+       When a log file surpasses this size, a new log file is created, and the old one may be archived, compressed, or otherwise handled based on the rolling policy. -->
+        <property name="maxFileSize" value="1GB"/>
+
+        <!-- Audit log. Contains security related things -->
+        <appender name="AuditLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDestinationDirectory}/audit.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${logDestinationDirectory}/audit-%d{yyyy-MM}/audit-%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
+                <maxFileSize>${maxFileSize}</maxFileSize>
+                <maxHistory>${keepLogDays}</maxHistory>
+                <totalSizeCap>${logMaxSize}</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${defaultPattern}</pattern>
+                <charset>${encoding}</charset>
+            </encoder>
+        </appender>
+
+        <appender name="MainLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDestinationDirectory}/main.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${logDestinationDirectory}/main-%d{yyyy-MM}/main-%d{yyyy-MM-dd}.%i.zip
+                </fileNamePattern>
+                <maxFileSize>${maxFileSize}</maxFileSize>
+                <maxHistory>${keepLogDays}</maxHistory>
+                <totalSizeCap>${logMaxSize}</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${defaultPattern}</pattern>
+                <charset>${encoding}
+                </charset>
+            </encoder>
+        </appender>
+
+        <appender name="ErrorLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDestinationDirectory}/error.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${logDestinationDirectory}/errors-%d{yyyy-MM}/error-%d{yyyy-MM-dd}.%i.zip
+                </fileNamePattern>
+                <maxFileSize>${maxFileSize}</maxFileSize>
+                <maxHistory>${keepLogDays}</maxHistory>
+                <totalSizeCap>${logMaxSize}</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${defaultPattern}</pattern>
+                <charset>${encoding}</charset>
+            </encoder>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+        </appender>
+
+        <appender name="QueryLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDestinationDirectory}/query.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${logDestinationDirectory}/queries-%d{yyyy-MM}/query-%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
+                <maxFileSize>${maxFileSize}</maxFileSize>
+                <maxHistory>${keepLogDays}</maxHistory>
+                <totalSizeCap>${logMaxSize}</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${defaultPattern}</pattern>
+                <charset>${encoding}</charset>
+            </encoder>
+        </appender>
+
+        <appender name="SlowQueryLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDestinationDirectory}/slow-query.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${logDestinationDirectory}/slow-queries-%d{yyyy-MM}/slow-query-%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
+                <maxFileSize>${maxFileSize}</maxFileSize>
+                <maxHistory>${keepLogDays}</maxHistory>
+                <totalSizeCap>${logMaxSize}</totalSizeCap>
+                <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${defaultPattern}</pattern>
+                <charset>${encoding}</charset>
+            </encoder>
+        </appender>
+
+        <if condition='!p("graphdb.foreground").isEmpty()'>
+            <then>
+                <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                    <encoder>
+                        <pattern>${defaultPattern}</pattern>
+                    </encoder>
+                </appender>
+            </then>
+        </if>
+
+        <!-- Log all repository, user creations, modifications and deletions. Also logs successful or not attempts to
+        login into system. Updates, queries and imports to repository. Set to "INFO" level for logging all former updates.
+        Will log exceptions on "ERROR" level. Additivity is set to "false" and called first to prevent the messages
+        from cluttering the other logs. -->
+        <logger name="com.ontotext.forest.security.audit.AuditLoggingFilter" level="INFO" additivity="false">
+            <appender-ref ref="AuditLog"/>
+        </logger>
+
+        <!-- Log update operations on workers. Set to "INFO" level by default for logging all updates in workers' QueryLog.
+         Will log exceptions on "ERROR" level. Additivity is set to "false" and called first to prevent the messages
+         from cluttering the other logs.-->
+        <logger name="com.ontotext.trree.monitorRepository.MonitorRepositoryConnection" level="INFO" additivity="false">
+            <appender-ref ref="QueryLog"/>
+        </logger>
+
+        <!-- Log querry operations on the repository. Set to "DEBUG" level for logging all querries. Will log exceptions on "ERROR"
+              level. Additivity is set to "false" to prevent the messages from cluttering the other logs. -->
+        <logger name="com.ontotext.trree.query.LoggingClosableIteration" level="INFO" additivity="false">
+            <appender-ref ref="QueryLog"/>
+        </logger>
+
+        <!-- Log slow queries on "INFO" level. Queries are deemed "slow" if they take more than "SlowOpThresholdMs" from the
+              RepositorySettings property. Set the level to "OFF" to stop this log. Additivity is set to "false" to prevent the messages
+              from cluttering the other logs. -->
+        <logger name="slow-queries" level="INFO" additivity="false">
+            <appender-ref ref="SlowQueryLog"/>
+        </logger>
+
+        <root>
+            <level value="${graphdb.logger.root.level:-DEBUG}"/>
+            <appender-ref ref="MainLog"/>
+            <appender-ref ref="ErrorLog"/>
+            <if condition='!p("graphdb.foreground").isEmpty()'>
+                <then>
+                    <appender-ref ref="STDOUT"/>
+                </then>
+            </if>
+
+        </root>
+
+        <!-- Make some of the more verbose loggers less chatty -->
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="com.github.ziplet" level="WARN"/>
+        <logger name="springfox.documentation" level="WARN"/>
+        <logger name="org.eclipse.rdf4j.query.algebra.evaluation" level="ERROR"/>
+
+        <!-- GeoSPAQRL related deps be less verbose -->
+        <logger name="hsqldb.*" level="WARN"/>
+        <logger name="org.geotoolkit.*" level="WARN"/>
+
+        <!-- SemanticVectors related logger be less verbose -->
+        <logger name="pitt.search.semanticvectors.DocVectors" level="WARN"/>
+    </configuration>

@@ -1,4 +1,4 @@
-{{- if and .Values.security.enabled (not .Values.configuration.initialSettingsConfig.existingConfigmap) }}
+{{- if and .Values.security.enabled (not .Values.initialConfiguration.settings.existingConfigmap) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,6 +10,6 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 data:
-  {{ .Values.configuration.initialSettingsConfig.configmapKey }}: |-
+  {{ .Values.initialConfiguration.settings.configmapKey }}: |-
     {{- tpl ( .Files.Get "files/config/settings.js" ) . | nindent 4 }}
 {{- end }}

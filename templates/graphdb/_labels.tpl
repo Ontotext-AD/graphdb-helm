@@ -2,10 +2,6 @@
 Helper functions for labels related to GraphDB resources
 */}}
 
-{{- define "graphdb.fullname.configmap.logback" -}}
-  {{- printf "%s-%s" ( include "graphdb.fullname" . ) "logback" -}}
-{{- end -}}
-
 {{- define "graphdb.fullname.configmap.properties" -}}
   {{- printf "%s-%s" ( include "graphdb.fullname" . ) "properties" -}}
 {{- end -}}

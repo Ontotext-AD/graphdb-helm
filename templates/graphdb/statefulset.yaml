@@ -51,24 +51,31 @@ spec:
       volumes:
         - name: graphdb-properties
           configMap:
-            name: {{ .Values.configuration.propertiesConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.properties" . ) }}
+            name: {{ include "graphdb.fullname.configmap.properties" . }}
+        {{- if .Values.extraConfiguration.properties.existingConfigmap }}
+        - name: graphdb-extra-properties
+          configMap:
+            name: {{ tpl .Values.extraConfiguration.properties.existingConfigmap . }}
+        {{- end }}
+        {{- if .Values.logging.logback.existingConfigmap }}
         - name: graphdb-logback-config
           configMap:
-            name: {{ .Values.configuration.propertiesConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.logback" . ) }}
+            name: {{ tpl .Values.logging.logback.existingConfigmap . }}
+        {{- end }}
         {{- if .Values.license.existingSecret }}
         - name: graphdb-license
           secret:
-            secretName: {{ .Values.license.existingSecret }}
+            secretName: {{ tpl .Values.license.existingSecret . }}
         {{- end }}
-        {{- if or .Values.security.enabled .Values.configuration.initialSettingsConfig.existingConfigmap }}
+        {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
         - name: graphdb-initial-settings-config
           configMap:
-            name: {{ .Values.configuration.initialSettingsConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
+            name: {{ .Values.initialConfiguration.settings.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
         {{- end }}
-        {{- if or .Values.security.enabled .Values.security.initialUsersConfig.existingConfigmap }}
+        {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingConfigmap }}
         - name: graphdb-initial-users-config
           configMap:
-            name: {{ .Values.security.initialUsersConfig.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
+            name: {{ .Values.initialConfiguration.users.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
         {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
@@ -126,9 +133,11 @@ spec:
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
+            {{- if .Values.logging.logback.existingConfigmap }}
             - name: graphdb-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
-              subPath: {{ .Values.configuration.logbackConfig.configmapKey }}
+              subPath: {{ .Values.logging.logback.configmapKey }}
+            {{- end }}
             {{- if .Values.license.existingSecret }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license
@@ -175,16 +184,21 @@ spec:
             {{- end }}
             - name: graphdb-properties
               mountPath: /tmp/graphdb/graphdb.properties
-              subPath: {{ .Values.configuration.propertiesConfig.configmapKey }}
-            {{- if or .Values.security.enabled .Values.configuration.initialSettingsConfig.existingConfigmap }}
+              subPath: graphdb.properties
+            {{- if .Values.extraConfiguration.properties.existingConfigmap }}
+            - name: graphdb-extra-properties
+              mountPath: /tmp/graphdb/graphdb-extra.properties
+              subPath: {{ .Values.extraConfiguration.properties.configmapKey }}
+            {{- end }}
+            {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
             - name: graphdb-initial-settings-config
               mountPath: /tmp/graphdb/settings.js
-              subPath: {{ .Values.configuration.initialSettingsConfig.configmapKey }}
+              subPath: {{ .Values.initialConfiguration.settings.configmapKey }}
             {{- end }}
-            {{- if or .Values.security.enabled .Values.security.initialUsersConfig.existingConfigmap }}
+            {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingConfigmap }}
             - name: graphdb-initial-users-config
               mountPath: /tmp/graphdb/users.js
-              subPath: {{ .Values.security.initialUsersConfig.configmapKey }}
+              subPath: {{ .Values.initialConfiguration.users.configmapKey }}
             {{- end }}
           {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
@@ -201,8 +215,14 @@ spec:
               echo 'Configuring graphdb.properties'
               cat /tmp/graphdb/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
               echo "" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
 
+              if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
+                echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
               echo "Configuring GraphDB hostname: $(hostname --fqdn)"
               echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
               echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties

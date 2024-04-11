@@ -5,7 +5,7 @@ metadata:
   name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
-  {{- with .Values.proxy.annotations }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}

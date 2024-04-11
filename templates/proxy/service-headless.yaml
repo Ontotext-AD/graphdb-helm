@@ -8,7 +8,7 @@ metadata:
     {{- with .Values.proxy.headlessService.labels }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.proxy.headlessService.annotations) }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations .Values.proxy.headlessService.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}

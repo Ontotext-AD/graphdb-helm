@@ -16,6 +16,8 @@ TODO: decide how detailed we want this to be
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration
 - Renamed `java_args` to `javaArguments`
+- Removed the default logback XML configuration and configmap in favor of an [example](examples/custom-logback) and a new configuration options
+  under `logging.logback`
 - Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
   use `global.storageClass`.
 - Updated the GraphDB deployment URL to be http://graphdb.127.0.0.1.nip.io/ by default
@@ -25,8 +27,8 @@ TODO: decide how detailed we want this to be
 - Moved all proxy configurations from `graphdb.clusterProxy` to just `proxy`
   - Renamed `proxy.persistence.enablePersistence` toggle to just `enabled`
   - Moved `proxy.serviceType` to `proxy.service.type`
-- Configmaps from `graphdb.configs` are now under `configuration`, `repositories` and `security` with a different structure allowing better reuse
-  of existing configmaps
+- Configmaps from `graphdb.configs` are now under `extraConfiguration`, `repositories` and `initialConfiguration` with a different structure allowing
+  better reuse of existing configmaps
 - Moved job related configurations from `graphdb` (e.g. `graphdb.jobResources`) to a new root section `jobs`
 - Moved `images.graphdb` configurations to just `image`
 - Moved `deployment.imagePullPolicy` to `image.pullPolicy` and `deployment.imagePullSecret` to `image.pullSecrets`
@@ -52,12 +54,12 @@ TODO: decide how detailed we want this to be
 - Added `image.sha` to optionally provide an expected SHA checksum of the image
 - Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
 - Added new configuration options for the default ingress `ingress`:
-  - Ability to override the `host` and `path` for GraphDB from `configuration.host` and `configuration.path` 
-  - Changing the `pathType` 
+  - Ability to override the `host` and `path` for GraphDB from `configuration.host` and `configuration.path`
+  - Changing the `pathType`
   - Inserting additional hosts and TLS configurations with `extraHosts` and `extraTLS`
-- Added `labels` for each service resource for insertion of additional labels 
+- Added `labels` for each service resource for insertion of additional labels
 - Added `containerPorts` and `proxy.containerPorts` for mapping the ports on which GraphDB listens on
-- Added `ports` mappings in each service 
+- Added `ports` mappings in each service
 - Added `extraContainerPorts` and `proxy.extraContainerPorts`
 - Added `imagePullPolicy` to the jobs containers
 - Added feature toggles
@@ -70,11 +72,12 @@ TODO: decide how detailed we want this to be
 
 ### Updates
 
-- GraphDB properties and logback configuration configmaps are now applied by default
+- GraphDB properties configmap is now applied by default
 - Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
 - Removed unused busybox image configurations from `images.busybox`
 - Service resources and probes now refer to the target ports by their nicknames
 - Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
+- Existing configmaps for `logging.logback` and `extraConfiguration.properties` are now templated
 
 ## Version 10.6.0-R2
 

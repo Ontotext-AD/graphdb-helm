@@ -1,4 +1,4 @@
-{{- if and (gt (int $.Values.replicas) 1) (not .Values.cluster.existingConfig) }}
+{{- if and .Values.cluster.jobs.createCluster.enabled (gt (int .Values.replicas) 1) (not .Values.cluster.existingConfig) }}
 # Default configuration map for provisioning the GraphDB cluster configuration.
 # To change it, prepare another configuration map and update "graphdb.configs.clusterConfig"
 apiVersion: v1

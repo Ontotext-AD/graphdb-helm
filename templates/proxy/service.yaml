@@ -1,4 +1,4 @@
-{{- if gt (int $.Values.replicas) 1 }}
+{{- if and .Values.proxy.service.enabled (gt (int .Values.replicas) 1) }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,12 +8,12 @@ metadata:
     {{- with .Values.proxy.service.labels }}
       {{- tpl ( toYaml . ) $ | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (deepCopy .Values.proxy.annotations) .Values.proxy.service.annotations) }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations .Values.proxy.service.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ $.Values.proxy.service.type }}
+  type: {{ .Values.proxy.service.type }}
   selector:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:

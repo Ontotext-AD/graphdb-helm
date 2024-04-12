@@ -1,4 +1,3 @@
-{{- if not .Values.configuration.propertiesConfig.existingConfigmap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,7 +9,7 @@ metadata:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 data:
-  {{ .Values.configuration.propertiesConfig.configmapKey }}: |-
+  graphdb.properties: |-
     {{- tpl ( .Files.Get "files/config/graphdb.properties" | trim ) . | nindent 4 }}
     {{- if .Values.configuration.properties }}
     ##### Overrides from values.yaml #####
@@ -20,4 +19,3 @@ data:
     {{- end }}
     {{- end }}
     {{- end }}
-{{- end }}

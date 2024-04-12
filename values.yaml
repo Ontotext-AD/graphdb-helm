@@ -28,10 +28,10 @@ nameOverride: ""
 # To override the GraphDB proxy's full name, use proxy.fullnameOverride
 fullnameOverride: ""
 
-# Additional common labels to add to the resources
+# Additional common labels to add to all resources
 labels: {}
 
-# Additional common annotations to add to the resources
+# Additional common annotations to add to all resources
 annotations: {}
 
 ################################
@@ -43,7 +43,7 @@ image:
   repository: ontotext/graphdb
   # If specified, overrides Chart.AppVersion
   tag: ""
-  # Expected SHA checksum of the used GraphDB image
+  # Expected SHA256 digest of the used GraphDB image, without the "sha256@" prefix
   sha: ""
   # Defines the policy for pulling images
   pullPolicy: IfNotPresent
@@ -55,19 +55,23 @@ image:
 ##########################
 
 # Number of GraphDB nodes to be deployed as part of the StatefulSet.
-# Set value to 1 to run a standalone GraphDB instance or to more to form a GraphDB cluster.
+# Set value to 1 to run a standalone GraphDB instance or to more to form a GraphDB cluster with GraphDB cluster proxies.
 replicas: 1
 
 ##########################
 # GraphDB Configurations #
 ##########################
 
+# License configurations.
+# License is needed for GraphDB Enterprise Edition features
 license:
   # Reference to a secret containing 'graphdb.license' file to be mounted in the GraphDB instances.
   existingSecret: ""
   # File name of the GraphDB license file in the existing license secret. Default is graphdb.license
   licenseFilename: graphdb.license
 
+# GraphDB runtime configuration settings.
+# For reference, see https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html
 configuration:
   # The public URL at which GraphDB will be accessed.
   # This configures both GraphDB address resolving and the default Ingress resource as well.
@@ -84,31 +88,44 @@ configuration:
   # Takes precedence over configurations in graphdb.properties
   javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 
-  propertiesConfig:
+#####################################
+# Additional GraphDB Configurations #
+#####################################
+
+extraConfiguration:
+  properties:
     existingConfigmap: ""
     configmapKey: "graphdb.properties"
 
-  logbackConfig:
-    existingConfigmap: ""
-    configmapKey: "logback.xml"
+###############################################
+# Initial Provisioning GraphDB Configurations #
+###############################################
 
-  initialSettingsConfig:
+initialConfiguration:
+  settings:
     existingConfigmap: ""
     configmapKey: "settings.js"
+  users:
+    existingConfigmap: ""
+    configmapKey: "users.js"
+
+#################################
+# GraphDB Logging Configuration #
+#################################
+
+logging:
+  logback:
+    existingConfigmap: ""
+    configmapKey: "logback.xml"
 
 ###################################
 # GraphDB Security Configurations #
 ###################################
 
 security:
-  # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
   enabled: false
 
-  initialUsersConfig:
-    existingConfigmap: ""
-    configmapKey: "users.js"
-
-  # TODO: I dont like them here... could think of users: { provisioner: { username, password } } or smth else
+  # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
   provisioningUsername: provisioner
   # bcrypt encrypted password. default: iHaveSuperpowers
   provisioningPassword: iHaveSuperpowers
@@ -142,6 +159,17 @@ cluster:
     transactionLogMaximumSizeGB: 50
     # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
     verificationTimeout: 1500
+  # Jobs configurations for to the cluster automation
+  jobs:
+    createCluster:
+      # Enables or disables the cluster creation Job
+      enabled: true
+    patchCluster:
+      # Enables or disables the Job for patching the cluster configuration
+      enabled: true
+    scaleCluster:
+      # Enables or disables the Jobs for scaling up or down the cluster
+      enabled: true
 
 ##########################
 # Ingress Configurations #
@@ -183,6 +211,8 @@ ingress:
 ##########################
 
 headlessService:
+  # Enables or disables the headless Service deployment
+  enabled: true
   # Extra labels to append to the headless service
   labels: {}
   # Extra annotations to append to the service
@@ -424,6 +454,8 @@ proxy:
 
   # GraphDB cluster proxy service configurations
   service:
+    # Enables or disables the Service deployment
+    enabled: true
     # Extra labels to append to the service
     labels: {}
     # Extra annotations to append to the service
@@ -440,6 +472,8 @@ proxy:
 
   # GraphDB cluster proxy headless service configurations
   headlessService:
+    # Enables or disables the headless Service deployment
+    enabled: true
     # Extra labels to append to the headless service
     labels: {}
     # Extra annotations to append to the service

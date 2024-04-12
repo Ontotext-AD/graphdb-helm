@@ -40,8 +40,11 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: graphdb-proxy
 app.kubernetes.io/part-of: graphdb
+{{- if .Values.labels }}
+{{ tpl ( toYaml .Values.labels ) . }}
+{{- end }}
 {{- if .Values.proxy.labels }}
-{{ tpl ( toYaml .Values.proxy.labels ) $ }}
+{{ tpl ( toYaml .Values.proxy.labels ) . }}
 {{- end }}
 {{- end }}
 

@@ -18,7 +18,7 @@ data:
     -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     -Dgraphdb.home=/opt/graphdb/home
     -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
-{{- if gt (int $.Values.replicas) 1 }}
-    -Dgraphdb.auth.token.secret={{ $.Values.cluster.clusterSecret | quote }}
-{{- end }}
-    {{ default $.Values.configuration.javaArguments}}
+    {{- if gt (int .Values.replicas) 1 }}
+    -Dgraphdb.auth.token.secret={{ .Values.cluster.clusterSecret | quote }}
+    {{- end }}
+    {{ .Values.configuration.javaArguments }}

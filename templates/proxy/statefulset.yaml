@@ -1,16 +1,16 @@
-{{- if gt (int $.Values.replicas) 1 }}
+{{- if gt (int .Values.replicas) 1 }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "graphdb-proxy.fullname" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
-  {{- with .Values.proxy.annotations }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ $.Values.proxy.replicas }}
+  replicas: {{ .Values.proxy.replicas }}
   serviceName: {{ include "graphdb-proxy.fullname.service.headless" . }}
   podManagementPolicy: Parallel
   revisionHistoryLimit: {{ .Values.proxy.revisionHistoryLimit }}
@@ -32,7 +32,7 @@ spec:
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print .Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
         {{- with .Values.proxy.podAnnotations }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}
@@ -42,7 +42,7 @@ spec:
         - name: graphdb-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
-      {{- with $.Values.proxy.extraVolumes }}
+      {{- with .Values.proxy.extraVolumes }}
         {{- tpl ( toYaml . ) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.nodeSelector }}
@@ -67,7 +67,7 @@ spec:
       initContainers:
         - name: {{ include "graphdb-proxy.chartName" . }}-provision-settings
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_PUBLIC_URL
               value: {{ .Values.configuration.externalUrl }}
@@ -85,7 +85,7 @@ spec:
             - name: graphdb-properties
               mountPath: /tmp/graphdb.properties
               subPath: graphdb.properties
-            {{- if $.Values.proxy.persistence.enabled }}
+            {{- if .Values.proxy.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
@@ -113,12 +113,12 @@ spec:
       containers:
         - name: {{ include "graphdb-proxy.chartName" . }}
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb-proxy.fullname" . }}
-            {{- with $.Values.proxy.extraEnvFrom }}
+            {{- with .Values.proxy.extraEnvFrom }}
               {{- tpl ( toYaml . ) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.proxy.extraEnv }}
@@ -133,11 +133,11 @@ spec:
               {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
-            {{- if $.Values.proxy.persistence.enabled }}
+            {{- if .Values.proxy.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
-            {{- with $.Values.proxy.extraVolumeMounts }}
+            {{- with .Values.proxy.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with .Values.proxy.resources }}

@@ -23,11 +23,11 @@ spec:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- $.Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+        {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
       containers:
         - name: provision-repositories
           image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_POD_NAME
               value: {{ include "graphdb.fullname" . }}
@@ -38,7 +38,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "graphdb.fullname.secret.provision-user" . }}
-          securityContext: {{- $.Values.jobs.securityContext | toYaml | nindent 12 }}
+          securityContext: {{- .Values.jobs.securityContext | toYaml | nindent 12 }}
           {{- with .Values.jobs.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}

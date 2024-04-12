@@ -1,18 +1,18 @@
-{{- if gt (int $.Values.replicas) 1 }}
+{{- if gt (int .Values.replicas) 1 }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "graphdb-proxy.fullname" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
-  {{- with .Values.proxy.annotations }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
     {{- tpl ( toYaml . ) $ | nindent 4 }}
   {{- end }}
 data:
   # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
-    -Dgraphdb.auth.token.secret={{ $.Values.cluster.clusterSecret | quote }}
+    -Dgraphdb.auth.token.secret={{ .Values.cluster.clusterSecret | quote }}
     -Dgraphdb.home=/opt/graphdb/home
-    {{ $.Values.proxy.configuration.javaArguments }}
+    {{ .Values.proxy.configuration.javaArguments }}
 {{- end }}

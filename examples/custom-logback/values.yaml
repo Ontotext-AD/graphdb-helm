@@ -1,0 +1,4 @@
+logging:
+  logback:
+    existingConfigmap: "graphdb-custom-logback-config"
+    configmapKey: "logback.xml"

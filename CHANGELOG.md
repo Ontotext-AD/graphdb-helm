@@ -78,7 +78,7 @@ TODO: decide how detailed we want this to be
 - Removed unused busybox image configurations from `images.busybox`
 - Service resources and probes now refer to the target ports by their nicknames
 - Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
-- Existing configmaps for `logging.logback` and `extraConfiguration.properties` are now templated
+- References to existing configmaps and secrets are now processed as templates
 - Added trimming when loading files in the configmaps and secrets
 
 ## Version 10.6.0-R2

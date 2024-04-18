@@ -70,12 +70,12 @@ spec:
         {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
         - name: graphdb-initial-settings-config
           configMap:
-            name: {{ .Values.initialConfiguration.settings.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
+            name: {{ ( tpl .Values.initialConfiguration.settings.existingConfigmap . ) | default ( include "graphdb.fullname.configmap.settings" . ) }}
         {{- end }}
         {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
         - name: graphdb-initial-users-config
           secret:
-            secretName: {{ .Values.initialConfiguration.users.existingSecret | default ( include "graphdb.fullname.secret.users" . ) }}
+            secretName: {{ ( tpl .Values.initialConfiguration.users.existingSecret . ) | default ( include "graphdb.fullname.secret.users" . ) }}
         {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}

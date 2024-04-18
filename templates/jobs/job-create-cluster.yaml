@@ -62,7 +62,7 @@ spec:
             sizeLimit: 10Mi
         - name: cluster-config
           configMap:
-            name: {{ .Values.cluster.existingConfig | default ( include "graphdb.fullname.configmap.cluster" . ) }}
+            name: {{ ( tpl .Values.cluster.existingConfig . ) | default ( include "graphdb.fullname.configmap.cluster" . ) }}
         - name: graphdb-utils
           configMap:
             name: {{ include "graphdb.fullname.configmap.utils" . }}

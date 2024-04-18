@@ -107,8 +107,8 @@ initialConfiguration:
     existingConfigmap: ""
     configmapKey: "settings.js"
   users:
-    existingConfigmap: ""
-    configmapKey: "users.js"
+    existingSecret: ""
+    secretKey: "users.js"
 
 #################################
 # GraphDB Logging Configuration #

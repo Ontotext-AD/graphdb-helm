@@ -29,6 +29,7 @@ TODO: decide how detailed we want this to be
   - Moved `proxy.serviceType` to `proxy.service.type`
 - Configmaps from `graphdb.configs` are now under `extraConfiguration`, `repositories` and `initialConfiguration` with a different structure allowing
   better reuse of existing configmaps
+  - Users are now provided as a Secret
 - Moved job related configurations from `graphdb` (e.g. `graphdb.jobResources`) to a new root section `jobs`
 - Moved `images.graphdb` configurations to just `image`
 - Moved `deployment.imagePullPolicy` to `image.pullPolicy` and `deployment.imagePullSecret` to `image.pullSecrets`

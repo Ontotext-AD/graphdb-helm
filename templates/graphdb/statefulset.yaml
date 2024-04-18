@@ -72,10 +72,10 @@ spec:
           configMap:
             name: {{ .Values.initialConfiguration.settings.existingConfigmap | default ( include "graphdb.fullname.configmap.settings" . ) }}
         {{- end }}
-        {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingConfigmap }}
+        {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
         - name: graphdb-initial-users-config
-          configMap:
-            name: {{ .Values.initialConfiguration.users.existingConfigmap | default ( include "graphdb.fullname.configmap.users" . ) }}
+          secret:
+            secretName: {{ .Values.initialConfiguration.users.existingSecret | default ( include "graphdb.fullname.secret.users" . ) }}
         {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
@@ -195,10 +195,10 @@ spec:
               mountPath: /tmp/graphdb/settings.js
               subPath: {{ .Values.initialConfiguration.settings.configmapKey }}
             {{- end }}
-            {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingConfigmap }}
+            {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
             - name: graphdb-initial-users-config
               mountPath: /tmp/graphdb/users.js
-              subPath: {{ .Values.initialConfiguration.users.configmapKey }}
+              subPath: {{ .Values.initialConfiguration.users.secretKey }}
             {{- end }}
           {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}

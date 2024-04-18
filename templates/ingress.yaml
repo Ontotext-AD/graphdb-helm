@@ -41,7 +41,7 @@ spec:
                 port:
                   number: {{ .Values.proxy.service.ports.http }}
                 {{- else }}
-                name: {{ include "graphdb.fullname.service.headless" . }}
+                name: {{ include "graphdb.fullname" . }}
                 port:
                   number: {{ .Values.headlessService.ports.http }}
                 {{- end }}

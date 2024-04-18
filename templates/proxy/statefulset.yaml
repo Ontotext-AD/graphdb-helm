@@ -65,6 +65,51 @@ spec:
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
+      containers:
+        - name: {{ include "graphdb-proxy.chartName" . }}
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "graphdb-proxy.fullname" . }}
+            {{- with .Values.proxy.extraEnvFrom }}
+              {{- tpl ( toYaml . ) $ | nindent 12 }}
+            {{- end }}
+          {{- with .Values.proxy.extraEnv }}
+          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.proxy.containerPorts.http }}
+            - name: rpc
+              containerPort: {{ .Values.proxy.containerPorts.rpc }}
+            {{- with .Values.proxy.extraContainerPorts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.proxy.persistence.enabled }}
+            - name: graphdb-storage
+              mountPath: /opt/graphdb/home
+            {{- end }}
+            {{- with .Values.proxy.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.proxy.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.startupProbe }}
+          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.readinessProbe }}
+          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.livenessProbe }}
+          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
       initContainers:
         - name: {{ include "graphdb-proxy.chartName" . }}-provision-settings
           image: {{ include "graphdb.image" . }}
@@ -111,49 +156,4 @@ spec:
         {{- with .Values.proxy.extraInitContainers }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      containers:
-        - name: {{ include "graphdb-proxy.chartName" . }}
-          image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
-          envFrom:
-            - configMapRef:
-                name: {{ include "graphdb-proxy.fullname" . }}
-            {{- with .Values.proxy.extraEnvFrom }}
-              {{- tpl ( toYaml . ) $ | nindent 12 }}
-            {{- end }}
-          {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
-          {{- end }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.proxy.containerPorts.http }}
-            - name: rpc
-              containerPort: {{ .Values.proxy.containerPorts.rpc }}
-            {{- with .Values.proxy.extraContainerPorts }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          volumeMounts:
-            {{- if .Values.proxy.persistence.enabled }}
-            - name: graphdb-storage
-              mountPath: /opt/graphdb/home
-            {{- end }}
-            {{- with .Values.proxy.extraVolumeMounts }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- with .Values.proxy.resources }}
-          resources: {{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.proxy.securityContext }}
-          securityContext: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.proxy.startupProbe }}
-          startupProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.proxy.readinessProbe }}
-          readinessProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.proxy.livenessProbe }}
-          livenessProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
 {{- end }}

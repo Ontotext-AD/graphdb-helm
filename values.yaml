@@ -211,6 +211,23 @@ ingress:
 # Service Configurations #
 ##########################
 
+# This service is deployed only when the replicas are set to 1, in cluster mode, this service does not exist.
+service:
+  # Enables or disables the Service deployment
+  enabled: true
+  # Extra labels to append to the service
+  labels: {}
+  # Extra annotations to append to the service
+  annotations: {}
+  # Service type used by the graphdb-cluster-proxy service
+  type: ClusterIP
+  # Ports exposed by the service
+  ports:
+    http: 7200
+  # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
+  # If left undefined, K8S will pick a random port from the node port range of the cluster.
+  nodePort: ""
+
 headlessService:
   # Enables or disables the headless Service deployment
   enabled: true
@@ -462,8 +479,7 @@ proxy:
     # Extra annotations to append to the service
     annotations: {}
     # Service type used by the graphdb-cluster-proxy service
-    # Note: If using ALB in AWS EKS this will default to being on the public internet
-    type: LoadBalancer
+    type: ClusterIP
     # Ports exposed by the service
     ports:
       http: 7200

@@ -44,6 +44,7 @@ TODO: decide how detailed we want this to be
   - Moved `graphdb.clusterConfig.nodesCount` to `replicas`
   - Moved the rest of `graphdb.clusterConfig` configurations under `cluster` and `cluster.config`
 - Moved `graphdb.security` configurations to `security`
+- Updated the Service type of the proxy to be ClusterIP by default
 
 ### New
 
@@ -91,6 +92,7 @@ TODO: decide how detailed we want this to be
   both GraphDB and its proxy
 - Added `graphdb.clusterConfig.transactionLogMaximumSizeGB` configuration for the cluster creation JSON configuration.
 - Added `graphdb.clusterConfig.existingClusterConfig` for providing a custom cluster creation JSON configuration.
+- Added a Service for single GraphDB deployments, configured with new configurations under `service`
 
 ### Fixed
 

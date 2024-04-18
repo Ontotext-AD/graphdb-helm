@@ -13,5 +13,5 @@ metadata:
   {{- end }}
 data:
   cluster-config.json: |-
-    {{- tpl ( .Files.Get "files/config/cluster-config.json" ) . | nindent 4 }}
+    {{- tpl ( .Files.Get "files/config/cluster-config.json" | trim ) . | nindent 4 }}
 {{- end }}

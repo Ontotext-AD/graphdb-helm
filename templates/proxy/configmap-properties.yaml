@@ -11,5 +11,5 @@ metadata:
   {{- end }}
 data:
   graphdb.properties: |-
-    {{- tpl ( .Files.Get "files/config/proxy/graphdb.properties" ) . | nindent 4 }}
+    {{- tpl ( .Files.Get "files/config/proxy/graphdb.properties" | trim ) . | nindent 4 }}
 {{- end }}

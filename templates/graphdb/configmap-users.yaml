@@ -11,5 +11,5 @@ metadata:
   {{- end }}
 data:
   {{ .Values.initialConfiguration.users.configmapKey }}: |-
-    {{- tpl ( .Files.Get "files/config/users.js" ) . | nindent 4 }}
+    {{- tpl ( .Files.Get "files/config/users.js" | trim ) . | nindent 4 }}
 {{- end }}

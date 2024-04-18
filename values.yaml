@@ -56,6 +56,7 @@ image:
 
 # Number of GraphDB nodes to be deployed as part of the StatefulSet.
 # Set value to 1 to run a standalone GraphDB instance or to more to form a GraphDB cluster with GraphDB cluster proxies.
+# This setting control the deployment of the cluster proxies and cluster jobs as well.
 replicas: 1
 
 ##########################

@@ -69,7 +69,14 @@ spec:
         - name: {{ include "graphdb-proxy.chartName" . }}
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.proxy.command }}
+          command: {{ toYaml .Values.proxy.command | nindent 12 }}
+          {{- else }}
           command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          {{- end }}
+          {{- with .Values.proxy.args }}
+          args: {{ toYaml . | nindent 12 }}
+          {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb-proxy.fullname" . }}

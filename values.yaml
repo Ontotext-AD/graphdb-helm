@@ -262,10 +262,10 @@ revisionHistoryLimit: 10
 # grace period in seconds before terminating the pods
 terminationGracePeriodSeconds: 120
 
-# overrides the default container command, use only for troubleshooting!
+# Overrides the default container command, use only for troubleshooting!
 command: []
 
-# overrides the default container command's arguments, use only for troubleshooting!
+# Overrides the default container command's arguments, use only for troubleshooting!
 args: []
 
 # Ports used by the GraphDB container
@@ -527,6 +527,12 @@ proxy:
 
   # Grace period in seconds before terminating the pods
   terminationGracePeriodSeconds: 30
+
+  # Overrides the default container command, use only for troubleshooting!
+  command: []
+
+  # Overrides the default container command's arguments, use only for troubleshooting!
+  args: []
 
   # Ports used by GraphDB proxy and the Service components
   containerPorts:

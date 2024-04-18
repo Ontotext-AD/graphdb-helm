@@ -93,6 +93,7 @@ TODO: decide how detailed we want this to be
 - Added `graphdb.clusterConfig.transactionLogMaximumSizeGB` configuration for the cluster creation JSON configuration.
 - Added `graphdb.clusterConfig.existingClusterConfig` for providing a custom cluster creation JSON configuration.
 - Added a Service for single GraphDB deployments, configured with new configurations under `service`
+- Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting.
 
 ### Fixed
 

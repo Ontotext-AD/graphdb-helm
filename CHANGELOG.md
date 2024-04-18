@@ -73,6 +73,8 @@ TODO: decide how detailed we want this to be
   - `proxy.headlessService.enabled`
 - Added new annotation checksums for GraphDB and GraphDB proxy in order to detect changes in the properties configmaps 
   and ultimately trigger rolling update
+- Added a Service for single GraphDB deployments, configured with new configurations under `service`
+- Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting.
 
 ### Updates
 
@@ -92,8 +94,6 @@ TODO: decide how detailed we want this to be
   both GraphDB and its proxy
 - Added `graphdb.clusterConfig.transactionLogMaximumSizeGB` configuration for the cluster creation JSON configuration.
 - Added `graphdb.clusterConfig.existingClusterConfig` for providing a custom cluster creation JSON configuration.
-- Added a Service for single GraphDB deployments, configured with new configurations under `service`
-- Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting.
 
 ### Fixed
 

@@ -42,6 +42,7 @@ spec:
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
+        checksum/configmap-properties: {{ include (print .Template.BasePath "/graphdb/configmap-properties.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}

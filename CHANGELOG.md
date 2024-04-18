@@ -70,6 +70,8 @@ TODO: decide how detailed we want this to be
   - `headlessService.enabled`
   - `proxy.service.enabled`
   - `proxy.headlessService.enabled`
+- Added new annotation checksums for GraphDB and GraphDB proxy in order to detect changes in the properties configmaps 
+  and ultimately trigger rolling update
 
 ### Updates
 

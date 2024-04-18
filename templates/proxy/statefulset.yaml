@@ -33,6 +33,7 @@ spec:
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
+        checksum/configmap-properties: {{ include (print .Template.BasePath "/proxy/configmap-properties.yaml") . | sha256sum }}
         {{- with .Values.proxy.podAnnotations }}
           {{- tpl ( toYaml . ) $ | nindent 8 }}
         {{- end }}

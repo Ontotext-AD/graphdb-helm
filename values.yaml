@@ -14,6 +14,8 @@ global:
   imageRegistry: ""
   # Inserts additional pull secret references together along with any from image.pullSecrets
   imagePullSecrets: []
+  # The default domain suffix of the Kubernetes cluster
+  clusterDomain: "cluster.local"
 
 ###############################
 #   Metadata Configurations   #

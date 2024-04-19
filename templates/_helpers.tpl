@@ -31,10 +31,11 @@ Renders the gRPC address of each GraphDB node that is part of the cluster as a J
 {{- define "graphdb.cluster.nodes.json" -}}
   {{- $pod_name := include "graphdb.fullname" . -}}
   {{- $service_name := include "graphdb.fullname.service.headless" . -}}
+  {{- $cluster_domain := .Values.global.clusterDomain -}}
   {{- $service_rpc_port := .Values.headlessService.ports.rpc -}}
   {{- $nodes := list -}}
   {{- range $i, $node_index := until (int .Values.replicas) -}}
-    {{- $nodes = append $nodes (printf "%s-%s.%s.%s.svc.cluster.local:%s" $pod_name (toString $node_index) $service_name $.Release.Namespace (toString $service_rpc_port)) -}}
+    {{- $nodes = append $nodes (printf "%s-%s.%s.%s.svc.%s:%s" $pod_name (toString $node_index) $service_name $.Release.Namespace $cluster_domain (toString $service_rpc_port)) -}}
   {{- end -}}
   {{- toPrettyJson $nodes -}}
 {{- end -}}
@@ -45,9 +46,10 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
 {{- define "graphdb-proxy.cluster.nodes" -}}
   {{- $pod_name := include "graphdb.fullname" . -}}
   {{- $service_name := include "graphdb.fullname.service.headless" . -}}
+  {{- $cluster_domain := .Values.global.clusterDomain -}}
   {{- $service_http_port := .Values.headlessService.ports.http -}}
   {{- range $i, $node_index := until (int .Values.replicas) -}}
-    http://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $.Release.Namespace }}.svc.cluster.local:{{ $service_http_port }}
+    http://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $.Release.Namespace }}.svc.{{ $cluster_domain }}:{{ $service_http_port }}
     {{- if gt (sub (int $.Values.replicas) 1 ) $node_index -}}
       {{- ", " -}}
     {{- end -}}

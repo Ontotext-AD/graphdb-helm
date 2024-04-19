@@ -75,6 +75,7 @@ TODO: decide how detailed we want this to be
   and ultimately trigger rolling update
 - Added a Service for single GraphDB deployments, configured with new configurations under `service`
 - Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting.
+- Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
 
 ### Updates
 
@@ -85,6 +86,7 @@ TODO: decide how detailed we want this to be
 - Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
 - References to existing configmaps and secrets are now processed as templates
 - Added trimming when loading files in the configmaps and secrets
+- Cluster jobs now automatically resolves the cluster domain
 
 ## Version 10.6.0-R2
 

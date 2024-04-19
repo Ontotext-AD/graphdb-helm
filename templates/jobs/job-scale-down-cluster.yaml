@@ -34,6 +34,8 @@ spec:
               value: {{ include "graphdb.fullname.service.headless" . }}
             - name: GRAPHDB_SERVICE_PORT
               value: {{ .Values.headlessService.ports.http | quote }}
+            - name: GRAPHDB_SERVICE_RPC_PORT
+              value: {{ .Values.headlessService.ports.rpc | quote }}
             - name: GRAPHDB_PROXY_SERVICE_NAME
               value: {{ include "graphdb-proxy.fullname" . }}
             - name: GRAPHDB_PROXY_SERVICE_PORT
@@ -55,7 +57,6 @@ spec:
             - "/tmp/utils/update-cluster.sh"
             - "removeNodes"
             - "{{ .Values.replicas }}"
-            - "{{ .Release.Namespace }}"
       volumes:
         - name: job-temp
           emptyDir:

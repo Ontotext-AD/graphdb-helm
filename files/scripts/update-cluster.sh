@@ -31,9 +31,12 @@ function patchCluster {
 function removeNodes {
   local expectedNodes=$1
   local authToken=$PROVISION_USER_AUTH_TOKEN
-  local namespace=$2
   local currentNodes=$(getNodeCountInCurrentCluster)
   local nodes=""
+  # DNS suffix in the form of namespace.svc.cluster.local
+  local dns_suffix
+  dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
+
   echo "Cluster reported: $currentNodes current nodes"
   echo "Cluster is expected to have: $expectedNodes nodes"
 
@@ -52,7 +55,7 @@ function removeNodes {
 
   echo "Scaling the cluster down"
   for ((i = expectedNodes; i < currentNodes; i++)) do
-    nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
+    nodes=${nodes}\"${GRAPHDB_POD_NAME}-$i.${GRAPHDB_SERVICE_NAME}.${dns_suffix}:${GRAPHDB_SERVICE_RPC_PORT}\"
     if [ $i -lt $(expr $currentNodes - 1) ]; then
       nodes=${nodes}\,
     fi
@@ -80,10 +83,13 @@ function removeNodes {
 function addNodes {
   local expectedNodes=$1
   local authToken=$PROVISION_USER_AUTH_TOKEN
-  local namespace=$2
-  local timeout=$3
+  local timeout=$2
   local currentNodes=$(getNodeCountInCurrentCluster)
   local nodes=""
+  # DNS suffix in the form of namespace.svc.cluster.local
+  local dns_suffix
+  dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
+
   echo "Cluster reported: $currentNodes current nodes"
   echo "Cluster is expected to have: $expectedNodes nodes"
 
@@ -95,7 +101,7 @@ function addNodes {
 
   echo "Scaling the cluster up"
   for ((i = currentNodes; i < expectedNodes; i++)) do
-    nodes=${nodes}\"graphdb-node-$i.graphdb-node.${namespace}.svc.cluster.local:7300\"
+    nodes=${nodes}\"${GRAPHDB_POD_NAME}-$i.${GRAPHDB_SERVICE_NAME}.${dns_suffix}:${GRAPHDB_SERVICE_RPC_PORT}\"
     if [ $i -lt $(expr $expectedNodes - 1) ]; then
       nodes=${nodes}\,
     fi
@@ -155,7 +161,7 @@ function getNodeCountInCurrentCluster {
        --header "Authorization: Basic ${authToken}" \
        --header 'Accept: */*' \
        "${node_address}/rest/cluster/config"
-  grep -o 'graphdb-node-' "clusterResponse.json" | grep -c ""
+  grep -o "${GRAPHDB_SERVICE_NAME}" "clusterResponse.json" | grep -c ""
 }
 
 function waitService {

@@ -464,6 +464,9 @@ proxy:
   ################################
 
   configuration:
+    # GraphDB proxy properties to insert in the default graphdb.properties proxy configmap
+    properties: {}
+
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"

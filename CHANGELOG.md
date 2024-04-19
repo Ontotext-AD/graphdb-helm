@@ -49,10 +49,10 @@ TODO: decide how detailed we want this to be
 ### New
 
 - Added `annotations` for common annotations across resources
-- Added `serviceAccount` allowing you to create or use an existing service account for GraphDB pods.
+- Added `serviceAccount` allowing you to create or use an existing service account for GraphDB pods
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
-- Added `conpfiguration.properties` for inserting additional GraphDB configurations in the properties configmap
+- Added `conpfiguration.properties` and `proxy.configuration.properties` for inserting additional GraphDB configurations in the properties configmaps
 - Added `image.sha` to optionally provide an expected SHA checksum of the image
 - Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
 - Added new configuration options for the default ingress `ingress`:
@@ -74,7 +74,7 @@ TODO: decide how detailed we want this to be
 - Added new annotation checksums for GraphDB and GraphDB proxy in order to detect changes in the properties configmaps 
   and ultimately trigger rolling update
 - Added a Service for single GraphDB deployments, configured with new configurations under `service`
-- Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting.
+- Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting
 - Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
 
 ### Updates
@@ -87,6 +87,7 @@ TODO: decide how detailed we want this to be
 - References to existing configmaps and secrets are now processed as templates
 - Added trimming when loading files in the configmaps and secrets
 - Cluster jobs now automatically resolves the cluster domain
+- Moved `files/config/proxy/graphdb.properties` to [files/config/graphdb-proxy.properties](./files/config/graphdb-proxy.properties)
 
 ## Version 10.6.0-R2
 

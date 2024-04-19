@@ -11,5 +11,13 @@ metadata:
   {{- end }}
 data:
   graphdb.properties: |-
-    {{- tpl ( .Files.Get "files/config/proxy/graphdb.properties" | trim ) . | nindent 4 }}
+    {{- tpl ( .Files.Get "files/config/graphdb-proxy.properties" | trim ) . | nindent 4 }}
+    {{- if .Values.proxy.configuration.properties }}
+    ##### Overrides from values.yaml #####
+    {{- range $key, $val := .Values.proxy.configuration.properties -}}
+    {{- if ne $val nil }}
+    {{ $key }}={{ tpl ($val | toString) $ | quote }}
+    {{- end }}
+    {{- end -}}
+    {{- end -}}
 {{- end }}

@@ -1,0 +1,37 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+
+env:
+  HELM_DOCS_IMAGE: "jnorwood/helm-docs:v1.13.1@sha256:717bd8f770bd1d25ccf79c876f1420e105832f2d6bbde12170405f58f540cb2d"
+
+jobs:
+  documentation:
+    name: Generate readme
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - id: checkout_repository
+        name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - id: generate_helm_docs
+        name: Generate Helm chart readme with helm-docs
+        run: |
+          docker run --rm --volume "$(pwd):/helm-docs" -u "$(id -u)" $HELM_DOCS_IMAGE
+
+      - id: update_pull_request
+        name: Update PR with readme changes
+        run: |
+          if ! git diff --exit-code; then
+            git config --local user.name 'github-actions[bot]'
+            git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+            git commit -am "Updated the README"
+            git push
+          else
+            echo "Readme is up to date, nothing to push..."
+          fi

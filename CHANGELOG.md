@@ -76,6 +76,7 @@ TODO: decide how detailed we want this to be
 - Added a Service for single GraphDB deployments, configured with new configurations under `service`
 - Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting
 - Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
+- Added `cluster.existingConfigmapKey` to specify a custom configmap key if needed
 
 ### Updates
 

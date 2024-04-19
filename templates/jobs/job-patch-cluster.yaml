@@ -24,6 +24,16 @@ spec:
       {{- end }}
       securityContext:
         {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+      volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: cluster-config
+          configMap:
+            name: {{ ( tpl .Values.cluster.existingConfig . ) | default ( printf "%s-cluster" (include "graphdb.fullname" . ) ) }}
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
       containers:
         - name: patch-cluster
           image: {{ include "graphdb.image" . }}
@@ -52,21 +62,12 @@ spec:
             - name: graphdb-utils
               mountPath: /tmp/utils
             - name: cluster-config
-              mountPath: /tmp/cluster-config
+              mountPath: /tmp/cluster-config/cluster-config.json
+              subPath: {{ .Values.cluster.existingConfigmapKey }}
           command: ['bash']
           args:
             - "/tmp/utils/update-cluster.sh"
             - "patchCluster"
             - "/tmp/cluster-config/cluster-config.json"
             - "{{ .Values.cluster.clusterCreationTimeout }}"
-      volumes:
-        - name: job-temp
-          emptyDir:
-            sizeLimit: 10Mi
-        - name: cluster-config
-          configMap:
-            name: {{ ( tpl .Values.cluster.existingConfig . ) | default ( printf "%s-cluster" (include "graphdb.fullname" . ) ) }}
-        - name: graphdb-utils
-          configMap:
-            name: {{ include "graphdb.fullname.configmap.utils" . }}
 {{- end }}

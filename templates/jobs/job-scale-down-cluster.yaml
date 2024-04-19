@@ -23,6 +23,13 @@ spec:
       {{- end }}
       securityContext:
         {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+      volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
       containers:
         - name: scale-down-cluster
           image: {{ include "graphdb.image" . }}
@@ -57,11 +64,4 @@ spec:
             - "/tmp/utils/update-cluster.sh"
             - "removeNodes"
             - "{{ .Values.replicas }}"
-      volumes:
-        - name: job-temp
-          emptyDir:
-            sizeLimit: 10Mi
-        - name: graphdb-utils
-          configMap:
-            name: {{ include "graphdb.fullname.configmap.utils" . }}
 {{- end }}

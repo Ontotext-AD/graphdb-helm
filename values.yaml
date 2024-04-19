@@ -144,9 +144,10 @@ cluster:
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
   clusterCreationTimeout: 60
   # Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
-  # The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation
   # This setting overrides the values under cluster.config
   existingConfig: ""
+  # The key in the existing cluster config configmap (if specified) that contains the cluster configuration JSON
+  existingConfigmapKey: cluster-config.json
   # Cluster configuration parameters:
   # Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
   config:

@@ -24,6 +24,13 @@ spec:
       {{- end }}
       securityContext:
         {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+      volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
       containers:
         - name: scale-up-cluster
           image: {{ include "graphdb.image" . }}
@@ -59,11 +66,4 @@ spec:
             - "addNodes"
             - "{{ .Values.replicas }}"
             - "{{ .Values.cluster.clusterCreationTimeout }}"
-      volumes:
-        - name: job-temp
-          emptyDir:
-            sizeLimit: 10Mi
-        - name: graphdb-utils
-          configMap:
-            name: {{ include "graphdb.fullname.configmap.utils" . }}
 {{- end }}

@@ -24,6 +24,16 @@ spec:
       {{- end }}
       securityContext:
         {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+      volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: repositories-config
+          configMap:
+            name: {{ .Values.repositories.repositoriesConfigmap }}
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
       containers:
         - name: provision-repositories
           image: {{ include "graphdb.image" . }}
@@ -55,14 +65,4 @@ spec:
             - "createRepositoryFromFile"
             - "{{ .Values.replicas }}"
             - "/tmp/repositories-config"
-      volumes:
-        - name: job-temp
-          emptyDir:
-            sizeLimit: 10Mi
-        - name: repositories-config
-          configMap:
-            name: {{ .Values.repositories.repositoriesConfigmap }}
-        - name: graphdb-utils
-          configMap:
-            name: {{ include "graphdb.fullname.configmap.utils" . }}
 {{- end }}

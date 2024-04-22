@@ -30,6 +30,10 @@ nameOverride: ""
 # To override the GraphDB proxy's full name, use proxy.fullnameOverride
 fullnameOverride: ""
 
+# Overrides the deployment namespace in case of multi-namespace deployments in umbrella charts.
+# The default is .Release.Namespace
+namespaceOverride: ""
+
 # Additional common labels to add to all resources
 labels: {}
 
@@ -427,6 +431,7 @@ import:
 repositories:
   # Optional configmap containing repository configuration ttl file(s).
   # GraphDB will automatically create repositories with the provided repositories configuration files
+  # Each key in the existing configmap will be treated as the config.ttl of a repository
   repositoriesConfigmap: ""
 
 ######################################################################################

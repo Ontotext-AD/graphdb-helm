@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   {{- with .Values.annotations }}

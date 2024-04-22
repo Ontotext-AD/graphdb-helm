@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "graphdb.fullname.job.scale-up-cluster" . }}
+  namespace: {{ include "graphdb.namespace" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:

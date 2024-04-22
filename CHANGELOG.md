@@ -77,6 +77,7 @@ TODO: decide how detailed we want this to be
 - Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting
 - Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
 - Added `cluster.existingConfigmapKey` to specify a custom configmap key if needed
+- Added `namespaceOverride` for overriding the deployment namespace for all resources in case of multi-namespace deployment
 
 ### Updates
 

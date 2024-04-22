@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
+  namespace: {{ include "graphdb.namespace" . }}
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}

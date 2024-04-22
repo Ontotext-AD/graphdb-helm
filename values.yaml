@@ -477,6 +477,14 @@ proxy:
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
 
+  #######################################
+  # GraphDB Proxy Logging Configuration #
+  #######################################
+  logging:
+    logback:
+      existingConfigmap: ""
+      configmapKey: "logback.xml"
+
   ##########################
   # Service Configurations #
   ##########################

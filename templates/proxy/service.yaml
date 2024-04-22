@@ -7,11 +7,11 @@ metadata:
   labels:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
     {{- with .Values.proxy.service.labels }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations .Values.proxy.service.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 spec:
   type: {{ .Values.proxy.service.type }}

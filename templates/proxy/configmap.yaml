@@ -8,7 +8,7 @@ metadata:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
   # >- means replace new line with space and no new lines at the end

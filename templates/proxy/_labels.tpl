@@ -9,7 +9,7 @@ Creates another chart name for the proxy service to distinguish it from GraphDB.
 Expand the name of the proxy service.
 */}}
 {{- define "graphdb-proxy.name" -}}
-{{- default ( include "graphdb-proxy.chartName" . ) .Values.proxy.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default (include "graphdb-proxy.chartName" .) .Values.proxy.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -21,7 +21,7 @@ If release name contains chart name it will be used as a full name.
 {{- if .Values.proxy.fullnameOverride }}
 {{- .Values.proxy.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default ( include "graphdb-proxy.chartName" . ) .Values.proxy.nameOverride }}
+{{- $name := default (include "graphdb-proxy.chartName" .) .Values.proxy.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -41,10 +41,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: graphdb-proxy
 app.kubernetes.io/part-of: graphdb
 {{- if .Values.labels }}
-{{ tpl ( toYaml .Values.labels ) . }}
+{{ tpl (toYaml .Values.labels) . }}
 {{- end }}
 {{- if .Values.proxy.labels }}
-{{ tpl ( toYaml .Values.proxy.labels ) . }}
+{{ tpl (toYaml .Values.proxy.labels) . }}
 {{- end }}
 {{- end }}
 
@@ -57,9 +57,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "graphdb-proxy.fullname.configmap.properties" -}}
-  {{- printf "%s-%s" ( include "graphdb-proxy.fullname" . ) "properties" -}}
+  {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "properties" -}}
 {{- end -}}
 
 {{- define "graphdb-proxy.fullname.service.headless" -}}
-  {{- printf "%s-%s" ( include "graphdb-proxy.fullname" . ) "headless" -}}
+  {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "headless" -}}
 {{- end -}}

@@ -11,7 +11,7 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
     "helm.sh/hook-weight": "2"
     {{- with .Values.annotations }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
 spec:
   ttlSecondsAfterFinished: 300
@@ -31,7 +31,7 @@ spec:
             sizeLimit: 10Mi
         - name: cluster-config
           configMap:
-            name: {{ ( tpl .Values.cluster.existingConfig . ) | default ( printf "%s-cluster" (include "graphdb.fullname" . ) ) }}
+            name: {{ (tpl .Values.cluster.existingConfig .) | default (printf "%s-cluster" (include "graphdb.fullname" .)) }}
         - name: graphdb-utils
           configMap:
             name: {{ include "graphdb.fullname.configmap.utils" . }}

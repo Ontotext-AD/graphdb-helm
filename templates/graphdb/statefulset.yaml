@@ -7,7 +7,7 @@ metadata:
     {{- include "graphdb.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 spec:
   replicas: {{ .Values.replicas }}
@@ -39,13 +39,13 @@ spec:
       labels:
         {{- include "graphdb.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
         checksum/configmap-properties: {{ include (print .Template.BasePath "/graphdb/configmap-properties.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
@@ -72,15 +72,15 @@ spec:
         {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
         - name: graphdb-initial-settings-config
           configMap:
-            name: {{ ( tpl .Values.initialConfiguration.settings.existingConfigmap . ) | default ( include "graphdb.fullname.configmap.settings" . ) }}
+            name: {{ (tpl .Values.initialConfiguration.settings.existingConfigmap .) | default (include "graphdb.fullname.configmap.settings" .) }}
         {{- end }}
         {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
         - name: graphdb-initial-users-config
           secret:
-            secretName: {{ ( tpl .Values.initialConfiguration.users.existingSecret . ) | default ( include "graphdb.fullname.secret.users" . ) }}
+            secretName: {{ (tpl .Values.initialConfiguration.users.existingSecret .) | default (include "graphdb.fullname.secret.users" .) }}
         {{- end }}
         {{- with .Values.extraVolumes }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
@@ -125,10 +125,10 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb.fullname" . }}
             {{- with .Values.extraEnvFrom }}
-              {{- tpl ( toYaml . ) $ | nindent 12 }}
+              {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.extraEnv }}
-          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
+          env: {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
           volumeMounts:
             {{- if .Values.persistence.enabled }}

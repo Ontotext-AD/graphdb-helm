@@ -15,7 +15,7 @@ global:
   # Inserts additional pull secret references together along with any from image.pullSecrets
   imagePullSecrets: []
   # The default domain suffix of the Kubernetes cluster
-  clusterDomain: "cluster.local"
+  clusterDomain: cluster.local
 
 ###############################
 #   Metadata Configurations   #
@@ -93,7 +93,7 @@ configuration:
   # Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over configurations in graphdb.properties
-  javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+  javaArguments: -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport
 
 #####################################
 # Additional GraphDB Configurations #
@@ -102,7 +102,7 @@ configuration:
 extraConfiguration:
   properties:
     existingConfigmap: ""
-    configmapKey: "graphdb.properties"
+    configmapKey: graphdb.properties
 
 ###############################################
 # Initial Provisioning GraphDB Configurations #
@@ -111,10 +111,10 @@ extraConfiguration:
 initialConfiguration:
   settings:
     existingConfigmap: ""
-    configmapKey: "settings.js"
+    configmapKey: settings.js
   users:
     existingSecret: ""
-    secretKey: "users.js"
+    secretKey: users.js
 
 #################################
 # GraphDB Logging Configuration #
@@ -123,7 +123,7 @@ initialConfiguration:
 logging:
   logback:
     existingConfigmap: ""
-    configmapKey: "logback.xml"
+    configmapKey: logback.xml
 
 ###################################
 # GraphDB Security Configurations #
@@ -257,7 +257,7 @@ persistence:
     accessModes: [ "ReadWriteOnce" ]
     resources:
       requests:
-        storage: "5Gi"
+        storage: 5Gi
 
 ##############################
 # Statefulset Configurations #
@@ -388,8 +388,8 @@ extraContainerPorts: {}
 # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
 pdb:
   create: false
-  minAvailable: "51%"
-  maxUnavailable:
+  minAvailable: 51%
+  maxUnavailable: ""
 
 ##################################
 # Service Account Configurations #
@@ -418,11 +418,10 @@ import:
   volumeMount:
     enabled: false
     volumeClaimTemplateSpec:
-      accessModes:
-        - "ReadWriteOnce"
+      accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: "10Gi"
+          storage: 10Gi
 
 #######################################
 ## Custom Repositories Configurations #
@@ -475,7 +474,7 @@ proxy:
 
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
-    javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+    javaArguments: -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport
 
   #######################################
   # GraphDB Proxy Logging Configuration #
@@ -483,7 +482,7 @@ proxy:
   logging:
     logback:
       existingConfigmap: ""
-      configmapKey: "logback.xml"
+      configmapKey: logback.xml
 
   ##########################
   # Service Configurations #
@@ -529,10 +528,10 @@ proxy:
     # Enables or disables the proxy's persistence
     enabled: true
     volumeClaimTemplateSpec:
-      accessModes: ["ReadWriteOnce"]
+      accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: "500Mi"
+          storage: 500Mi
 
   ##############################
   # Statefulset Configurations #

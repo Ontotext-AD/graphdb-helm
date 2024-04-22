@@ -8,9 +8,9 @@ metadata:
     {{- include "graphdb.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
   {{ .Values.initialConfiguration.settings.configmapKey }}: |-
-    {{- tpl ( .Files.Get "files/config/settings.js" | trim ) . | nindent 4 }}
+    {{- tpl (.Files.Get "files/config/settings.js" | trim) . | nindent 4 }}
 {{- end }}

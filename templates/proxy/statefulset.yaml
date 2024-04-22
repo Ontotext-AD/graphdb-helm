@@ -8,7 +8,7 @@ metadata:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 spec:
   replicas: {{ .Values.proxy.replicas }}
@@ -30,13 +30,13 @@ spec:
       labels:
         {{- include "graphdb-proxy.selectorLabels" . | nindent 8 }}
         {{- with .Values.proxy.podLabels }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
         checksum/configmap-properties: {{ include (print .Template.BasePath "/proxy/configmap-properties.yaml") . | sha256sum }}
         {{- with .Values.proxy.podAnnotations }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.terminationGracePeriodSeconds }}
@@ -50,7 +50,7 @@ spec:
             name: {{ tpl .Values.proxy.logging.logback.existingConfigmap . }}
       {{- end }}
       {{- with .Values.proxy.extraVolumes }}
-        {{- tpl ( toYaml . ) $ | nindent 8 }}
+        {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
@@ -87,10 +87,10 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb-proxy.fullname" . }}
             {{- with .Values.proxy.extraEnvFrom }}
-              {{- tpl ( toYaml . ) $ | nindent 12 }}
+              {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
+          env: {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
           ports:
             - name: http

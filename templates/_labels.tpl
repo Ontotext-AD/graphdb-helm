@@ -41,7 +41,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: graphdb
 app.kubernetes.io/part-of: graphdb
 {{- if .Values.labels }}
-{{ tpl ( toYaml .Values.labels ) . }}
+{{ tpl (toYaml .Values.labels) . }}
 {{- end }}
 {{- end }}
 

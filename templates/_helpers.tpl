@@ -3,7 +3,7 @@ Combined image pull secrets
 */}}
 {{- define "graphdb.combinedImagePullSecrets" -}}
   {{- $secrets := concat .Values.global.imagePullSecrets .Values.image.pullSecrets }}
-  {{- tpl ( toYaml $secrets ) . -}}
+  {{- tpl (toYaml $secrets) . -}}
 {{- end -}}
 
 {{/*
@@ -52,7 +52,7 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
   {{- $service_http_port := .Values.headlessService.ports.http -}}
   {{- range $i, $node_index := until (int .Values.replicas) -}}
     http://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $namespace }}.svc.{{ $cluster_domain }}:{{ $service_http_port }}
-    {{- if gt (sub (int $.Values.replicas) 1 ) $node_index -}}
+    {{- if gt (sub (int $.Values.replicas) 1) $node_index -}}
       {{- ", " -}}
     {{- end -}}
   {{- end -}}

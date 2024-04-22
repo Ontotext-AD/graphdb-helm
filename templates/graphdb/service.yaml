@@ -7,11 +7,11 @@ metadata:
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
     {{- with .Values.service.labels }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.service.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 spec:
   type: {{ .Values.service.type }}

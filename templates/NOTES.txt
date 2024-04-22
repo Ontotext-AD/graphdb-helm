@@ -10,12 +10,12 @@
                       |_|
 -------------------------------------------------------------------------------
 version: {{ .Chart.AppVersion }}
-GDB cluster: {{ gt ( int .Values.replicas ) 1 }}
+GDB cluster: {{ gt (int .Values.replicas) 1 }}
 
 ** Please be patient while the chart is being deployed and services are available **
 You can check their status with kubectl get pods
 
-{{- if and ( gt ( int .Values.replicas) 1 ) ( not .Values.license.existingSecret ) }}
+{{- if and (gt (int .Values.replicas) 1) (not .Values.license.existingSecret) }}
 WARNING: You are attempting to make a cluster without providing a license secret!
 {{- end }}
 

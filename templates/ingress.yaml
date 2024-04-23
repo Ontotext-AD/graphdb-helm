@@ -4,6 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
     {{- with .Values.ingress.labels }}
@@ -41,7 +42,7 @@ spec:
                 port:
                   number: {{ .Values.proxy.service.ports.http }}
                 {{- else }}
-                name: {{ include "graphdb.fullname.service.headless" . }}
+                name: {{ include "graphdb.fullname" . }}
                 port:
                   number: {{ .Values.headlessService.ports.http }}
                 {{- end }}

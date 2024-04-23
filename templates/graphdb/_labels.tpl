@@ -10,7 +10,7 @@ Helper functions for labels related to GraphDB resources
   {{- printf "%s-%s" ( include "graphdb.fullname" . ) "settings" -}}
 {{- end -}}
 
-{{- define "graphdb.fullname.configmap.users" -}}
+{{- define "graphdb.fullname.secret.users" -}}
   {{- printf "%s-%s" ( include "graphdb.fullname" . ) "users" -}}
 {{- end -}}
 

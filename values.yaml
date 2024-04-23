@@ -14,6 +14,8 @@ global:
   imageRegistry: ""
   # Inserts additional pull secret references together along with any from image.pullSecrets
   imagePullSecrets: []
+  # The default domain suffix of the Kubernetes cluster
+  clusterDomain: "cluster.local"
 
 ###############################
 #   Metadata Configurations   #
@@ -27,6 +29,10 @@ nameOverride: ""
 # Overrides the naming of all GraphDB resources, effectively removing the release name prefix. Takes precedence over nameOverride
 # To override the GraphDB proxy's full name, use proxy.fullnameOverride
 fullnameOverride: ""
+
+# Overrides the deployment namespace in case of multi-namespace deployments in umbrella charts.
+# The default is .Release.Namespace
+namespaceOverride: ""
 
 # Additional common labels to add to all resources
 labels: {}
@@ -56,6 +62,7 @@ image:
 
 # Number of GraphDB nodes to be deployed as part of the StatefulSet.
 # Set value to 1 to run a standalone GraphDB instance or to more to form a GraphDB cluster with GraphDB cluster proxies.
+# This setting control the deployment of the cluster proxies and cluster jobs as well.
 replicas: 1
 
 ##########################
@@ -106,8 +113,8 @@ initialConfiguration:
     existingConfigmap: ""
     configmapKey: "settings.js"
   users:
-    existingConfigmap: ""
-    configmapKey: "users.js"
+    existingSecret: ""
+    secretKey: "users.js"
 
 #################################
 # GraphDB Logging Configuration #
@@ -141,9 +148,10 @@ cluster:
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
   clusterCreationTimeout: 60
   # Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
-  # The resources expect a configmap containing a key "cluster-config.json" with the JSON for cluster creation
   # This setting overrides the values under cluster.config
   existingConfig: ""
+  # The key in the existing cluster config configmap (if specified) that contains the cluster configuration JSON
+  existingConfigmapKey: cluster-config.json
   # Cluster configuration parameters:
   # Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
   config:
@@ -210,6 +218,23 @@ ingress:
 # Service Configurations #
 ##########################
 
+# This service is deployed only when the replicas are set to 1, in cluster mode, this service does not exist.
+service:
+  # Enables or disables the Service deployment
+  enabled: true
+  # Extra labels to append to the service
+  labels: {}
+  # Extra annotations to append to the service
+  annotations: {}
+  # Service type used by the graphdb-cluster-proxy service
+  type: ClusterIP
+  # Ports exposed by the service
+  ports:
+    http: 7200
+  # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
+  # If left undefined, K8S will pick a random port from the node port range of the cluster.
+  nodePort: ""
+
 headlessService:
   # Enables or disables the headless Service deployment
   enabled: true
@@ -244,10 +269,10 @@ revisionHistoryLimit: 10
 # grace period in seconds before terminating the pods
 terminationGracePeriodSeconds: 120
 
-# overrides the default container command, use only for troubleshooting!
+# Overrides the default container command, use only for troubleshooting!
 command: []
 
-# overrides the default container command's arguments, use only for troubleshooting!
+# Overrides the default container command's arguments, use only for troubleshooting!
 args: []
 
 # Ports used by the GraphDB container
@@ -406,6 +431,7 @@ import:
 repositories:
   # Optional configmap containing repository configuration ttl file(s).
   # GraphDB will automatically create repositories with the provided repositories configuration files
+  # Each key in the existing configmap will be treated as the config.ttl of a repository
   repositoriesConfigmap: ""
 
 ######################################################################################
@@ -444,6 +470,9 @@ proxy:
   ################################
 
   configuration:
+    # GraphDB proxy properties to insert in the default graphdb.properties proxy configmap
+    properties: {}
+
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
@@ -461,8 +490,7 @@ proxy:
     # Extra annotations to append to the service
     annotations: {}
     # Service type used by the graphdb-cluster-proxy service
-    # Note: If using ALB in AWS EKS this will default to being on the public internet
-    type: LoadBalancer
+    type: ClusterIP
     # Ports exposed by the service
     ports:
       http: 7200
@@ -510,6 +538,12 @@ proxy:
 
   # Grace period in seconds before terminating the pods
   terminationGracePeriodSeconds: 30
+
+  # Overrides the default container command, use only for troubleshooting!
+  command: []
+
+  # Overrides the default container command's arguments, use only for troubleshooting!
+  args: []
 
   # Ports used by GraphDB proxy and the Service components
   containerPorts:

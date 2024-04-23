@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "graphdb.fullname.job.provision-repositories" . }}
+  namespace: {{ include "graphdb.namespace" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
@@ -24,6 +25,16 @@ spec:
       {{- end }}
       securityContext:
         {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+      volumes:
+        - name: job-temp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: repositories-config
+          configMap:
+            name: {{ .Values.repositories.repositoriesConfigmap }}
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
       containers:
         - name: provision-repositories
           image: {{ include "graphdb.image" . }}
@@ -55,14 +66,4 @@ spec:
             - "createRepositoryFromFile"
             - "{{ .Values.replicas }}"
             - "/tmp/repositories-config"
-      volumes:
-        - name: job-temp
-          emptyDir:
-            sizeLimit: 10Mi
-        - name: repositories-config
-          configMap:
-            name: {{ .Values.repositories.repositoriesConfigmap }}
-        - name: graphdb-utils
-          configMap:
-            name: {{ include "graphdb.fullname.configmap.utils" . }}
 {{- end }}

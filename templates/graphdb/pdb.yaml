@@ -3,6 +3,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   {{- with .Values.annotations }}

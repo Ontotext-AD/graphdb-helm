@@ -59,6 +59,11 @@ spec:
           configMap:
             name: {{ tpl .Values.extraConfiguration.properties.existingConfigmap . }}
         {{- end }}
+        {{- if .Values.extraConfiguration.properties.existingSecret }}
+        - name: graphdb-extra-secret-properties
+          secret:
+            secretName: {{ tpl .Values.extraConfiguration.properties.existingSecret . }}
+        {{- end }}
         {{- if .Values.logging.logback.existingConfigmap }}
         - name: graphdb-logback-config
           configMap:
@@ -192,6 +197,11 @@ spec:
               mountPath: /tmp/graphdb/graphdb-extra.properties
               subPath: {{ .Values.extraConfiguration.properties.configmapKey }}
             {{- end }}
+            {{- if .Values.extraConfiguration.properties.existingSecret }}
+            - name: graphdb-extra-secret-properties
+              mountPath: /tmp/graphdb/graphdb-extra-secret.properties
+              subPath: {{ .Values.extraConfiguration.properties.secretKey }}
+            {{- end }}
             {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
             - name: graphdb-initial-settings-config
               mountPath: /tmp/graphdb/settings.js
@@ -215,7 +225,18 @@ spec:
               mkdir -p /opt/graphdb/home/conf/ /opt/graphdb/home/data/ /opt/graphdb/home/jdbc-driver/
 
               echo 'Configuring graphdb.properties'
-              cat /tmp/graphdb/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
+              echo "" > /opt/graphdb/home/conf/graphdb.properties
+
+              echo "Configuring GraphDB hostname: $(hostname --fqdn)"
+              cat << EOF >> /opt/graphdb/home/conf/graphdb.properties
+              ##### Configurations from initContainer #####"
+              graphdb.hostname=$(hostname --fqdn)
+              graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}
+              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}
+              EOF
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
               echo "" >> /opt/graphdb/home/conf/graphdb.properties
 
               if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
@@ -224,11 +245,11 @@ spec:
                 echo "" >> /opt/graphdb/home/conf/graphdb.properties
               fi
 
-              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "Configuring GraphDB hostname: $(hostname --fqdn)"
-              echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}" >> /opt/graphdb/home/conf/graphdb.properties
+              if [[ -f /tmp/graphdb/graphdb-extra-secret.properties ]]; then
+                echo "##### Overrides from extra secret properties #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra-secret.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
 
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
                 echo "Provisioning users with users.js file..."

@@ -44,6 +44,16 @@ spec:
         - name: graphdb-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
+        {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
+        - name: graphdb-extra-properties
+          configMap:
+            name: {{ tpl .Values.proxy.extraConfiguration.properties.existingConfigmap . }}
+        {{- end }}
+        {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
+        - name: graphdb-extra-secret-properties
+          secret:
+            secretName: {{ tpl .Values.proxy.extraConfiguration.properties.existingSecret . }}
+        {{- end }}
       {{- if .Values.proxy.logging.logback.existingConfigmap }}
         - name: graphdb-logback-config
           configMap:
@@ -153,6 +163,16 @@ spec:
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
+            {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
+            - name: graphdb-extra-properties
+              mountPath: /tmp/graphdb/graphdb-extra.properties
+              subPath: {{ .Values.proxy.extraConfiguration.properties.configmapKey }}
+            {{- end }}
+            {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
+            - name: graphdb-extra-secret-properties
+              mountPath: /tmp/graphdb/graphdb-extra-secret.properties
+              subPath: {{ .Values.proxy.extraConfiguration.properties.secretKey }}
+            {{- end }}
           command: [ 'sh', '-c' ]
           args:
             - |
@@ -160,15 +180,32 @@ spec:
               mkdir -p /opt/graphdb/home/conf/
 
               echo 'Configuring graphdb.properties'
-              cat /tmp/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" > /opt/graphdb/home/conf/graphdb.properties
 
               echo 'Configuring GraphDB cluster proxy hostnames'
-              echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_PROXY_RPC_PORT}" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_PROXY_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.external-url=${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
+              cat << EOF >> /opt/graphdb/home/conf/graphdb.properties
+              ##### Configurations from initContainer #####
+              graphdb.hostname=$(hostname --fqdn)
+              graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_PROXY_RPC_PORT}
+              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_PROXY_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}
+              graphdb.external-url=${GRAPHDB_PUBLIC_URL}
+              EOF
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
+                echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              if [[ -f /tmp/graphdb/graphdb-extra-secret.properties ]]; then
+                echo "##### Overrides from extra secret properties #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra-secret.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
 
               echo 'Done'
         {{- with .Values.proxy.extraInitContainers }}

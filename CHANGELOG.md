@@ -79,6 +79,8 @@ TODO: decide how detailed we want this to be
 - Added `cluster.existingConfigmapKey` to specify a custom configmap key if needed
 - Added `namespaceOverride` for overriding the deployment namespace for all resources in case of multi-namespace deployment
 - Added `proxy.logging.logback` configurations for providing the proxy with a custom Logback XML configuration
+- Added `extraConfiguration.existingSecret` for appending GraphDB properties from an existing Secret resource
+- Added `proxy.extraConfiguration` for appending extra GraphDB properties from existing ConfigMap and Secret resources
 
 ### Updates
 
@@ -90,7 +92,9 @@ TODO: decide how detailed we want this to be
 - References to existing configmaps and secrets are now processed as templates
 - Added trimming when loading files in the configmaps and secrets
 - Cluster jobs now automatically resolves the cluster domain
-- Moved `files/config/proxy/graphdb.properties` to [files/config/graphdb-proxy.properties](./files/config/graphdb-proxy.properties)
+- Removed `files/config/graphdb.properties` and `files/config/proxy/graphdb.properties` and moved any defined properties directly into the ConfigMap
+  declarations
+- Moved GraphDB specific properties from `GDB_JAVA_OPTS` into the properties ConfigMaps
 
 ## Version 10.6.0-R2
 

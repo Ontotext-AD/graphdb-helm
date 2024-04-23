@@ -93,16 +93,26 @@ configuration:
   # Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over configurations in graphdb.properties
-  javaArguments: -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport
+  javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
 
 #####################################
 # Additional GraphDB Configurations #
 #####################################
 
+# Additional configurations that will be provisioned to GraphDB
 extraConfiguration:
+  # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
+  # in the default configmap and secret resources.
   properties:
+    # Reference to an existing ConfigMap resource containing GraphDB configurations
     existingConfigmap: ""
+    # Key in the existing ConfigMap that holds the properties for GraphDB
     configmapKey: graphdb.properties
+
+    # Reference to an existing Secret resource containing sensitive GraphDB configurations
+    existingSecret: ""
+    # Key in the existing Secret that holds the properties for GraphDB
+    secretKey: graphdb.properties
 
 ###############################################
 # Initial Provisioning GraphDB Configurations #
@@ -474,7 +484,27 @@ proxy:
 
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
-    javaArguments: -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport
+    # Takes precedence over configurations in graphdb.properties
+    javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
+
+  ###########################################
+  # Additional GraphDB Proxy Configurations #
+  ###########################################
+
+  # Additional configurations that will be provisioned to GraphDB
+  extraConfiguration:
+    # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
+    # in the default configmap and secret resources.
+    properties:
+      # Reference to an existing ConfigMap resource containing GraphDB configurations
+      existingConfigmap: ""
+      # Key in the existing ConfigMap that holds the properties for GraphDB
+      configmapKey: graphdb.properties
+
+      # Reference to an existing Secret resource containing sensitive GraphDB configurations
+      existingSecret: ""
+      # Key in the existing Secret that holds the properties for GraphDB
+      secretKey: graphdb.properties
 
   #######################################
   # GraphDB Proxy Logging Configuration #

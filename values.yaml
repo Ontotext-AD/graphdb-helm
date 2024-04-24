@@ -90,6 +90,9 @@ configuration:
   # GraphDB properties to insert in the default graphdb.properties configmap
   properties: {}
 
+  # Sensitive GraphDB properties to insert in the default graphdb.properties secret
+  secretProperties: {}
+
   # Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over configurations in graphdb.properties
@@ -154,6 +157,11 @@ security:
 cluster:
   # A secret used for secure communication amongst the nodes in the cluster.
   clusterSecret: s3cr37
+  # Reference to an existing Secret that contains the cluster secret token. This overrides cluster.clusterSecret
+  existingClusterSecret:
+  # Key in the existing Secret that holds the secret cluster token for GraphDB
+  existingClusterSecretKey:
+
   # Timeout for the cluster creation CURL query.
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
   clusterCreationTimeout: 60
@@ -479,8 +487,11 @@ proxy:
   ################################
 
   configuration:
-    # GraphDB proxy properties to insert in the default graphdb.properties proxy configmap
+    # GraphDB proxy properties to insert in the default graphdb.properties proxy ConfigMap
     properties: {}
+
+    # Sensitive GraphDB properties to insert in the default graphdb.properties proxy Secret
+    secretProperties: {}
 
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value

@@ -81,6 +81,10 @@ TODO: decide how detailed we want this to be
 - Added `proxy.logging.logback` configurations for providing the proxy with a custom Logback XML configuration
 - Added `extraConfiguration.existingSecret` for appending GraphDB properties from an existing Secret resource
 - Added `proxy.extraConfiguration` for appending extra GraphDB properties from existing ConfigMap and Secret resources
+- Added `cluster.existingClusterSecret` and `cluster.existingClusterSecretKey` for using an existing Secret instead of providing the cluster secret 
+  token as plaintext in values.yaml
+- Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
+- Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
 
 ### Updates
 

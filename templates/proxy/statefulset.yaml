@@ -35,6 +35,7 @@ spec:
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
         checksum/configmap-properties: {{ include (print .Template.BasePath "/proxy/configmap-properties.yaml") . | sha256sum }}
+        checksum/secret-properties: {{ include (print .Template.BasePath "/proxy/secret-properties.yaml") . | sha256sum }}
         {{- with .Values.proxy.podAnnotations }}
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
@@ -44,6 +45,9 @@ spec:
         - name: graphdb-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
+        - name: graphdb-secret-properties
+          secret:
+            secretName: {{ include "graphdb-proxy.fullname.secret.properties" . }}
         {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
         - name: graphdb-extra-properties
           configMap:
@@ -149,6 +153,13 @@ spec:
               value: {{ .Values.proxy.containerPorts.http | quote }}
             - name: GRAPHDB_PROXY_RPC_PORT
               value: {{ .Values.proxy.containerPorts.rpc | quote }}
+            {{- if .Values.cluster.existingClusterSecret }}
+            - name: GRAPHDB_CLUSTER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.cluster.existingClusterSecret }}
+                  key: {{ .Values.cluster.existingClusterSecretKey }}
+            {{- end }}
           {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -156,13 +167,16 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: graphdb-properties
-              mountPath: /tmp/graphdb.properties
-              subPath: graphdb.properties
             {{- if .Values.proxy.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
+            - name: graphdb-properties
+              mountPath: /tmp/graphdb.properties
+              subPath: graphdb.properties
+            - name: graphdb-secret-properties
+              mountPath: /tmp/graphdb/graphdb-secrets.properties
+              subPath: graphdb-secrets.properties
             {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
             - name: graphdb-extra-properties
               mountPath: /tmp/graphdb/graphdb-extra.properties
@@ -177,6 +191,7 @@ spec:
           args:
             - |
               set -eu
+              set +x
               mkdir -p /opt/graphdb/home/conf/
 
               echo 'Configuring graphdb.properties'
@@ -194,6 +209,15 @@ spec:
 
               cat /tmp/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
               echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb/graphdb-secrets.properties >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              if [[ -n ${GRAPHDB_CLUSTER_SECRET:-""} ]]; then
+                echo "##### Override from existing cluster secret #####" >> /opt/graphdb/home/conf/graphdb.properties
+                (echo "graphdb.auth.token.secret=${GRAPHDB_CLUSTER_SECRET}" >> /opt/graphdb/home/conf/graphdb.properties) >/dev/null 2>&1
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
 
               if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
                 echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties

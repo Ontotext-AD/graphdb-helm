@@ -6,6 +6,10 @@ Helper functions for labels related to GraphDB resources
   {{- printf "%s-%s" (include "graphdb.fullname" .) "properties" -}}
 {{- end -}}
 
+{{- define "graphdb.fullname.secret.properties" -}}
+  {{- printf "%s-%s" (include "graphdb.fullname" .) "properties" -}}
+{{- end -}}
+
 {{- define "graphdb.fullname.configmap.settings" -}}
   {{- printf "%s-%s" (include "graphdb.fullname" .) "settings" -}}
 {{- end -}}

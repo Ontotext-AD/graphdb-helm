@@ -60,6 +60,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "properties" -}}
 {{- end -}}
 
+{{- define "graphdb-proxy.fullname.secret.properties" -}}
+  {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "properties" -}}
+{{- end -}}
+
 {{- define "graphdb-proxy.fullname.service.headless" -}}
   {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "headless" -}}
 {{- end -}}

@@ -17,9 +17,6 @@ data:
     graphdb.append.request.id.headers=true
     graphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     graphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
-    {{- if gt (int .Values.replicas) 1 }}
-    graphdb.auth.token.secret={{ .Values.cluster.clusterSecret | quote }}
-    {{- end }}
     {{- if .Values.configuration.properties }}
     ##### Overrides from values.yaml #####
     {{- range $key, $val := .Values.configuration.properties -}}

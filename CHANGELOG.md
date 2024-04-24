@@ -45,6 +45,7 @@ TODO: decide how detailed we want this to be
   - Moved the rest of `graphdb.clusterConfig` configurations under `cluster` and `cluster.config`
 - Moved `graphdb.security` configurations to `security`
 - Updated the Service type of the proxy to be ClusterIP by default
+- Renamed `pdb` to `podDisruptionBudget` and renamed `podDisruptionBudget.create` to `podDisruptionBudget.enabled` for consistency
 
 ### New
 
@@ -85,6 +86,7 @@ TODO: decide how detailed we want this to be
   token as plaintext in values.yaml
 - Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
 - Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
+- Added `proxy.pdb` for configuring a pod disruption budget for the GraphDB Proxy
 
 ### Updates
 

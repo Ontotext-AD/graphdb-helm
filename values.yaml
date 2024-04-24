@@ -381,19 +381,19 @@ livenessProbe:
 # Additional Statefulset Configurations #
 #########################################
 
-# additional environment variables to be set for the graphdb nodes
+# Additional environment variables to be set for the graphdb nodes
 extraEnvFrom: []
 
-# additional environment variables to be set for the graphdb nodes
+# Additional environment variables to be set for the graphdb nodes
 extraEnv: []
 
-# additional volumes to be set for the graphdb nodes
+# Additional volumes to be set for the graphdb nodes
 extraVolumes: []
 
-# additional volume mounts to be set for the graphdb nodes
+# Additional volume mounts to be set for the graphdb nodes
 extraVolumeMounts: []
 
-# additional init containers inserted after the provisioning init containers
+# Additional init containers inserted after the provisioning init containers
 extraInitContainers: []
 
 # Additional container ports to expose
@@ -404,8 +404,8 @@ extraContainerPorts: {}
 ########################################
 
 # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
-pdb:
-  create: false
+podDisruptionBudget:
+  enabled: false
   minAvailable: 51%
   maxUnavailable: ""
 
@@ -689,3 +689,13 @@ proxy:
 
   # Additional container ports to expose for each cluster proxy
   extraContainerPorts: {}
+
+  ########################################
+  # Pod Disruption Budget Configurations #
+  ########################################
+
+  # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 51%
+    maxUnavailable: ""

@@ -15,7 +15,7 @@ TODO: decide how detailed we want this to be
 - Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration
-- Renamed `java_args` to `javaArguments`
+- Renamed `java_args` to `defaultJavaArguments` and added a separate `javaArguments` that can be used for additional configurations
 - Removed the default logback XML configuration and configmap in favor of an [example](examples/custom-logback) and a new configuration options
   under `logging.logback`
 - Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
@@ -46,6 +46,9 @@ TODO: decide how detailed we want this to be
 - Moved `graphdb.security` configurations to `security`
 - Updated the Service type of the proxy to be ClusterIP by default
 - Renamed `pdb` to `podDisruptionBudget` and renamed `podDisruptionBudget.create` to `podDisruptionBudget.enabled` for consistency
+- Removed configuration overrides from the default `GDB_JAVA_OPTS`: `enable-context-index`, `entity-pool-implementation`
+  and `health.max.query.time.seconds`
+- Removed `default.min.distinct.threshold` from the default `defaultJavaArguments` values
 
 ### New
 
@@ -101,6 +104,8 @@ TODO: decide how detailed we want this to be
 - Removed `files/config/graphdb.properties` and `files/config/proxy/graphdb.properties` and moved any defined properties directly into the ConfigMap
   declarations
 - Moved GraphDB specific properties from `GDB_JAVA_OPTS` into the properties ConfigMaps
+- Added `-XX:-UseCompressedOops` in the default Java arguments to allow allocating heap sizes larger than 32GBs when the max heap size is based on
+  the `-XX:MaxRAMPercentage` Java option
 
 ## Version 10.6.0-R2
 

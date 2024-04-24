@@ -93,10 +93,13 @@ configuration:
   # Sensitive GraphDB properties to insert in the default graphdb.properties secret
   secretProperties: {}
 
-  # Java arguments with which node instances will be launched.
+  # Default Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over configurations in graphdb.properties
-  javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
+  defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops
+
+  # Java arguments to append after defaultJavaArguments, use to avoid overriding the default values
+  javaArguments: ""
 
 #####################################
 # Additional GraphDB Configurations #
@@ -496,7 +499,10 @@ proxy:
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     # Takes precedence over configurations in graphdb.properties
-    javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
+    defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70
+
+    # Java arguments to append after defaultJavaArguments, use to avoid overriding the default values
+    javaArguments: ""
 
   ###########################################
   # Additional GraphDB Proxy Configurations #

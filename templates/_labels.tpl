@@ -36,7 +36,7 @@ Common labels
 {{- define "graphdb.labels" -}}
 helm.sh/chart: {{ include "graphdb.chart" . }}
 {{ include "graphdb.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ coalesce .Values.image.tag .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: graphdb
 app.kubernetes.io/part-of: graphdb

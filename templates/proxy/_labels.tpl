@@ -36,7 +36,7 @@ Common labels for the proxy service.
 {{- define "graphdb-proxy.labels" -}}
 helm.sh/chart: {{ include "graphdb.chart" . }}
 {{ include "graphdb-proxy.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ coalesce .Values.image.tag .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/component: graphdb-proxy
 app.kubernetes.io/part-of: graphdb

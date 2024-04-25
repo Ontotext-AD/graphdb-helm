@@ -10,6 +10,7 @@ TODO: short section about the most notable changes (decoupling, naming, plugins,
 
 TODO: decide how detailed we want this to be
 
+- Updated the chart to require Kubernetes version 1.24+
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Renamed `extraLabels` to just `labels`
 - Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
@@ -98,6 +99,11 @@ TODO: decide how detailed we want this to be
 - Added `proxy.initContainerSecurityContext` and `proxy.initContainerResources` to avoid using the configurations from GraphDB
 - Added `extraContainers` and `proxy.extraContainers` for inserting additional containers into the pods of GraphDB and the GraphDB proxy
 - Added `extraObjects` as a way to insert additional Kubernetes objects into the deployment
+- Added `service.externalTrafficPolicy` and `service.proxy.externalTrafficPolicy` to override the policy to Local if needed
+- Added `service.healthCheckNodePort` and `service.proxy.healthCheckNodePort` to define a specific node port for LB health checks
+- Added `service.loadBalancerClass` and `service.proxy.loadBalancerClass` to select a specific load balancer implementation
+- Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
+- Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
 
 ### Updates
 

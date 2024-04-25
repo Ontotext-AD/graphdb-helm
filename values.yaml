@@ -255,6 +255,22 @@ service:
   # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
   # If left undefined, K8S will pick a random port from the node port range of the cluster.
   nodePort: ""
+  # Defines the policy for treating external ingress traffic.
+  # By default, Cluster does not preserve client IPs. Change to Local to preserve them.
+  # See https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+  externalTrafficPolicy: ""
+  # NodePort used by external load balancers when the external traffic policy is set to Local.
+  # By default, Kubernetes will assign a random port, use this to override it.
+  healthCheckNodePort: ""
+  # Defines the class that should select a particular load balancer implementation.
+  # By default, Kubernetes will assign the cluster default implementation, use this to override it.
+  # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+  loadBalancerClass: ""
+  # Source IP ranges for restricting external ingress traffic
+  loadBalancerSourceRanges: []
+  # External IP addresses at which the service will be exposed
+  # See https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+  externalIPs: []
 
 headlessService:
   # Enables or disables the headless Service deployment
@@ -575,6 +591,22 @@ proxy:
     # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
     # If left undefined, K8S will pick a random port from the node port range of the cluster.
     nodePort: ""
+    # Defines the policy for treating external ingress traffic.
+    # By default, Cluster does not preserve client IPs. Change to Local to preserve them.
+    # See https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    externalTrafficPolicy: ""
+    # NodePort used by external load balancers when the external traffic policy is set to Local.
+    # By default, Kubernetes will assign a random port, use this to override it.
+    healthCheckNodePort: ""
+    # Defines the class that should select a particular load balancer implementation.
+    # By default, Kubernetes will assign the cluster default implementation, use this to override it.
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+    loadBalancerClass: ""
+    # Source IP ranges for restricting external ingress traffic
+    loadBalancerSourceRanges: []
+    # External IP addresses at which the service will be exposed
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+    externalIPs: []
 
   # GraphDB cluster proxy headless service configurations
   headlessService:

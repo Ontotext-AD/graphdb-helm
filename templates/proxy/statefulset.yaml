@@ -153,6 +153,9 @@ spec:
           {{- with .Values.proxy.livenessProbe }}
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- with .Values.extraContainers }}
+          {{ tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
       initContainers:
         - name: {{ include "graphdb-proxy.chartName" . }}-provision-settings
           image: {{ include "graphdb.image" . }}

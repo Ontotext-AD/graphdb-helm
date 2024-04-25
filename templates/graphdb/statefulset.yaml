@@ -185,6 +185,9 @@ spec:
           {{- with .Values.livenessProbe }}
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- with .Values.extraContainers }}
+          {{ tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
       initContainers:
         # PROVISION SETTINGS AND SECURITY
         - name: {{ .Chart.Name }}-provision-settings
@@ -296,5 +299,5 @@ spec:
 
               echo 'Done'
         {{- with .Values.extraInitContainers }}
-          {{- toYaml . | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}

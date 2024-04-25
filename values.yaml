@@ -422,6 +422,10 @@ extraInitContainers: []
 # Additional container ports to expose
 extraContainerPorts: {}
 
+# Additional containers to insert into the GraphDB pods, e.g. sidecar containers
+# Values are processed as templates
+extraContainers: []
+
 ########################################
 # Pod Disruption Budget Configurations #
 ########################################
@@ -738,6 +742,10 @@ proxy:
   # Additional container ports to expose for each cluster proxy
   extraContainerPorts: {}
 
+  # Additional containers to insert into the GraphDB proxy pods, e.g. sidecar containers
+  # Values are processed as templates
+  extraContainers: []
+
   ########################################
   # Pod Disruption Budget Configurations #
   ########################################
@@ -747,3 +755,11 @@ proxy:
     enabled: false
     minAvailable: 51%
     maxUnavailable: ""
+
+#################################
+# Additional Kubernetes Objects #
+#################################
+
+# Additional objects to insert along with the release.
+# Values are processed as templates.
+extraObjects: []

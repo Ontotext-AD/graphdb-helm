@@ -96,6 +96,8 @@ TODO: decide how detailed we want this to be
 - Added `schedulerName` and `proxy.schedulerName` for overriding the default Kubernetes scheduler
 - Added `dnsConfig`, `dnsPolicy`, `proxy.dnsConfig` and `proxy.dnsPolicy` for customizing the DNS resolution if needed
 - Added `proxy.initContainerSecurityContext` and `proxy.initContainerResources` to avoid using the configurations from GraphDB
+- Added `extraContainers` and `proxy.extraContainers` for inserting additional containers into the pods of GraphDB and the GraphDB proxy
+- Added `extraObjects` as a way to insert additional Kubernetes objects into the deployment
 
 ### Updates
 

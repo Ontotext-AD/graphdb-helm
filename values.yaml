@@ -284,11 +284,31 @@ persistence:
 # Statefulset Configurations #
 ##############################
 
+# Configures the strategy of updating pods
+updateStrategy:
+  type: RollingUpdate
+
+# Configures how pods are created and scaled
+podManagementPolicy: Parallel
+
 # changes the maximum amount of kept revisions
 revisionHistoryLimit: 10
 
 # grace period in seconds before terminating the pods
 terminationGracePeriodSeconds: 120
+
+# Toggles the auto mounting of API credentials token into the pods.
+# Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
+automountServiceAccountToken: false
+
+# Overrides the default scheduler
+schedulerName: ""
+
+# Overrides the pod's DNS settings
+dnsConfig: {}
+
+# Defines the pod's policy for DNS resolution
+dnsPolicy: ""
 
 # Overrides the default container command, use only for troubleshooting!
 command: []
@@ -311,13 +331,13 @@ podAnnotations: {}
 # Security Context Configurations #
 ###################################
 
-# podSecurityContext defines privilege and access control settings for the node pods.
+# Defines privilege and access control settings for the node pods.
 podSecurityContext: {}
 
-# securityContext defines privilege and access control settings for the node container running graphdb.
+# Defines privilege and access control settings for the node container running GraphDB.
 securityContext: {}
 
-# provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
+# Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
 initContainerSecurityContext: {}
 
 #############################
@@ -584,6 +604,13 @@ proxy:
   # Statefulset Configurations #
   ##############################
 
+  # Configures the strategy of updating proxy pods
+  updateStrategy:
+    type: RollingUpdate
+
+  # Configures how proxy pods are created and scaled
+  podManagementPolicy: Parallel
+
   # Number of cluster proxies used to access the GraphDB cluster
   replicas: 1
 
@@ -592,6 +619,15 @@ proxy:
 
   # Grace period in seconds before terminating the pods
   terminationGracePeriodSeconds: 30
+
+  # Overrides the default scheduler
+  schedulerName: ""
+
+  # Overrides the pod's DNS settings
+  dnsConfig: {}
+
+  # Defines the pod's policy for DNS resolution
+  dnsPolicy: ""
 
   # Overrides the default container command, use only for troubleshooting!
   command: []
@@ -614,11 +650,14 @@ proxy:
   # Security Context Configurations #
   ###################################
 
-  # The podSecurityContext defines privilege and access control settings for the proxy pods.
+  # Defines privilege and access control settings for the proxy pods.
   podSecurityContext: {}
 
-  # The securityContext defines privilege and access control settings for the proxy containers.
+  # Defines privilege and access control settings for the proxy containers.
   securityContext: {}
+
+  # Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
+  initContainerSecurityContext: {}
 
   #############################
   # Scheduling Configurations #
@@ -643,6 +682,9 @@ proxy:
     requests:
       memory: 1500Mi
       cpu: 100m
+
+  # Defines resource requests and limits for the containers provisioning configurations for GraphDB.
+  initContainerResources: {}
 
   #########################
   # Probes Configurations #

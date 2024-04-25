@@ -90,6 +90,12 @@ TODO: decide how detailed we want this to be
 - Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
 - Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
 - Added `proxy.pdb` for configuring a pod disruption budget for the GraphDB Proxy
+- Added `updateStrategy` and `proxy.updateStrategy` for controlling the strategy when updating pods
+- Added `podManagementPolicy` and `proxy.podManagementPolicy` for configuring how the pods are created and scaled
+- Added `automountServiceAccountToken` with default value `false` effectively ejecting the service account token by default
+- Added `schedulerName` and `proxy.schedulerName` for overriding the default Kubernetes scheduler
+- Added `dnsConfig`, `dnsPolicy`, `proxy.dnsConfig` and `proxy.dnsPolicy` for customizing the DNS resolution if needed
+- Added `proxy.initContainerSecurityContext` and `proxy.initContainerResources` to avoid using the configurations from GraphDB
 
 ### Updates
 
@@ -106,6 +112,7 @@ TODO: decide how detailed we want this to be
 - Moved GraphDB specific properties from `GDB_JAVA_OPTS` into the properties ConfigMaps
 - Added `-XX:-UseCompressedOops` in the default Java arguments to allow allocating heap sizes larger than 32GBs when the max heap size is based on
   the `-XX:MaxRAMPercentage` Java option
+- Ejected the default service account token in the proxy pods
 
 ## Version 10.6.0-R2
 

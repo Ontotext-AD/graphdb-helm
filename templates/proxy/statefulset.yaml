@@ -13,7 +13,8 @@ metadata:
 spec:
   replicas: {{ .Values.proxy.replicas }}
   serviceName: {{ include "graphdb-proxy.fullname.service.headless" . }}
-  podManagementPolicy: Parallel
+  updateStrategy: {{ .Values.proxy.updateStrategy | toYaml | nindent 4 }}
+  podManagementPolicy: {{ .Values.proxy.podManagementPolicy }}
   revisionHistoryLimit: {{ .Values.proxy.revisionHistoryLimit }}
   selector:
     matchLabels:
@@ -41,6 +42,16 @@ spec:
         {{- end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.terminationGracePeriodSeconds }}
+      automountServiceAccountToken: false
+      {{- if .Values.proxy.schedulerName }}
+      schedulerName: {{ .Values.proxy.schedulerName }}
+      {{- end }}
+      {{- with .Values.proxy.dnsConfig }}
+      dnsConfig: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.proxy.dnsPolicy }}
+      dnsPolicy: {{ .Values.proxy.dnsPolicy }}
+      {{- end }}
       volumes:
         - name: graphdb-properties
           configMap:
@@ -160,10 +171,10 @@ spec:
                   name: {{ .Values.cluster.existingClusterSecret }}
                   key: {{ .Values.cluster.existingClusterSecretKey }}
             {{- end }}
-          {{- with .Values.initContainerSecurityContext }}
+          {{- with .Values.proxy.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.initContainerResources }}
+          {{- with .Values.proxy.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:

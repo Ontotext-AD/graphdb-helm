@@ -12,9 +12,8 @@ metadata:
 spec:
   replicas: {{ .Values.replicas }}
   serviceName: {{ include "graphdb.fullname.service.headless" . }}
-  updateStrategy:
-    type: RollingUpdate
-  podManagementPolicy: Parallel
+  updateStrategy: {{ .Values.updateStrategy | toYaml | nindent 4 }}
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
@@ -51,6 +50,16 @@ spec:
     spec:
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName }}
+      {{- end }}
+      {{- with .Values.dnsConfig }}
+      dnsConfig: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- end }}
       volumes:
         - name: graphdb-properties
           configMap:
@@ -144,15 +153,15 @@ spec:
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
             {{- end }}
-            {{- if .Values.logging.logback.existingConfigmap }}
-            - name: graphdb-logback-config
-              mountPath: /opt/graphdb/home/conf/logback.xml
-              subPath: {{ .Values.logging.logback.configmapKey }}
-            {{- end }}
             {{- if .Values.license.existingSecret }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license
               subPath: {{ .Values.license.licenseFilename }}
+            {{- end }}
+            {{- if .Values.logging.logback.existingConfigmap }}
+            - name: graphdb-logback-config
+              mountPath: /opt/graphdb/home/conf/logback.xml
+              subPath: {{ .Values.logging.logback.configmapKey }}
             {{- end }}
             {{- if .Values.import.volumeMount.enabled }}
             - name: graphdb-server-import

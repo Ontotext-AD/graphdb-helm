@@ -121,6 +121,7 @@ TODO: decide how detailed we want this to be
 - Added `-XX:-UseCompressedOops` in the default Java arguments to allow allocating heap sizes larger than 32GBs when the max heap size is based on
   the `-XX:MaxRAMPercentage` Java option
 - Ejected the default service account token in the proxy pods
+- Overhauled NOTES.txt to be more helpful
 
 ## Version 10.6.0-R2
 

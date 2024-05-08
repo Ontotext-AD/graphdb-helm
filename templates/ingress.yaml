@@ -10,10 +10,10 @@ metadata:
     {{- with .Values.ingress.labels }}
       {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.ingress.annotations) }}
   annotations:
-    {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.ingress.annotations) }}
-      {{- tpl (toYaml .) $ | nindent 4 }}
-    {{- end }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
 spec:
   {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}

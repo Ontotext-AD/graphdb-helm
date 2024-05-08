@@ -389,7 +389,7 @@ resources:
     memory: 2Gi
   requests:
     memory: 2Gi
-    cpu: 0.5
+    cpu: 500m
 
 # initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
 initContainerResources: {}

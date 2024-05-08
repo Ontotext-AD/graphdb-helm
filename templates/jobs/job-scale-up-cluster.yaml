@@ -24,8 +24,9 @@ spec:
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
-      securityContext:
-        {{- .Values.jobs.podSecurityContext | toYaml | nindent 8 }}
+      {{- with .Values.jobs.podSecurityContext }}
+      securityContext: {{ toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: job-temp
           emptyDir: {{ .Values.jobs.persistence.emptyDir | toYaml | nindent 12 }}
@@ -54,7 +55,9 @@ spec:
                 secretKeyRef:
                   name: {{ coalesce .Values.security.provisioner.existingSecret (include "graphdb.fullname.secret.provisioning-user" .) }}
                   key: {{ .Values.security.provisioner.tokenKey }}
-          securityContext: {{- .Values.jobs.securityContext | toYaml | nindent 12 }}
+          {{- with .Values.jobs.securityContext }}
+          securityContext: {{ toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.jobs.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}

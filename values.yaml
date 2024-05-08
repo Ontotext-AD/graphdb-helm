@@ -397,12 +397,22 @@ topologySpreadConstraints: []
 resources:
   limits:
     memory: 2Gi
+    ephemeral-storage: 10Mi
   requests:
     memory: 2Gi
     cpu: 500m
+    ephemeral-storage: 10Mi
 
-# initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
-initContainerResources: {}
+# initContainerResources defines resource requests and limits for the node containers provisioning configurations for GraphDB.
+initContainerResources:
+  limits:
+    memory: 16Mi
+    cpu: 50m
+    ephemeral-storage: 10Mi
+  requests:
+    memory: 16Mi
+    cpu: 50m
+    ephemeral-storage: 10Mi
 
 #########################
 # Probes Configurations #
@@ -530,7 +540,15 @@ jobs:
   # securityContext defines privilege and access control settings for all the job containers
   securityContext: {}
   # resources defines resource requests and limits for all the job containers
-  resources: {}
+  resources:
+    limits:
+      memory: 16Mi
+      cpu: 50m
+      ephemeral-storage: 10Mi
+    requests:
+      memory: 16Mi
+      cpu: 50m
+      ephemeral-storage: 10Mi
   # Persistence configurations for all jobs
   persistence:
     # Empty directory volume for temporary file storage of scripts
@@ -749,12 +767,22 @@ proxy:
   resources:
     limits:
       memory: 1500Mi
+      ephemeral-storage: 10Mi
     requests:
       memory: 1500Mi
       cpu: 100m
+      ephemeral-storage: 10Mi
 
   # Defines resource requests and limits for the containers provisioning configurations for GraphDB.
-  initContainerResources: {}
+  initContainerResources:
+    limits:
+      memory: 16Mi
+      cpu: 50m
+      ephemeral-storage: 10Mi
+    requests:
+      memory: 16Mi
+      cpu: 50m
+      ephemeral-storage: 10Mi
 
   #########################
   # Probes Configurations #

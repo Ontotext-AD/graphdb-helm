@@ -132,6 +132,7 @@ TODO: decide how detailed we want this to be
   the `-XX:MaxRAMPercentage` Java option
 - Ejected the default service account token in the proxy pods
 - Overhauled NOTES.txt to be more helpful
+- Added default resource limits and requests for all init containers and provisioning jobs
 
 ## Version 10.6.0-R2
 

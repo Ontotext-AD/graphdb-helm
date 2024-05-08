@@ -107,6 +107,9 @@ TODO: decide how detailed we want this to be
 - Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
 - Added configurations for extra `labels` and `annotations` for all persistent volume claim templates: `persistence`, `proxy.persistence`
   and `import.volumeMount`
+- Added `jobs.backoffLimit` for configuring the retry count for all jobs
+- Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
+- Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
 
 ### Updates
 

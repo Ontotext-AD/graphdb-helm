@@ -506,12 +506,21 @@ repositories:
 ######################################################################################
 
 jobs:
+  # Number of retries before considering the jobs failed
+  backoffLimit: 10
+  # Time in seconds before deleting finished pods
+  ttlSecondsAfterFinished: 300
   # podSecurityContext defines privilege and access control settings for all the job pods
   podSecurityContext: {}
   # securityContext defines privilege and access control settings for all the job containers
   securityContext: {}
   # resources defines resource requests and limits for all the job containers
   resources: {}
+  # Persistence configurations for all jobs
+  persistence:
+    # Empty directory volume for temporary file storage of scripts
+    emptyDir:
+      sizeLimit: 10Mi
 
 ###############################################################################
 #                    GraphDB Cluster Proxy Configurations                     #

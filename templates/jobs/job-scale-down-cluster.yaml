@@ -48,9 +48,11 @@ spec:
               value: {{ include "graphdb-proxy.fullname" . }}
             - name: GRAPHDB_PROXY_SERVICE_PORT
               value: {{ .Values.proxy.headlessService.ports.http | quote }}
-          envFrom:
-            - secretRef:
-                name: {{ include "graphdb.fullname.secret.provision-user" . }}
+            - name: GRAPHDB_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ coalesce .Values.security.provisioner.existingSecret (include "graphdb.fullname.secret.provisioning-user" .) }}
+                  key: {{ .Values.security.provisioner.tokenKey }}
           securityContext: {{- .Values.jobs.securityContext | toYaml | nindent 12 }}
           {{- with .Values.jobs.resources }}
           resources: {{ toYaml . | nindent 12 }}

@@ -147,11 +147,16 @@ logging:
 
 security:
   enabled: false
-
-  # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
-  provisioningUsername: provisioner
-  # bcrypt encrypted password. default: iHaveSuperpowers
-  provisioningPassword: iHaveSuperpowers
+  # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly
+  provisioner:
+    # The following user will be created in the default initial users.js and used in the cluster provisioning
+    username: provisioner
+    password: iHaveSuperpowers
+    # Reference to a basic authentication token of an existing user to use for provisioning instead of the default user in the initial user.js
+    # Note that the user must already exist in GraphDB for this to work properly.
+    existingSecret: ""
+    # Field name in the secret holding the authentication token.
+    tokenKey: GRAPHDB_AUTH_TOKEN
 
 ##################################
 # GraphDB Cluster Configurations #
@@ -161,9 +166,9 @@ cluster:
   # A secret used for secure communication amongst the nodes in the cluster.
   clusterSecret: s3cr37
   # Reference to an existing Secret that contains the cluster secret token. This overrides cluster.clusterSecret
-  existingClusterSecret:
+  existingClusterSecret: ""
   # Key in the existing Secret that holds the secret cluster token for GraphDB
-  existingClusterSecretKey:
+  existingClusterSecretKey: ""
 
   # Timeout for the cluster creation CURL query.
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.

@@ -50,6 +50,7 @@ TODO: decide how detailed we want this to be
 - Removed configuration overrides from the default `GDB_JAVA_OPTS`: `enable-context-index`, `entity-pool-implementation`
   and `health.max.query.time.seconds`
 - Removed `default.min.distinct.threshold` from the default `defaultJavaArguments` values
+- Moved `provisioningUsername` and `provisioningPassword` under `security.provisioner`
 
 ### New
 
@@ -110,6 +111,7 @@ TODO: decide how detailed we want this to be
 - Added `jobs.backoffLimit` for configuring the retry count for all jobs
 - Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
 - Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
+- Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
 
 ### Updates
 

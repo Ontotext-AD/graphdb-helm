@@ -10,8 +10,8 @@ Helper functions for labels related to Job and provisioning resources
   {{- printf "%s-%s" (include "graphdb.fullname" .) "utils" -}}
 {{- end -}}
 
-{{- define "graphdb.fullname.secret.provision-user" -}}
-  {{- printf "%s-%s" (include "graphdb.fullname" .) "provision-user" -}}
+{{- define "graphdb.fullname.secret.provisioning-user" -}}
+  {{- printf "%s-%s" (include "graphdb.fullname" .) "provisioning-user" -}}
 {{- end -}}
 
 {{- define "graphdb.fullname.job.create-cluster" -}}

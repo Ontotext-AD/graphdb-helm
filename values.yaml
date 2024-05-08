@@ -271,6 +271,8 @@ service:
   # External IP addresses at which the service will be exposed
   # See https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
   externalIPs: []
+  # Additional ports to expose with the service
+  extraPorts: []
 
 headlessService:
   # Enables or disables the headless Service deployment
@@ -607,6 +609,8 @@ proxy:
     # External IP addresses at which the service will be exposed
     # See https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     externalIPs: []
+    # Additional proxy ports to expose with the service
+    extraPorts: []
 
   # GraphDB cluster proxy headless service configurations
   headlessService:

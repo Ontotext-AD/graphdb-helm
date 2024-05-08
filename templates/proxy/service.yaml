@@ -40,4 +40,7 @@ spec:
       {{- if .Values.proxy.service.nodePort }}
       nodePort: {{ .Values.proxy.service.nodePort }}
       {{- end }}
+    {{- with .Values.proxy.service.extraPorts -}}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}

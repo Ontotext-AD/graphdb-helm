@@ -104,6 +104,7 @@ TODO: decide how detailed we want this to be
 - Added `service.loadBalancerClass` and `service.proxy.loadBalancerClass` to select a specific load balancer implementation
 - Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
 - Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
+- Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
 
 ### Updates
 

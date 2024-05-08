@@ -13,7 +13,7 @@ TODO: decide how detailed we want this to be
 - Updated the chart to require Kubernetes version 1.24+
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Renamed `extraLabels` to just `labels`
-- Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
+- Renamed GraphDB storage PVC template name prefix to `storage` and server import folder to `import`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration
 - Renamed `java_args` to `defaultJavaArguments` and added a separate `javaArguments` that can be used for additional configurations

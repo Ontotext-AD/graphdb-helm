@@ -22,13 +22,13 @@ spec:
   volumeClaimTemplates:
     {{- if .Values.persistence.enabled }}
     - metadata:
-        name: graphdb-storage
+        name: storage
       spec:
         {{- toYaml .Values.persistence.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
     {{- if .Values.import.volumeMount.enabled }}
     - metadata:
-        name: graphdb-import
+        name: import
       spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplateSpec | nindent 8 }}
     {{- end }}
@@ -150,7 +150,7 @@ spec:
           {{- end }}
           volumeMounts:
             {{- if .Values.persistence.enabled }}
-            - name: graphdb-storage
+            - name: storage
               mountPath: /opt/graphdb/home
             {{- end }}
             {{- if .Values.license.existingSecret }}
@@ -164,7 +164,7 @@ spec:
               subPath: {{ .Values.logging.logback.configmapKey }}
             {{- end }}
             {{- if .Values.import.volumeMount.enabled }}
-            - name: graphdb-server-import
+            - name: import
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
@@ -209,7 +209,7 @@ spec:
             {{- end }}
           volumeMounts:
             {{- if .Values.persistence.enabled }}
-            - name: graphdb-storage
+            - name: storage
               mountPath: /opt/graphdb/home
             {{- end }}
             - name: graphdb-properties

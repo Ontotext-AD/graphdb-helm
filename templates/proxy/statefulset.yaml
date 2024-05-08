@@ -22,7 +22,7 @@ spec:
   {{- if .Values.proxy.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
-        name: graphdb-storage
+        name: storage
       spec:
         {{- toYaml .Values.proxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
   {{- end }}
@@ -53,24 +53,24 @@ spec:
       dnsPolicy: {{ .Values.proxy.dnsPolicy }}
       {{- end }}
       volumes:
-        - name: graphdb-properties
+        - name: graphdb-proxy-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
-        - name: graphdb-secret-properties
+        - name: graphdb-proxy-secret-properties
           secret:
             secretName: {{ include "graphdb-proxy.fullname.secret.properties" . }}
         {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
-        - name: graphdb-extra-properties
+        - name: graphdb-proxy-extra-properties
           configMap:
             name: {{ tpl .Values.proxy.extraConfiguration.properties.existingConfigmap . }}
         {{- end }}
         {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
-        - name: graphdb-extra-secret-properties
+        - name: graphdb-proxy-extra-secret-properties
           secret:
             secretName: {{ tpl .Values.proxy.extraConfiguration.properties.existingSecret . }}
         {{- end }}
       {{- if .Values.proxy.logging.logback.existingConfigmap }}
-        - name: graphdb-logback-config
+        - name: graphdb-proxy-logback-config
           configMap:
             name: {{ tpl .Values.proxy.logging.logback.existingConfigmap . }}
       {{- end }}
@@ -127,11 +127,11 @@ spec:
             {{- end }}
           volumeMounts:
             {{- if .Values.proxy.persistence.enabled }}
-            - name: graphdb-storage
+            - name: storage
               mountPath: /opt/graphdb/home
             {{- end }}
             {{- if .Values.proxy.logging.logback.existingConfigmap }}
-            - name: graphdb-logback-config
+            - name: graphdb-proxy-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
               subPath: {{ .Values.proxy.logging.logback.configmapKey }}
             {{- end }}
@@ -182,22 +182,22 @@ spec:
           {{- end }}
           volumeMounts:
             {{- if .Values.proxy.persistence.enabled }}
-            - name: graphdb-storage
+            - name: storage
               mountPath: /opt/graphdb/home
             {{- end }}
-            - name: graphdb-properties
+            - name: graphdb-proxy-properties
               mountPath: /tmp/graphdb.properties
               subPath: graphdb.properties
-            - name: graphdb-secret-properties
+            - name: graphdb-proxy-secret-properties
               mountPath: /tmp/graphdb/graphdb-secrets.properties
               subPath: graphdb-secrets.properties
             {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
-            - name: graphdb-extra-properties
+            - name: graphdb-proxy-extra-properties
               mountPath: /tmp/graphdb/graphdb-extra.properties
               subPath: {{ .Values.proxy.extraConfiguration.properties.configmapKey }}
             {{- end }}
             {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
-            - name: graphdb-extra-secret-properties
+            - name: graphdb-proxy-extra-secret-properties
               mountPath: /tmp/graphdb/graphdb-extra-secret.properties
               subPath: {{ .Values.proxy.extraConfiguration.properties.secretKey }}
             {{- end }}

@@ -147,7 +147,13 @@ logging:
 
 security:
   enabled: false
-  # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly
+  # Administrator user with ROLE_ADMIN authority
+  admin:
+    username: admin
+    # If the password is not specified, it will use the default one for GraphDB which is "root"
+    password: ""
+  # Provisioning user with ROLE_ADMIN authority
+  # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly.
   provisioner:
     # The following user will be created in the default initial users.js and used in the cluster provisioning
     username: provisioner
@@ -157,6 +163,10 @@ security:
     existingSecret: ""
     # Field name in the secret holding the authentication token.
     tokenKey: GRAPHDB_AUTH_TOKEN
+  # Additional users to insert in the default users.js (see files/config/users.js)
+  # Check the default user.js syntax for details.
+  # Note that this won't be applied if you provide a custom Secret object with user.js via initialConfiguration.users.existingSecret
+  users: {}
 
 ##################################
 # GraphDB Cluster Configurations #

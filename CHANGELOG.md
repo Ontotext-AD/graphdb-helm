@@ -112,6 +112,8 @@ TODO: decide how detailed we want this to be
 - Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
 - Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
 - Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
+- Added `security.admin` for configuring the username and/or the password of the administrator user
+- Added `security.users` for inserting additional users into the default initial user.js configuration
 
 ### Updates
 

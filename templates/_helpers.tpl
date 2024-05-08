@@ -76,3 +76,11 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
     {{- end }}
   {{- end }}
 {{- end -}}
+
+{{- define "grahdb.security.extra-users.json" -}}
+{{- if .Values.security.users -}}
+  {{- range $user, $data := .Values.security.users -}}
+    {{- $user | quote }}: {{ $data | mustToPrettyJson }},
+  {{- end -}}
+{{- end -}}
+{{- end -}}

@@ -23,6 +23,12 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: storage
+        {{- with .Values.proxy.persistence.labels }}
+        labels: {{ tpl (toYaml .) $ | nindent 10 }}
+        {{- end }}
+        {{- with .Values.proxy.persistence.annotations }}
+        annotations: {{ tpl (toYaml .) $ | nindent 10 }}
+        {{- end }}
       spec:
         {{- toYaml .Values.proxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
   {{- end }}

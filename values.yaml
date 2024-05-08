@@ -292,6 +292,8 @@ headlessService:
 
 persistence:
   enabled: true
+  labels: {}
+  annotations: {}
   volumeClaimTemplateSpec:
     accessModes: [ "ReadWriteOnce" ]
     resources:
@@ -480,6 +482,8 @@ import:
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   volumeMount:
     enabled: false
+    labels: {}
+    annotations: {}
     volumeClaimTemplateSpec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
@@ -634,6 +638,8 @@ proxy:
   persistence:
     # Enables or disables the proxy's persistence
     enabled: true
+    labels: {}
+    annotations: {}
     volumeClaimTemplateSpec:
       accessModes: [ "ReadWriteOnce" ]
       resources:

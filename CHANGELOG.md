@@ -105,6 +105,8 @@ TODO: decide how detailed we want this to be
 - Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
 - Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
 - Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
+- Added configurations for extra `labels` and `annotations` for all persistent volume claim templates: `persistence`, `proxy.persistence`
+  and `import.volumeMount`
 
 ### Updates
 

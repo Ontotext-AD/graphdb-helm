@@ -6,6 +6,7 @@
                          \____|_|  \__,_| .__/|_| |_|____/|____/
                                         |_|
 -----------------------------------------------------------------------------------------
+
 Chart version: {{ .Chart.Version }}
 GraphDB version: {{ coalesce .Values.image.tag .Chart.AppVersion }}
 {{- if gt (int .Values.replicas) 1 }}

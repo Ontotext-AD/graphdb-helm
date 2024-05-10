@@ -8,11 +8,14 @@ metadata:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
   graphdb.properties: |-
-    {{- tpl ( .Files.Get "files/config/graphdb-proxy.properties" | trim ) . | nindent 4 }}
+    ##### GraphDB configurations #####
+    # See https://graphdb.ontotext.com/documentation/ for supported properties
+    graphdb.connector.port={{ .Values.proxy.containerPorts.http }}
+    graphdb.proxy.hosts={{ include "graphdb-proxy.cluster.nodes" . }}
     {{- if .Values.proxy.configuration.properties }}
     ##### Overrides from values.yaml #####
     {{- range $key, $val := .Values.proxy.configuration.properties -}}

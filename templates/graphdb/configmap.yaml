@@ -7,19 +7,12 @@ metadata:
     {{- include "graphdb.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
-  # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
+    -Dgraphdb.home=/opt/graphdb/home
     -Denable-context-index=true
     -Dentity-pool-implementation=transactional
     -Dhealth.max.query.time.seconds=60
-    -Dgraphdb.append.request.id.headers=true
-    -Dgraphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
-    -Dgraphdb.home=/opt/graphdb/home
-    -Dgraphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
-    {{- if gt (int .Values.replicas) 1 }}
-    -Dgraphdb.auth.token.secret={{ .Values.cluster.clusterSecret | quote }}
-    {{- end }}
     {{ .Values.configuration.javaArguments }}

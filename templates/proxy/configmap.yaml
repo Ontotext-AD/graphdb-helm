@@ -8,12 +8,10 @@ metadata:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
-  # >- means replace new line with space and no new lines at the end
   GDB_JAVA_OPTS: >-
-    -Dgraphdb.auth.token.secret={{ .Values.cluster.clusterSecret | quote }}
     -Dgraphdb.home=/opt/graphdb/home
     {{ .Values.proxy.configuration.javaArguments }}
 {{- end }}

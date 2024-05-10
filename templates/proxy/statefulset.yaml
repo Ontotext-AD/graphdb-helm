@@ -8,7 +8,7 @@ metadata:
     {{- include "graphdb-proxy.labels" . | nindent 4 }}
   {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 spec:
   replicas: {{ .Values.proxy.replicas }}
@@ -30,13 +30,14 @@ spec:
       labels:
         {{- include "graphdb-proxy.selectorLabels" . | nindent 8 }}
         {{- with .Values.proxy.podLabels }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
         checksum/configmap-properties: {{ include (print .Template.BasePath "/proxy/configmap-properties.yaml") . | sha256sum }}
+        checksum/secret-properties: {{ include (print .Template.BasePath "/proxy/secret-properties.yaml") . | sha256sum }}
         {{- with .Values.proxy.podAnnotations }}
-          {{- tpl ( toYaml . ) $ | nindent 8 }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.terminationGracePeriodSeconds }}
@@ -44,8 +45,26 @@ spec:
         - name: graphdb-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
+        - name: graphdb-secret-properties
+          secret:
+            secretName: {{ include "graphdb-proxy.fullname.secret.properties" . }}
+        {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
+        - name: graphdb-extra-properties
+          configMap:
+            name: {{ tpl .Values.proxy.extraConfiguration.properties.existingConfigmap . }}
+        {{- end }}
+        {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
+        - name: graphdb-extra-secret-properties
+          secret:
+            secretName: {{ tpl .Values.proxy.extraConfiguration.properties.existingSecret . }}
+        {{- end }}
+      {{- if .Values.proxy.logging.logback.existingConfigmap }}
+        - name: graphdb-logback-config
+          configMap:
+            name: {{ tpl .Values.proxy.logging.logback.existingConfigmap . }}
+      {{- end }}
       {{- with .Values.proxy.extraVolumes }}
-        {{- tpl ( toYaml . ) $ | nindent 8 }}
+        {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.nodeSelector }}
       nodeSelector: {{- toYaml . | nindent 8 }}
@@ -82,10 +101,10 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb-proxy.fullname" . }}
             {{- with .Values.proxy.extraEnvFrom }}
-              {{- tpl ( toYaml . ) $ | nindent 12 }}
+              {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl ( toYaml . ) $ | nindent 12 }}
+          env: {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
           ports:
             - name: http
@@ -99,6 +118,11 @@ spec:
             {{- if .Values.proxy.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
+            {{- end }}
+            {{- if .Values.proxy.logging.logback.existingConfigmap }}
+            - name: graphdb-logback-config
+              mountPath: /opt/graphdb/home/conf/logback.xml
+              subPath: {{ .Values.proxy.logging.logback.configmapKey }}
             {{- end }}
             {{- with .Values.proxy.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}
@@ -129,6 +153,13 @@ spec:
               value: {{ .Values.proxy.containerPorts.http | quote }}
             - name: GRAPHDB_PROXY_RPC_PORT
               value: {{ .Values.proxy.containerPorts.rpc | quote }}
+            {{- if .Values.cluster.existingClusterSecret }}
+            - name: GRAPHDB_CLUSTER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.cluster.existingClusterSecret }}
+                  key: {{ .Values.cluster.existingClusterSecretKey }}
+            {{- end }}
           {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -136,29 +167,69 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: graphdb-properties
-              mountPath: /tmp/graphdb.properties
-              subPath: graphdb.properties
             {{- if .Values.proxy.persistence.enabled }}
             - name: graphdb-storage
               mountPath: /opt/graphdb/home
+            {{- end }}
+            - name: graphdb-properties
+              mountPath: /tmp/graphdb.properties
+              subPath: graphdb.properties
+            - name: graphdb-secret-properties
+              mountPath: /tmp/graphdb/graphdb-secrets.properties
+              subPath: graphdb-secrets.properties
+            {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
+            - name: graphdb-extra-properties
+              mountPath: /tmp/graphdb/graphdb-extra.properties
+              subPath: {{ .Values.proxy.extraConfiguration.properties.configmapKey }}
+            {{- end }}
+            {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
+            - name: graphdb-extra-secret-properties
+              mountPath: /tmp/graphdb/graphdb-extra-secret.properties
+              subPath: {{ .Values.proxy.extraConfiguration.properties.secretKey }}
             {{- end }}
           command: [ 'sh', '-c' ]
           args:
             - |
               set -eu
+              set +x
               mkdir -p /opt/graphdb/home/conf/
 
               echo 'Configuring graphdb.properties'
-              cat /tmp/graphdb.properties > /opt/graphdb/home/conf/graphdb.properties
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "##### Overrides from initContainer #####" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" > /opt/graphdb/home/conf/graphdb.properties
 
               echo 'Configuring GraphDB cluster proxy hostnames'
-              echo "graphdb.hostname=$(hostname --fqdn)" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_PROXY_RPC_PORT}" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_PROXY_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
-              echo "graphdb.external-url=${GRAPHDB_PUBLIC_URL}" >> /opt/graphdb/home/conf/graphdb.properties
+              cat << EOF >> /opt/graphdb/home/conf/graphdb.properties
+              ##### Configurations from initContainer #####
+              graphdb.hostname=$(hostname --fqdn)
+              graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_PROXY_RPC_PORT}
+              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_PROXY_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}
+              graphdb.external-url=${GRAPHDB_PUBLIC_URL}
+              EOF
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb/graphdb-secrets.properties >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              if [[ -n ${GRAPHDB_CLUSTER_SECRET:-""} ]]; then
+                echo "##### Override from existing cluster secret #####" >> /opt/graphdb/home/conf/graphdb.properties
+                (echo "graphdb.auth.token.secret=${GRAPHDB_CLUSTER_SECRET}" >> /opt/graphdb/home/conf/graphdb.properties) >/dev/null 2>&1
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
+                echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              if [[ -f /tmp/graphdb/graphdb-extra-secret.properties ]]; then
+                echo "##### Overrides from extra secret properties #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra-secret.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
 
               echo 'Done'
         {{- with .Values.proxy.extraInitContainers }}

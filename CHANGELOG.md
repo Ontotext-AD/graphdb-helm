@@ -45,6 +45,7 @@ TODO: decide how detailed we want this to be
   - Moved the rest of `graphdb.clusterConfig` configurations under `cluster` and `cluster.config`
 - Moved `graphdb.security` configurations to `security`
 - Updated the Service type of the proxy to be ClusterIP by default
+- Renamed `pdb` to `podDisruptionBudget` and renamed `podDisruptionBudget.create` to `podDisruptionBudget.enabled` for consistency
 
 ### New
 
@@ -78,6 +79,14 @@ TODO: decide how detailed we want this to be
 - Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
 - Added `cluster.existingConfigmapKey` to specify a custom configmap key if needed
 - Added `namespaceOverride` for overriding the deployment namespace for all resources in case of multi-namespace deployment
+- Added `proxy.logging.logback` configurations for providing the proxy with a custom Logback XML configuration
+- Added `extraConfiguration.existingSecret` for appending GraphDB properties from an existing Secret resource
+- Added `proxy.extraConfiguration` for appending extra GraphDB properties from existing ConfigMap and Secret resources
+- Added `cluster.existingClusterSecret` and `cluster.existingClusterSecretKey` for using an existing Secret instead of providing the cluster secret 
+  token as plaintext in values.yaml
+- Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
+- Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
+- Added `proxy.pdb` for configuring a pod disruption budget for the GraphDB Proxy
 
 ### Updates
 
@@ -89,7 +98,9 @@ TODO: decide how detailed we want this to be
 - References to existing configmaps and secrets are now processed as templates
 - Added trimming when loading files in the configmaps and secrets
 - Cluster jobs now automatically resolves the cluster domain
-- Moved `files/config/proxy/graphdb.properties` to [files/config/graphdb-proxy.properties](./files/config/graphdb-proxy.properties)
+- Removed `files/config/graphdb.properties` and `files/config/proxy/graphdb.properties` and moved any defined properties directly into the ConfigMap
+  declarations
+- Moved GraphDB specific properties from `GDB_JAVA_OPTS` into the properties ConfigMaps
 
 ## Version 10.6.0-R2
 

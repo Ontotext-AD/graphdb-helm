@@ -8,11 +8,11 @@ metadata:
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
     {{- with .Values.ingress.labels }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
   annotations:
     {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.ingress.annotations) }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
 spec:
   {{- with .Values.ingress.className }}
@@ -26,7 +26,7 @@ spec:
       secretName: {{ required "TLS secret is required!" .Values.ingress.tls.secretName }}
     {{- end }}
     {{- with .Values.ingress.extraTLS }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
   {{- end }}
   rules:
@@ -47,6 +47,6 @@ spec:
                   number: {{ .Values.headlessService.ports.http }}
                 {{- end }}
     {{- with .Values.ingress.extraHosts }}
-      {{- tpl ( toYaml . ) $ | nindent 4 }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
 {{- end }}

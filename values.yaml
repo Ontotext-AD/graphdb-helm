@@ -15,7 +15,7 @@ global:
   # Inserts additional pull secret references together along with any from image.pullSecrets
   imagePullSecrets: []
   # The default domain suffix of the Kubernetes cluster
-  clusterDomain: "cluster.local"
+  clusterDomain: cluster.local
 
 ###############################
 #   Metadata Configurations   #
@@ -90,19 +90,32 @@ configuration:
   # GraphDB properties to insert in the default graphdb.properties configmap
   properties: {}
 
+  # Sensitive GraphDB properties to insert in the default graphdb.properties secret
+  secretProperties: {}
+
   # Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over configurations in graphdb.properties
-  javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+  javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
 
 #####################################
 # Additional GraphDB Configurations #
 #####################################
 
+# Additional configurations that will be provisioned to GraphDB
 extraConfiguration:
+  # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
+  # in the default configmap and secret resources.
   properties:
+    # Reference to an existing ConfigMap resource containing GraphDB configurations
     existingConfigmap: ""
-    configmapKey: "graphdb.properties"
+    # Key in the existing ConfigMap that holds the properties for GraphDB
+    configmapKey: graphdb.properties
+
+    # Reference to an existing Secret resource containing sensitive GraphDB configurations
+    existingSecret: ""
+    # Key in the existing Secret that holds the properties for GraphDB
+    secretKey: graphdb.properties
 
 ###############################################
 # Initial Provisioning GraphDB Configurations #
@@ -111,10 +124,10 @@ extraConfiguration:
 initialConfiguration:
   settings:
     existingConfigmap: ""
-    configmapKey: "settings.js"
+    configmapKey: settings.js
   users:
     existingSecret: ""
-    secretKey: "users.js"
+    secretKey: users.js
 
 #################################
 # GraphDB Logging Configuration #
@@ -123,7 +136,7 @@ initialConfiguration:
 logging:
   logback:
     existingConfigmap: ""
-    configmapKey: "logback.xml"
+    configmapKey: logback.xml
 
 ###################################
 # GraphDB Security Configurations #
@@ -144,6 +157,11 @@ security:
 cluster:
   # A secret used for secure communication amongst the nodes in the cluster.
   clusterSecret: s3cr37
+  # Reference to an existing Secret that contains the cluster secret token. This overrides cluster.clusterSecret
+  existingClusterSecret:
+  # Key in the existing Secret that holds the secret cluster token for GraphDB
+  existingClusterSecretKey:
+
   # Timeout for the cluster creation CURL query.
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
   clusterCreationTimeout: 60
@@ -257,7 +275,7 @@ persistence:
     accessModes: [ "ReadWriteOnce" ]
     resources:
       requests:
-        storage: "5Gi"
+        storage: 5Gi
 
 ##############################
 # Statefulset Configurations #
@@ -363,19 +381,19 @@ livenessProbe:
 # Additional Statefulset Configurations #
 #########################################
 
-# additional environment variables to be set for the graphdb nodes
+# Additional environment variables to be set for the graphdb nodes
 extraEnvFrom: []
 
-# additional environment variables to be set for the graphdb nodes
+# Additional environment variables to be set for the graphdb nodes
 extraEnv: []
 
-# additional volumes to be set for the graphdb nodes
+# Additional volumes to be set for the graphdb nodes
 extraVolumes: []
 
-# additional volume mounts to be set for the graphdb nodes
+# Additional volume mounts to be set for the graphdb nodes
 extraVolumeMounts: []
 
-# additional init containers inserted after the provisioning init containers
+# Additional init containers inserted after the provisioning init containers
 extraInitContainers: []
 
 # Additional container ports to expose
@@ -386,10 +404,10 @@ extraContainerPorts: {}
 ########################################
 
 # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
-pdb:
-  create: false
-  minAvailable: "51%"
-  maxUnavailable:
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 51%
+  maxUnavailable: ""
 
 ##################################
 # Service Account Configurations #
@@ -418,11 +436,10 @@ import:
   volumeMount:
     enabled: false
     volumeClaimTemplateSpec:
-      accessModes:
-        - "ReadWriteOnce"
+      accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: "10Gi"
+          storage: 10Gi
 
 #######################################
 ## Custom Repositories Configurations #
@@ -470,12 +487,43 @@ proxy:
   ################################
 
   configuration:
-    # GraphDB proxy properties to insert in the default graphdb.properties proxy configmap
+    # GraphDB proxy properties to insert in the default graphdb.properties proxy ConfigMap
     properties: {}
+
+    # Sensitive GraphDB properties to insert in the default graphdb.properties proxy Secret
+    secretProperties: {}
 
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
-    javaArguments: "-XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m -XX:+UseContainerSupport"
+    # Takes precedence over configurations in graphdb.properties
+    javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
+
+  ###########################################
+  # Additional GraphDB Proxy Configurations #
+  ###########################################
+
+  # Additional configurations that will be provisioned to GraphDB
+  extraConfiguration:
+    # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
+    # in the default configmap and secret resources.
+    properties:
+      # Reference to an existing ConfigMap resource containing GraphDB configurations
+      existingConfigmap: ""
+      # Key in the existing ConfigMap that holds the properties for GraphDB
+      configmapKey: graphdb.properties
+
+      # Reference to an existing Secret resource containing sensitive GraphDB configurations
+      existingSecret: ""
+      # Key in the existing Secret that holds the properties for GraphDB
+      secretKey: graphdb.properties
+
+  #######################################
+  # GraphDB Proxy Logging Configuration #
+  #######################################
+  logging:
+    logback:
+      existingConfigmap: ""
+      configmapKey: logback.xml
 
   ##########################
   # Service Configurations #
@@ -521,10 +569,10 @@ proxy:
     # Enables or disables the proxy's persistence
     enabled: true
     volumeClaimTemplateSpec:
-      accessModes: ["ReadWriteOnce"]
+      accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: "500Mi"
+          storage: 500Mi
 
   ##############################
   # Statefulset Configurations #
@@ -641,3 +689,13 @@ proxy:
 
   # Additional container ports to expose for each cluster proxy
   extraContainerPorts: {}
+
+  ########################################
+  # Pod Disruption Budget Configurations #
+  ########################################
+
+  # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 51%
+    maxUnavailable: ""

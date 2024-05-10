@@ -1,23 +1,23 @@
-{{/*
-    A welcome screen showing useful information after installing/upgrading the chart.
-*/}}
--------------------------------------------------------------------------------
-        ____                 _     ____  ____
-       / ___|_ __ __ _ _ __ | |__ |  _ \| __ )
-      | |  _| '__/ _` | '_ \| '_ \| | | |  _ \
-      | |_| | | | (_| | |_) | | | | |_| | |_) |
-       \____|_|  \__,_| .__/|_| |_|____/|____/
-                      |_|
--------------------------------------------------------------------------------
-version: {{ .Chart.AppVersion }}
-GDB cluster: {{ gt ( int .Values.replicas ) 1 }}
+---------------------------------------------------------------------------
+                   ____                 _     ____  ____
+                  / ___|_ __ __ _ _ __ | |__ |  _ \| __ )
+                 | |  _| '__/ _` | '_ \| '_ \| | | |  _ \
+                 | |_| | | | (_| | |_) | | | | |_| | |_) |
+                  \____|_|  \__,_| .__/|_| |_|____/|____/
+                                 |_|
+---------------------------------------------------------------------------
+Chart version: {{ .Chart.Version }}
+GraphDB version: {{ coalesce .Values.image.tag .Chart.AppVersion }}
+GraphDB cluster: {{ gt (int .Values.replicas) 1 }}
 
 ** Please be patient while the chart is being deployed and services are available **
 You can check their status with kubectl get pods
 
-{{- if and ( gt ( int .Values.replicas) 1 ) ( not .Values.license.existingSecret ) }}
+{{- if and (gt (int .Values.replicas) 1) (not .Values.license.existingSecret) }}
 WARNING: You are attempting to make a cluster without providing a license secret!
 {{- end }}
+{{- if not .Values.persistence.enabled }}
+WARNING: Persistence is disabled! You will lose your data when GraphDB pods are restarted or terminated
+{{- end }}
 
-Endpoints:
-* GraphDB workbench: {{ .Values.configuration.externalUrl }}
+GraphDB workbench: {{ .Values.configuration.externalUrl }}

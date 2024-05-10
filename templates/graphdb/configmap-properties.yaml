@@ -7,11 +7,19 @@ metadata:
     {{- include "graphdb.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
   annotations:
-    {{- tpl ( toYaml . ) $ | nindent 4 }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
   graphdb.properties: |-
-    {{- tpl ( .Files.Get "files/config/graphdb.properties" | trim ) . | nindent 4 }}
+    ##### GraphDB configurations #####
+    # See https://graphdb.ontotext.com/documentation/ for supported properties
+    graphdb.connector.port={{ .Values.containerPorts.http }}
+    graphdb.append.request.id.headers=true
+    graphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
+    graphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
+    {{- if eq (int .Values.replicas) 1}}
+    graphdb.external-url={{ .Values.configuration.externalUrl }}
+    {{- end }}
     {{- if .Values.configuration.properties }}
     ##### Overrides from values.yaml #####
     {{- range $key, $val := .Values.configuration.properties -}}

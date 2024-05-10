@@ -93,10 +93,13 @@ configuration:
   # Sensitive GraphDB properties to insert in the default graphdb.properties secret
   secretProperties: {}
 
-  # Java arguments with which node instances will be launched.
+  # Default Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over configurations in graphdb.properties
-  javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
+  defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops
+
+  # Java arguments to append after defaultJavaArguments, use to avoid overriding the default values
+  javaArguments: ""
 
 #####################################
 # Additional GraphDB Configurations #
@@ -144,11 +147,16 @@ logging:
 
 security:
   enabled: false
-
-  # If the security is enabled, it's mandatory to have a provisioning user, so the health-checks and cluster linking can work properly
-  provisioningUsername: provisioner
-  # bcrypt encrypted password. default: iHaveSuperpowers
-  provisioningPassword: iHaveSuperpowers
+  # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly
+  provisioner:
+    # The following user will be created in the default initial users.js and used in the cluster provisioning
+    username: provisioner
+    password: iHaveSuperpowers
+    # Reference to a basic authentication token of an existing user to use for provisioning instead of the default user in the initial user.js
+    # Note that the user must already exist in GraphDB for this to work properly.
+    existingSecret: ""
+    # Field name in the secret holding the authentication token.
+    tokenKey: GRAPHDB_AUTH_TOKEN
 
 ##################################
 # GraphDB Cluster Configurations #
@@ -158,9 +166,9 @@ cluster:
   # A secret used for secure communication amongst the nodes in the cluster.
   clusterSecret: s3cr37
   # Reference to an existing Secret that contains the cluster secret token. This overrides cluster.clusterSecret
-  existingClusterSecret:
+  existingClusterSecret: ""
   # Key in the existing Secret that holds the secret cluster token for GraphDB
-  existingClusterSecretKey:
+  existingClusterSecretKey: ""
 
   # Timeout for the cluster creation CURL query.
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
@@ -252,6 +260,24 @@ service:
   # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
   # If left undefined, K8S will pick a random port from the node port range of the cluster.
   nodePort: ""
+  # Defines the policy for treating external ingress traffic.
+  # By default, Cluster does not preserve client IPs. Change to Local to preserve them.
+  # See https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+  externalTrafficPolicy: ""
+  # NodePort used by external load balancers when the external traffic policy is set to Local.
+  # By default, Kubernetes will assign a random port, use this to override it.
+  healthCheckNodePort: ""
+  # Defines the class that should select a particular load balancer implementation.
+  # By default, Kubernetes will assign the cluster default implementation, use this to override it.
+  # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+  loadBalancerClass: ""
+  # Source IP ranges for restricting external ingress traffic
+  loadBalancerSourceRanges: []
+  # External IP addresses at which the service will be exposed
+  # See https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+  externalIPs: []
+  # Additional ports to expose with the service
+  extraPorts: []
 
 headlessService:
   # Enables or disables the headless Service deployment
@@ -271,6 +297,8 @@ headlessService:
 
 persistence:
   enabled: true
+  labels: {}
+  annotations: {}
   volumeClaimTemplateSpec:
     accessModes: [ "ReadWriteOnce" ]
     resources:
@@ -281,11 +309,31 @@ persistence:
 # Statefulset Configurations #
 ##############################
 
+# Configures the strategy of updating pods
+updateStrategy:
+  type: RollingUpdate
+
+# Configures how pods are created and scaled
+podManagementPolicy: Parallel
+
 # changes the maximum amount of kept revisions
 revisionHistoryLimit: 10
 
 # grace period in seconds before terminating the pods
 terminationGracePeriodSeconds: 120
+
+# Toggles the auto mounting of API credentials token into the pods.
+# Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
+automountServiceAccountToken: false
+
+# Overrides the default scheduler
+schedulerName: ""
+
+# Overrides the pod's DNS settings
+dnsConfig: {}
+
+# Defines the pod's policy for DNS resolution
+dnsPolicy: ""
 
 # Overrides the default container command, use only for troubleshooting!
 command: []
@@ -308,13 +356,13 @@ podAnnotations: {}
 # Security Context Configurations #
 ###################################
 
-# podSecurityContext defines privilege and access control settings for the node pods.
+# Defines privilege and access control settings for the node pods.
 podSecurityContext: {}
 
-# securityContext defines privilege and access control settings for the node container running graphdb.
+# Defines privilege and access control settings for the node container running GraphDB.
 securityContext: {}
 
-# provisionSecurityContext defines privilege and access control settings for the node containers provisioning configurations for graphdb.
+# Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
 initContainerSecurityContext: {}
 
 #############################
@@ -341,7 +389,7 @@ resources:
     memory: 2Gi
   requests:
     memory: 2Gi
-    cpu: 0.5
+    cpu: 500m
 
 # initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
 initContainerResources: {}
@@ -399,6 +447,10 @@ extraInitContainers: []
 # Additional container ports to expose
 extraContainerPorts: {}
 
+# Additional containers to insert into the GraphDB pods, e.g. sidecar containers
+# Values are processed as templates
+extraContainers: []
+
 ########################################
 # Pod Disruption Budget Configurations #
 ########################################
@@ -435,6 +487,8 @@ import:
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   volumeMount:
     enabled: false
+    labels: {}
+    annotations: {}
     volumeClaimTemplateSpec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
@@ -457,12 +511,21 @@ repositories:
 ######################################################################################
 
 jobs:
+  # Number of retries before considering the jobs failed
+  backoffLimit: 10
+  # Time in seconds before deleting finished pods
+  ttlSecondsAfterFinished: 300
   # podSecurityContext defines privilege and access control settings for all the job pods
   podSecurityContext: {}
   # securityContext defines privilege and access control settings for all the job containers
   securityContext: {}
   # resources defines resource requests and limits for all the job containers
   resources: {}
+  # Persistence configurations for all jobs
+  persistence:
+    # Empty directory volume for temporary file storage of scripts
+    emptyDir:
+      sizeLimit: 10Mi
 
 ###############################################################################
 #                    GraphDB Cluster Proxy Configurations                     #
@@ -496,7 +559,10 @@ proxy:
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     # Takes precedence over configurations in graphdb.properties
-    javaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Ddefault.min.distinct.threshold=100m
+    defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70
+
+    # Java arguments to append after defaultJavaArguments, use to avoid overriding the default values
+    javaArguments: ""
 
   ###########################################
   # Additional GraphDB Proxy Configurations #
@@ -545,6 +611,24 @@ proxy:
     # Exposes the service on a specific node port on the host machine when "serviceType: NodePort"
     # If left undefined, K8S will pick a random port from the node port range of the cluster.
     nodePort: ""
+    # Defines the policy for treating external ingress traffic.
+    # By default, Cluster does not preserve client IPs. Change to Local to preserve them.
+    # See https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    externalTrafficPolicy: ""
+    # NodePort used by external load balancers when the external traffic policy is set to Local.
+    # By default, Kubernetes will assign a random port, use this to override it.
+    healthCheckNodePort: ""
+    # Defines the class that should select a particular load balancer implementation.
+    # By default, Kubernetes will assign the cluster default implementation, use this to override it.
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+    loadBalancerClass: ""
+    # Source IP ranges for restricting external ingress traffic
+    loadBalancerSourceRanges: []
+    # External IP addresses at which the service will be exposed
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+    externalIPs: []
+    # Additional proxy ports to expose with the service
+    extraPorts: []
 
   # GraphDB cluster proxy headless service configurations
   headlessService:
@@ -568,6 +652,8 @@ proxy:
   persistence:
     # Enables or disables the proxy's persistence
     enabled: true
+    labels: {}
+    annotations: {}
     volumeClaimTemplateSpec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
@@ -578,6 +664,13 @@ proxy:
   # Statefulset Configurations #
   ##############################
 
+  # Configures the strategy of updating proxy pods
+  updateStrategy:
+    type: RollingUpdate
+
+  # Configures how proxy pods are created and scaled
+  podManagementPolicy: Parallel
+
   # Number of cluster proxies used to access the GraphDB cluster
   replicas: 1
 
@@ -586,6 +679,15 @@ proxy:
 
   # Grace period in seconds before terminating the pods
   terminationGracePeriodSeconds: 30
+
+  # Overrides the default scheduler
+  schedulerName: ""
+
+  # Overrides the pod's DNS settings
+  dnsConfig: {}
+
+  # Defines the pod's policy for DNS resolution
+  dnsPolicy: ""
 
   # Overrides the default container command, use only for troubleshooting!
   command: []
@@ -608,11 +710,14 @@ proxy:
   # Security Context Configurations #
   ###################################
 
-  # The podSecurityContext defines privilege and access control settings for the proxy pods.
+  # Defines privilege and access control settings for the proxy pods.
   podSecurityContext: {}
 
-  # The securityContext defines privilege and access control settings for the proxy containers.
+  # Defines privilege and access control settings for the proxy containers.
   securityContext: {}
+
+  # Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
+  initContainerSecurityContext: {}
 
   #############################
   # Scheduling Configurations #
@@ -637,6 +742,9 @@ proxy:
     requests:
       memory: 1500Mi
       cpu: 100m
+
+  # Defines resource requests and limits for the containers provisioning configurations for GraphDB.
+  initContainerResources: {}
 
   #########################
   # Probes Configurations #
@@ -690,6 +798,10 @@ proxy:
   # Additional container ports to expose for each cluster proxy
   extraContainerPorts: {}
 
+  # Additional containers to insert into the GraphDB proxy pods, e.g. sidecar containers
+  # Values are processed as templates
+  extraContainers: []
+
   ########################################
   # Pod Disruption Budget Configurations #
   ########################################
@@ -699,3 +811,11 @@ proxy:
     enabled: false
     minAvailable: 51%
     maxUnavailable: ""
+
+#################################
+# Additional Kubernetes Objects #
+#################################
+
+# Additional objects to insert along with the release.
+# Values are processed as templates.
+extraObjects: []

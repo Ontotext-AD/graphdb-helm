@@ -10,12 +10,13 @@ TODO: short section about the most notable changes (decoupling, naming, plugins,
 
 TODO: decide how detailed we want this to be
 
+- Updated the chart to require Kubernetes version 1.24+
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Renamed `extraLabels` to just `labels`
-- Renamed GraphDB storage PVC prefix to `graphdb-storage` and server import folder to `graphdb-server-import`
+- Renamed GraphDB storage PVC template name prefix to `storage` and server import folder to `import`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
 - Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration
-- Renamed `java_args` to `javaArguments`
+- Renamed `java_args` to `defaultJavaArguments` and added a separate `javaArguments` that can be used for additional configurations
 - Removed the default logback XML configuration and configmap in favor of an [example](examples/custom-logback) and a new configuration options
   under `logging.logback`
 - Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
@@ -46,6 +47,10 @@ TODO: decide how detailed we want this to be
 - Moved `graphdb.security` configurations to `security`
 - Updated the Service type of the proxy to be ClusterIP by default
 - Renamed `pdb` to `podDisruptionBudget` and renamed `podDisruptionBudget.create` to `podDisruptionBudget.enabled` for consistency
+- Removed configuration overrides from the default `GDB_JAVA_OPTS`: `enable-context-index`, `entity-pool-implementation`
+  and `health.max.query.time.seconds`
+- Removed `default.min.distinct.threshold` from the default `defaultJavaArguments` values
+- Moved `provisioningUsername` and `provisioningPassword` under `security.provisioner`
 
 ### New
 
@@ -87,6 +92,26 @@ TODO: decide how detailed we want this to be
 - Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
 - Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
 - Added `proxy.pdb` for configuring a pod disruption budget for the GraphDB Proxy
+- Added `updateStrategy` and `proxy.updateStrategy` for controlling the strategy when updating pods
+- Added `podManagementPolicy` and `proxy.podManagementPolicy` for configuring how the pods are created and scaled
+- Added `automountServiceAccountToken` with default value `false` effectively ejecting the service account token by default
+- Added `schedulerName` and `proxy.schedulerName` for overriding the default Kubernetes scheduler
+- Added `dnsConfig`, `dnsPolicy`, `proxy.dnsConfig` and `proxy.dnsPolicy` for customizing the DNS resolution if needed
+- Added `proxy.initContainerSecurityContext` and `proxy.initContainerResources` to avoid using the configurations from GraphDB
+- Added `extraContainers` and `proxy.extraContainers` for inserting additional containers into the pods of GraphDB and the GraphDB proxy
+- Added `extraObjects` as a way to insert additional Kubernetes objects into the deployment
+- Added `service.externalTrafficPolicy` and `service.proxy.externalTrafficPolicy` to override the policy to Local if needed
+- Added `service.healthCheckNodePort` and `service.proxy.healthCheckNodePort` to define a specific node port for LB health checks
+- Added `service.loadBalancerClass` and `service.proxy.loadBalancerClass` to select a specific load balancer implementation
+- Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
+- Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
+- Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
+- Added configurations for extra `labels` and `annotations` for all persistent volume claim templates: `persistence`, `proxy.persistence`
+  and `import.volumeMount`
+- Added `jobs.backoffLimit` for configuring the retry count for all jobs
+- Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
+- Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
+- Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
 
 ### Updates
 
@@ -101,6 +126,10 @@ TODO: decide how detailed we want this to be
 - Removed `files/config/graphdb.properties` and `files/config/proxy/graphdb.properties` and moved any defined properties directly into the ConfigMap
   declarations
 - Moved GraphDB specific properties from `GDB_JAVA_OPTS` into the properties ConfigMaps
+- Added `-XX:-UseCompressedOops` in the default Java arguments to allow allocating heap sizes larger than 32GBs when the max heap size is based on
+  the `-XX:MaxRAMPercentage` Java option
+- Ejected the default service account token in the proxy pods
+- Overhauled NOTES.txt to be more helpful
 
 ## Version 10.6.0-R2
 

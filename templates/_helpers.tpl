@@ -57,3 +57,22 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
     {{- end -}}
   {{- end -}}
 {{- end -}}
+
+{{- define "graphdb.notes.warnings" -}}
+  {{- $warnings := list -}}
+  {{- if and (gt (int .Values.replicas) 1) (not .Values.license.existingSecret) -}}
+    {{- $warnings = append $warnings "WARNING: You are attempting to make a cluster without providing a secret for GraphDB Enterprise Edition license!" -}}
+  {{- end -}}
+  {{- if not .Values.persistence.enabled -}}
+    {{- $warnings = append $warnings "WARNING: Persistence is disabled! You will lose your data when GraphDB pods are restarted or terminated!" -}}
+  {{- end -}}
+  {{- if and (gt (int .Values.replicas) 1) (eq (mod (int .Values.replicas) 2) 0) -}}
+    {{- $warnings = append $warnings "WARNING: You are deploying a GraphDB cluster with an even amount of replicas! You should be using an odd amount of replicas." -}}
+  {{- end -}}
+  {{- if gt (len $warnings) 0 }}
+    {{- print "\n" }}
+    {{- range $warning, $index := $warnings }}
+{{ print $index }}
+    {{- end }}
+  {{- end }}
+{{- end -}}

@@ -17,6 +17,21 @@ spec:
   type: {{ .Values.service.type }}
   selector:
     {{- include "graphdb.selectorLabels" . | nindent 4 }}
+  {{- if .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if .Values.service.healthCheckNodePort }}
+  healthCheckNodePort: {{ .Values.service.healthCheckNodePort }}
+  {{- end }}
+  {{- if .Values.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.service.loadBalancerClass }}
+  {{- end }}
+  {{- if .Values.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ .Values.service.loadBalancerSourceRanges | toYaml | nindent 4 }}
+  {{- end }}
+  {{- if .Values.service.externalIPs }}
+  externalIPs: {{ .Values.service.externalIPs | toYaml | nindent 4 }}
+  {{- end }}
   ports:
     - name: http
       port: {{ .Values.service.ports.http }}
@@ -25,4 +40,7 @@ spec:
       {{- if .Values.service.nodePort }}
       nodePort: {{ .Values.service.nodePort }}
       {{- end }}
+    {{- with .Values.service.extraPorts -}}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}

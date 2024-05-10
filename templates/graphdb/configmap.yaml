@@ -12,7 +12,6 @@ metadata:
 data:
   GDB_JAVA_OPTS: >-
     -Dgraphdb.home=/opt/graphdb/home
-    -Denable-context-index=true
-    -Dentity-pool-implementation=transactional
-    -Dhealth.max.query.time.seconds=60
+    -Dhttp.socket.keepalive=true
+    {{ .Values.configuration.defaultJavaArguments }}
     {{ .Values.configuration.javaArguments }}

@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-set -eu
+set -o errexit
+set -o nounset
+set -o pipefail
 
 function patchCluster {
   local configLocation=$1
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   local timeout=$2
 
   echo "Patching cluster"
   waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
   curl -o patchResponse.json -isSL -m "$timeout" -X PATCH \
-       --header "Authorization: Basic ${authToken}" \
+       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        -d @"$configLocation" \
@@ -30,7 +31,6 @@ function patchCluster {
 
 function removeNodes {
   local expectedNodes=$1
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   local currentNodes=$(getNodeCountInCurrentCluster)
   local nodes=""
   # DNS suffix in the form of namespace.svc.cluster.local
@@ -66,7 +66,7 @@ function removeNodes {
   curl -o clusterRemove.json -isSL -m 15 -X DELETE \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Basic ${authToken}" \
+       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        -d "${nodes}" \
        "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
@@ -82,7 +82,6 @@ function removeNodes {
 
 function addNodes {
   local expectedNodes=$1
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   local timeout=$2
   local currentNodes=$(getNodeCountInCurrentCluster)
   local nodes=""
@@ -109,10 +108,10 @@ function addNodes {
 
   nodes=\{\"nodes\":\[${nodes}\]\}
   waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
-  curl -o clusterAdd.json -isSL -m ${timeout} -X POST \
+  curl -o clusterAdd.json -isSL -m "${timeout}" -X POST \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Basic ${authToken}" \
+       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        -d "${nodes}" \
        "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
@@ -133,10 +132,10 @@ function addNodes {
 }
 
 function deleteCluster {
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   waitService "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+
   curl -o response.json -isSL -m 15 -X DELETE \
-       --header "Authorization: Basic ${authToken}" \
+       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Accept: */*' \
        "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config?force=false"
 
@@ -153,12 +152,11 @@ function deleteCluster {
 }
 
 function getNodeCountInCurrentCluster {
-  local authToken=$PROVISION_USER_AUTH_TOKEN
   local node_address="http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}"
   waitService "${node_address}/rest/repositories"
   curl -o clusterResponse.json -isSL -m 15 -X GET \
        --header 'Content-Type: application/json' \
-       --header "Authorization: Basic ${authToken}" \
+       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Accept: */*' \
        "${node_address}/rest/cluster/config"
   grep -o "${GRAPHDB_SERVICE_NAME}" "clusterResponse.json" | grep -c ""
@@ -166,12 +164,11 @@ function getNodeCountInCurrentCluster {
 
 function waitService {
   local address=$1
-  local authToken=$PROVISION_USER_AUTH_TOKEN
 
   local attempt_counter=0
   local max_attempts=100
 
-  until $(curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${authToken}" --silent --fail ${address}); do
+  until curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1

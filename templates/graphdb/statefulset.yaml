@@ -18,7 +18,7 @@ spec:
   selector:
     matchLabels:
       {{- include "graphdb.selectorLabels" . | nindent 6 }}
-  {{- if or .Values.persistence.enabled .Values.import.volumeMount.enabled }}
+  {{- if or .Values.persistence.enabled .Values.import.volumeMount.enabled .Values.extraVolumeClaimTemplates }}
   volumeClaimTemplates:
     {{- if .Values.persistence.enabled }}
     - metadata:
@@ -43,6 +43,9 @@ spec:
         {{- end }}
       spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplateSpec | nindent 8 }}
+    {{- end }}
+    {{- if .Values.extraVolumeClaimTemplates }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
   {{- end }}
   template:

@@ -488,6 +488,9 @@ extraVolumes: []
 # Additional volume mounts to be set for the graphdb nodes
 extraVolumeMounts: []
 
+# Additional volume claim templates to be set in GraphDB's StatefulSet
+extraVolumeClaimTemplates: []
+
 # Additional init containers inserted after the provisioning init containers
 extraInitContainers: []
 
@@ -896,6 +899,9 @@ proxy:
 
   # Additional volume mounts to be set for each cluster proxy
   extraVolumeMounts: []
+
+  # Additional volume claim templates to be set in the proxy's StatefulSet
+  extraVolumeClaimTemplates: []
 
   # Additional init containers to be set for each cluster proxy
   extraInitContainers: []

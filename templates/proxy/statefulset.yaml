@@ -19,8 +19,9 @@ spec:
   selector:
     matchLabels:
       {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}
-  {{- if .Values.proxy.persistence.enabled }}
+  {{- if or .Values.proxy.persistence.enabled .Values.proxy.extraVolumeClaimTemplates }}
   volumeClaimTemplates:
+    {{- if .Values.proxy.persistence.enabled }}
     - metadata:
         name: storage
         {{- with .Values.proxy.persistence.labels }}
@@ -31,6 +32,10 @@ spec:
         {{- end }}
       spec:
         {{- toYaml .Values.proxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
+    {{- end }}
+    {{- if .Values.proxy.extraVolumeClaimTemplates }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
   {{- end }}
   template:
     metadata:

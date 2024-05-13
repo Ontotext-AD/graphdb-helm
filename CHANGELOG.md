@@ -116,6 +116,7 @@ TODO: decide how detailed we want this to be
 - Added `security.admin` for configuring the username and/or the password of the administrator user
 - Added `security.users` for inserting additional users into the default initial user.js configuration
 - Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
+- Added `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
 
 ### Updates
 

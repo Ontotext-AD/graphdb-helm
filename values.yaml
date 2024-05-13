@@ -367,13 +367,40 @@ podAnnotations: {}
 ###################################
 
 # Defines privilege and access control settings for the node pods.
-podSecurityContext: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
 
 # Defines privilege and access control settings for the node container running GraphDB.
-securityContext: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ "ALL" ]
+  seccompProfile:
+    type: RuntimeDefault
 
 # Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
-initContainerSecurityContext: {}
+initContainerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ "ALL" ]
+  seccompProfile:
+    type: RuntimeDefault
+
+# Optional init container that can change the permissions to match the security context settings.
+# Use when you have existing persistent volumes with mismatching permissions.
+initContainerDataPermissions:
+  enabled: false
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
 
 #############################
 # Scheduling Configurations #
@@ -536,9 +563,22 @@ jobs:
   # Time in seconds before deleting finished pods
   ttlSecondsAfterFinished: 300
   # podSecurityContext defines privilege and access control settings for all the job pods
-  podSecurityContext: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
   # securityContext defines privilege and access control settings for all the job containers
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
   # resources defines resource requests and limits for all the job containers
   resources:
     limits:
@@ -739,13 +779,40 @@ proxy:
   ###################################
 
   # Defines privilege and access control settings for the proxy pods.
-  podSecurityContext: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
 
   # Defines privilege and access control settings for the proxy containers.
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
 
   # Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
-  initContainerSecurityContext: {}
+  initContainerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Optional init container that can change the permissions to match the security context settings.
+  # Use when you have existing persistent volumes with mismatching permissions.
+  initContainerDataPermissions:
+    enabled: false
+    securityContext:
+      runAsNonRoot: false
+      runAsUser: 0
 
   #############################
   # Scheduling Configurations #

@@ -10,8 +10,9 @@ TODO: short section about the most notable changes (decoupling, naming, plugins,
 
 TODO: decide how detailed we want this to be
 
-- Updated the chart to require Kubernetes version 1.24+
+- Updated the chart to require Kubernetes version 1.26+
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
+- Enabled security context by default for all pods and containers
 - Renamed `extraLabels` to just `labels`
 - Renamed GraphDB storage PVC template name prefix to `storage` and server import folder to `import`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
@@ -114,6 +115,7 @@ TODO: decide how detailed we want this to be
 - Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
 - Added `security.admin` for configuring the username and/or the password of the administrator user
 - Added `security.users` for inserting additional users into the default initial user.js configuration
+- Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
 
 ### Updates
 

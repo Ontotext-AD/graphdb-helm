@@ -7,7 +7,7 @@ description: GraphDB is a highly efficient, scalable and robust graph database w
 type: application
 version: 11.0.0
 appVersion: 10.6.2
-kubeVersion: ^1.24.0-0
+kubeVersion: ^1.26.0-0
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png
 maintainers:

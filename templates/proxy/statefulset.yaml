@@ -163,6 +163,32 @@ spec:
           {{ tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       initContainers:
+        {{- if .Values.proxy.initContainerDataPermissions.enabled }}
+        # Fixes the permissions in the storage volume to match the security context settings
+        - name: {{ .Chart.Name }}-fix-permissions
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GRAPHDB_USER_ID
+              value: {{ coalesce .Values.proxy.securityContext.runAsUser .Values.proxy.podSecurityContext.runAsUser | quote }}
+            - name: GRAPHDB_GROUP_ID
+              value: {{ coalesce .Values.proxy.securityContext.runAsGroup .Values.proxy.podSecurityContext.runAsGroup | quote }}
+          volumeMounts:
+            - name: storage
+              mountPath: /opt/graphdb/home
+          {{- with .Values.proxy.initContainerResources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.initContainerDataPermissions.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command: [ 'sh', '-c' ]
+          args:
+            - |
+              set -eu
+              echo "Changing ownership to ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID}"
+              chown -R ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID} /opt/graphdb/home
+        {{- end }}
         - name: {{ include "graphdb-proxy.chartName" . }}-provision-settings
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}

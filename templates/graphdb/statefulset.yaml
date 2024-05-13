@@ -131,6 +131,145 @@ spec:
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
+      initContainers:
+        {{- if and .Values.persistence.enabled .Values.initContainerDataPermissions.enabled }}
+        # Fixes the permissions in the storage volume to match the security context settings
+        - name: {{ .Chart.Name }}-fix-permissions
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GRAPHDB_USER_ID
+              value: {{ coalesce .Values.securityContext.runAsUser .Values.podSecurityContext.runAsUser | quote }}
+            - name: GRAPHDB_GROUP_ID
+              value: {{ coalesce .Values.securityContext.runAsGroup .Values.podSecurityContext.runAsGroup | quote }}
+          volumeMounts:
+            - name: storage
+              mountPath: /opt/graphdb/home
+          {{- with .Values.initContainerResources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.initContainerDataPermissions.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              set -eu
+              echo "Changing ownership to ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID}"
+              chown -R ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID} /opt/graphdb/home
+        {{- end }}
+        # PROVISION SETTINGS AND SECURITY
+        - name: {{ .Chart.Name }}-provision-settings
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GRAPHDB_PUBLIC_URL
+              value: {{ .Values.configuration.externalUrl }}
+            - name: GRAPHDB_HTTP_PORT
+              value: {{ .Values.containerPorts.http | quote }}
+            - name: GRAPHDB_RPC_PORT
+              value: {{ .Values.containerPorts.rpc | quote }}
+            {{- if .Values.cluster.existingClusterSecret }}
+            - name: GRAPHDB_CLUSTER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.cluster.existingClusterSecret }}
+                  key: {{ .Values.cluster.existingClusterSecretKey }}
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.persistence.enabled }}
+            - name: storage
+              mountPath: /opt/graphdb/home
+            {{- end }}
+            - name: graphdb-properties
+              mountPath: /tmp/graphdb/graphdb.properties
+              subPath: graphdb.properties
+            - name: graphdb-secret-properties
+              mountPath: /tmp/graphdb/graphdb-secrets.properties
+              subPath: graphdb-secrets.properties
+            {{- if .Values.extraConfiguration.properties.existingConfigmap }}
+            - name: graphdb-extra-properties
+              mountPath: /tmp/graphdb/graphdb-extra.properties
+              subPath: {{ .Values.extraConfiguration.properties.configmapKey }}
+            {{- end }}
+            {{- if .Values.extraConfiguration.properties.existingSecret }}
+            - name: graphdb-extra-secret-properties
+              mountPath: /tmp/graphdb/graphdb-extra-secret.properties
+              subPath: {{ .Values.extraConfiguration.properties.secretKey }}
+            {{- end }}
+            {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
+            - name: graphdb-initial-settings-config
+              mountPath: /tmp/graphdb/settings.js
+              subPath: {{ .Values.initialConfiguration.settings.configmapKey }}
+            {{- end }}
+            {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
+            - name: graphdb-initial-users-config
+              mountPath: /tmp/graphdb/users.js
+              subPath: {{ .Values.initialConfiguration.users.secretKey }}
+            {{- end }}
+          {{- with .Values.initContainerSecurityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.initContainerResources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              set -eu
+              set +x
+              mkdir -p /opt/graphdb/home/conf/ /opt/graphdb/home/data/ /opt/graphdb/home/jdbc-driver/
+
+              echo 'Configuring graphdb.properties'
+              echo "" > /opt/graphdb/home/conf/graphdb.properties
+
+              echo "Configuring GraphDB hostname: $(hostname --fqdn)"
+              cat << EOF >> /opt/graphdb/home/conf/graphdb.properties
+              ##### Configurations from initContainer #####"
+              graphdb.hostname=$(hostname --fqdn)
+              graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}
+              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}
+              EOF
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              cat /tmp/graphdb/graphdb-secrets.properties >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+
+              if [[ -n ${GRAPHDB_CLUSTER_SECRET:-""} ]]; then
+                echo "##### Override from existing cluster secret #####" >> /opt/graphdb/home/conf/graphdb.properties
+                (echo "graphdb.auth.token.secret=${GRAPHDB_CLUSTER_SECRET}" >> /opt/graphdb/home/conf/graphdb.properties) >/dev/null 2>&1
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
+                echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              if [[ -f /tmp/graphdb/graphdb-extra-secret.properties ]]; then
+                echo "##### Overrides from extra secret properties #####" >> /opt/graphdb/home/conf/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra-secret.properties >> /opt/graphdb/home/conf/graphdb.properties
+                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              fi
+
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
+                echo "Provisioning users with users.js file..."
+                cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
+              fi
+
+              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/settings.js && -f /tmp/graphdb/settings.js ]]; then
+                echo "Provisioning settings with settings.js file..."
+                cp /tmp/graphdb/settings.js /opt/graphdb/home/data/settings.js
+              fi
+
+              echo 'Done'
+        {{- with .Values.extraInitContainers }}
+          {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}
@@ -199,143 +338,4 @@ spec:
           {{- end }}
         {{- with .Values.extraContainers }}
           {{ tpl (toYaml .) $ | nindent 8 }}
-        {{- end }}
-      initContainers:
-        {{- if and .Values.persistence.enabled .Values.initContainerDataPermissions.enabled }}
-        # Fixes the permissions in the storage volume to match the security context settings
-        - name: {{ .Chart.Name }}-fix-permissions
-          image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: GRAPHDB_USER_ID
-              value: {{ coalesce .Values.securityContext.runAsUser .Values.podSecurityContext.runAsUser | quote }}
-            - name: GRAPHDB_GROUP_ID
-              value: {{ coalesce .Values.securityContext.runAsGroup .Values.podSecurityContext.runAsGroup | quote }}
-          volumeMounts:
-            - name: storage
-              mountPath: /opt/graphdb/home
-          {{- with .Values.initContainerResources }}
-          resources: {{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.initContainerDataPermissions.securityContext }}
-          securityContext: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          command: [ 'sh', '-c' ]
-          args:
-            - |
-              set -eu
-              echo "Changing ownership to ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID}"
-              chown -R ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID} /opt/graphdb/home
-        {{- end }}
-        # PROVISION SETTINGS AND SECURITY
-        - name: {{ .Chart.Name }}-provision-settings
-          image: {{ include "graphdb.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: GRAPHDB_PUBLIC_URL
-              value: {{ .Values.configuration.externalUrl }}
-            - name: GRAPHDB_HTTP_PORT
-              value: {{ .Values.containerPorts.http | quote }}
-            - name: GRAPHDB_RPC_PORT
-              value: {{ .Values.containerPorts.rpc | quote }}
-            {{- if .Values.cluster.existingClusterSecret }}
-            - name: GRAPHDB_CLUSTER_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.cluster.existingClusterSecret }}
-                  key: {{ .Values.cluster.existingClusterSecretKey }}
-            {{- end }}
-          volumeMounts:
-            {{- if .Values.persistence.enabled }}
-            - name: storage
-              mountPath: /opt/graphdb/home
-            {{- end }}
-            - name: graphdb-properties
-              mountPath: /tmp/graphdb/graphdb.properties
-              subPath: graphdb.properties
-            - name: graphdb-secret-properties
-              mountPath: /tmp/graphdb/graphdb-secrets.properties
-              subPath: graphdb-secrets.properties
-            {{- if .Values.extraConfiguration.properties.existingConfigmap }}
-            - name: graphdb-extra-properties
-              mountPath: /tmp/graphdb/graphdb-extra.properties
-              subPath: {{ .Values.extraConfiguration.properties.configmapKey }}
-            {{- end }}
-            {{- if .Values.extraConfiguration.properties.existingSecret }}
-            - name: graphdb-extra-secret-properties
-              mountPath: /tmp/graphdb/graphdb-extra-secret.properties
-              subPath: {{ .Values.extraConfiguration.properties.secretKey }}
-            {{- end }}
-            {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
-            - name: graphdb-initial-settings-config
-              mountPath: /tmp/graphdb/settings.js
-              subPath: {{ .Values.initialConfiguration.settings.configmapKey }}
-            {{- end }}
-            {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
-            - name: graphdb-initial-users-config
-              mountPath: /tmp/graphdb/users.js
-              subPath: {{ .Values.initialConfiguration.users.secretKey }}
-            {{- end }}
-          {{- with .Values.initContainerSecurityContext }}
-          securityContext: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.initContainerResources }}
-          resources: {{ toYaml . | nindent 12 }}
-          {{- end }}
-          command: [ 'sh', '-c' ]
-          args:
-            - |
-              set -eu
-              set +x
-              mkdir -p /opt/graphdb/home/conf/ /opt/graphdb/home/data/ /opt/graphdb/home/jdbc-driver/
-
-              echo 'Configuring graphdb.properties'
-              echo "" > /opt/graphdb/home/conf/graphdb.properties
-
-              echo "Configuring GraphDB hostname: $(hostname --fqdn)"
-              cat << EOF >> /opt/graphdb/home/conf/graphdb.properties
-              ##### Configurations from initContainer #####"
-              graphdb.hostname=$(hostname --fqdn)
-              graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}
-              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}
-              EOF
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
-
-              cat /tmp/graphdb/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
-
-              cat /tmp/graphdb/graphdb-secrets.properties >> /opt/graphdb/home/conf/graphdb.properties
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
-
-              if [[ -n ${GRAPHDB_CLUSTER_SECRET:-""} ]]; then
-                echo "##### Override from existing cluster secret #####" >> /opt/graphdb/home/conf/graphdb.properties
-                (echo "graphdb.auth.token.secret=${GRAPHDB_CLUSTER_SECRET}" >> /opt/graphdb/home/conf/graphdb.properties) >/dev/null 2>&1
-                echo "" >> /opt/graphdb/home/conf/graphdb.properties
-              fi
-
-              if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
-                echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties
-                cat /tmp/graphdb/graphdb-extra.properties >> /opt/graphdb/home/conf/graphdb.properties
-                echo "" >> /opt/graphdb/home/conf/graphdb.properties
-              fi
-
-              if [[ -f /tmp/graphdb/graphdb-extra-secret.properties ]]; then
-                echo "##### Overrides from extra secret properties #####" >> /opt/graphdb/home/conf/graphdb.properties
-                cat /tmp/graphdb/graphdb-extra-secret.properties >> /opt/graphdb/home/conf/graphdb.properties
-                echo "" >> /opt/graphdb/home/conf/graphdb.properties
-              fi
-
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
-                echo "Provisioning users with users.js file..."
-                cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
-              fi
-
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/settings.js && -f /tmp/graphdb/settings.js ]]; then
-                echo "Provisioning settings with settings.js file..."
-                cp /tmp/graphdb/settings.js /opt/graphdb/home/data/settings.js
-              fi
-
-              echo 'Done'
-        {{- with .Values.extraInitContainers }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}

@@ -70,7 +70,7 @@ spec:
             - name: cluster-config
               mountPath: /tmp/cluster-config/cluster-config.json
               subPath: {{ .Values.cluster.existingConfigmapKey }}
-          command: ['bash']
+          command: ["bash"]
           args:
             - "/tmp/utils/update-cluster.sh"
             - "patchCluster"

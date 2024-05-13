@@ -65,7 +65,7 @@ spec:
               mountPath: /tmp
             - name: graphdb-utils
               mountPath: /tmp/utils
-          command: ['bash']
+          command: ["bash"]
           args:
             - "/tmp/utils/update-cluster.sh"
             - "removeNodes"

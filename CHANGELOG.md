@@ -52,6 +52,7 @@ TODO: decide how detailed we want this to be
   and `health.max.query.time.seconds`
 - Removed `default.min.distinct.threshold` from the default `defaultJavaArguments` values
 - Moved `provisioningUsername` and `provisioningPassword` under `security.provisioner`
+- Moved `persistence.volumeClaimTemplateSpec` to `persistence.volumeClaimTemplate.spec`
 
 ### New
 
@@ -62,6 +63,7 @@ TODO: decide how detailed we want this to be
 - Added `conpfiguration.properties` and `proxy.configuration.properties` for inserting additional GraphDB configurations in the properties configmaps
 - Added `image.sha` to optionally provide an expected SHA checksum of the image
 - Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
+- Added `persistence.emptyDir` and `proxy.persistence.emptyDir` configurations for an emptyDir volume that will be used when the persistence is disabled
 - Added new configuration options for the default ingress `ingress`:
   - Ability to override the `host` and `path` for GraphDB from `configuration.host` and `configuration.path`
   - Changing the `pathType`
@@ -107,8 +109,8 @@ TODO: decide how detailed we want this to be
 - Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
 - Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
 - Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
-- Added configurations for extra `labels` and `annotations` for all persistent volume claim templates: `persistence`, `proxy.persistence`
-  and `import.volumeMount`
+- Added configurations for extra `labels` and `annotations` for all persistent volume claim
+  templates: `persistence.volumeClaimTemplate`, `proxy.persistence.volumeClaimTemplate` and `import.volumeMount.volumeClaimTemplate`
 - Added `jobs.backoffLimit` for configuring the retry count for all jobs
 - Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
 - Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs

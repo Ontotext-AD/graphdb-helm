@@ -306,14 +306,26 @@ headlessService:
 ##############################
 
 persistence:
+  # Toggles the persistence of GraphDB data.
+  # If enabled, the StatefulSet will use a PVC template.
+  # If disabled, it fallbacks to an emptyDir volume.
   enabled: true
-  labels: {}
-  annotations: {}
-  volumeClaimTemplateSpec:
-    accessModes: [ "ReadWriteOnce" ]
-    resources:
-      requests:
-        storage: 5Gi
+  # Configurations for PVC based persistence
+  volumeClaimTemplate:
+    # Extra labels to add to the PVC template.
+    labels: {}
+    # Extra annotations to add to the PVC template.
+    annotations: {}
+    # Specification for a PVC to be created by the StatefulSet
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi
+  # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
+  # Used when the persistence is disabled.
+  emptyDir:
+    sizeLimit: 1G
 
 ##############################
 # Statefulset Configurations #
@@ -537,13 +549,14 @@ import:
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   volumeMount:
     enabled: false
-    labels: {}
-    annotations: {}
-    volumeClaimTemplateSpec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 10Gi
+    volumeClaimTemplate:
+      labels: {}
+      annotations: {}
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
 
 #######################################
 ## Custom Repositories Configurations #
@@ -721,15 +734,26 @@ proxy:
   # Persistence for storing GraphDB proxy log files.
   # See https://kubernetes.io/docs/concepts/storage/persistent-volumes/
   persistence:
-    # Enables or disables the proxy's persistence
+    # Toggles the persistence of GraphDB proxy data.
+    # If enabled, the StatefulSet will use a PVC template.
+    # If disabled, it fallbacks to an emptyDir volume.
     enabled: true
-    labels: {}
-    annotations: {}
-    volumeClaimTemplateSpec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 500Mi
+    # Configurations for PVC based persistence
+    volumeClaimTemplate:
+      # Extra labels to add to the PVC template.
+      labels: {}
+      # Extra annotations to add to the PVC template.
+      annotations: {}
+      # Specification for a PVC to be created by the StatefulSet
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 500Mi
+    # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
+    # Used when the persistence is disabled.
+    emptyDir:
+      sizeLimit: 1Gi
 
   ##############################
   # Statefulset Configurations #

@@ -23,26 +23,26 @@ spec:
     {{- if .Values.persistence.enabled }}
     - metadata:
         name: storage
-        {{- with .Values.persistence.labels }}
+        {{- with .Values.persistence.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.persistence.annotations }}
+        {{- with .Values.persistence.volumeClaimTemplate.annotations }}
         annotations: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
       spec:
-        {{- toYaml .Values.persistence.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.persistence.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- if .Values.import.volumeMount.enabled }}
     - metadata:
         name: import
-        {{- with .Values.import.volumeMount.labels }}
+        {{- with .Values.import.volumeMount.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.import.volumeMount.annotations }}
+        {{- with .Values.import.volumeMount.volumeClaimTemplate.annotations }}
         annotations: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
       spec:
-        {{- toYaml .Values.import.volumeMount.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.import.volumeMount.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- if .Values.extraVolumeClaimTemplates }}
       {{- tpl (toYaml .) $ | nindent 4 }}
@@ -76,6 +76,10 @@ spec:
       dnsPolicy: {{ .Values.dnsPolicy }}
       {{- end }}
       volumes:
+        {{- if not .Values.persistence.enabled }}
+        - name: storage
+          emptyDir: {{ .Values.persistence.emptyDir | toYaml | nindent 12 }}
+        {{- end }}
         - name: graphdb-properties
           configMap:
             name: {{ include "graphdb.fullname.configmap.properties" . }}
@@ -180,10 +184,8 @@ spec:
                   key: {{ .Values.cluster.existingClusterSecretKey }}
             {{- end }}
           volumeMounts:
-            {{- if .Values.persistence.enabled }}
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- end }}
             - name: graphdb-properties
               mountPath: /tmp/graphdb/graphdb.properties
               subPath: graphdb.properties
@@ -303,10 +305,8 @@ spec:
           env: {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if .Values.persistence.enabled }}
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- end }}
             {{- if .Values.license.existingSecret }}
             - name: graphdb-license
               mountPath: /opt/graphdb/home/conf/graphdb.license

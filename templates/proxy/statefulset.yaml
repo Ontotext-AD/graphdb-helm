@@ -24,14 +24,14 @@ spec:
     {{- if .Values.proxy.persistence.enabled }}
     - metadata:
         name: storage
-        {{- with .Values.proxy.persistence.labels }}
+        {{- with .Values.proxy.persistence.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.proxy.persistence.annotations }}
+        {{- with .Values.proxy.persistence.volumeClaimTemplate.annotations }}
         annotations: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
       spec:
-        {{- toYaml .Values.proxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.proxy.persistence.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- if .Values.proxy.extraVolumeClaimTemplates }}
       {{- tpl (toYaml .) $ | nindent 4 }}
@@ -64,6 +64,10 @@ spec:
       dnsPolicy: {{ .Values.proxy.dnsPolicy }}
       {{- end }}
       volumes:
+        {{- if not .Values.proxy.persistence.enabled }}
+        - name: storage
+          emptyDir: {{ .Values.proxy.persistence.emptyDir | toYaml | nindent 12 }}
+        {{- end }}
         - name: graphdb-proxy-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
@@ -158,10 +162,8 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if .Values.proxy.persistence.enabled }}
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- end }}
             - name: graphdb-proxy-properties
               mountPath: /tmp/graphdb.properties
               subPath: graphdb.properties
@@ -256,10 +258,8 @@ spec:
               {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
-            {{- if .Values.proxy.persistence.enabled }}
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- end }}
             {{- if .Values.proxy.logging.logback.existingConfigmap }}
             - name: graphdb-proxy-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml

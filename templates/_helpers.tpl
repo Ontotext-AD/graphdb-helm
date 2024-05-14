@@ -18,9 +18,9 @@ Renders the container image for GraphDB
   {{- if $registry -}}
     {{- $image = printf "%s/%s" $registry $image -}}
   {{- end -}}
-  {{/* Add SHA if provided */}}
-  {{- if .Values.image.sha -}}
-    {{- $image = printf "%s@sha256:%s" $image .Values.image.sha -}}
+  {{/* Add SHA digest if provided */}}
+  {{- if .Values.image.digest -}}
+    {{- $image = printf "%s@%s" $image .Values.image.digest -}}
   {{- end -}}
   {{- $image -}}
 {{- end -}}

@@ -61,7 +61,7 @@ TODO: decide how detailed we want this to be
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
 - Added `conpfiguration.properties` and `proxy.configuration.properties` for inserting additional GraphDB configurations in the properties configmaps
-- Added `image.sha` to optionally provide an expected SHA checksum of the image
+- Added `image.digest` to optionally provide an expected digest of the image
 - Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
 - Added `persistence.emptyDir` and `proxy.persistence.emptyDir` configurations for an emptyDir volume that will be used when the persistence is disabled
 - Added new configuration options for the default ingress `ingress`:

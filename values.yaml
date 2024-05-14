@@ -519,7 +519,7 @@ extraContainers: []
 
 # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
 podDisruptionBudget:
-  enabled: false
+  enabled: true
   minAvailable: 51%
   maxUnavailable: ""
 
@@ -943,7 +943,7 @@ proxy:
 
   # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
   podDisruptionBudget:
-    enabled: false
+    enabled: true
     minAvailable: 51%
     maxUnavailable: ""
 

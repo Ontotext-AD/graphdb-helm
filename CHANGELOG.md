@@ -138,6 +138,7 @@ TODO: decide how detailed we want this to be
 - Ejected the default service account token in the proxy pods
 - Overhauled NOTES.txt to be more helpful
 - Added default resource limits and requests for all init containers and provisioning jobs
+- PodDisruptionBudget are enabled by default for both GraphDB and GraphDB proxy
 
 ## Version 10.6.0-R2
 

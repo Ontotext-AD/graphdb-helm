@@ -93,16 +93,16 @@ spec:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
+      nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.affinity }}
-      affinity: {{- toYaml . | nindent 8 }}
+      affinity: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
+      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- toYaml . | nindent 8 }}
+      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.proxy.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}

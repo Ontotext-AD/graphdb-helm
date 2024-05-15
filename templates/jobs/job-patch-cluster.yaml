@@ -32,7 +32,7 @@ spec:
           emptyDir: {{ .Values.jobs.persistence.emptyDir | toYaml | nindent 12 }}
         - name: cluster-config
           configMap:
-            name: {{ (tpl .Values.cluster.existingConfig .) | default (printf "%s-cluster" (include "graphdb.fullname" .)) }}
+            name: {{ (tpl .Values.cluster.config.existingConfigmap .) | default (printf "%s-cluster" (include "graphdb.fullname" .)) }}
         - name: graphdb-utils
           configMap:
             name: {{ include "graphdb.fullname.configmap.utils" . }}
@@ -69,7 +69,7 @@ spec:
               mountPath: /tmp/utils
             - name: cluster-config
               mountPath: /tmp/cluster-config/cluster-config.json
-              subPath: {{ .Values.cluster.existingConfigmapKey }}
+              subPath: {{ .Values.cluster.config.configmapKey }}
           command: ["bash"]
           args:
             - "/tmp/utils/update-cluster.sh"

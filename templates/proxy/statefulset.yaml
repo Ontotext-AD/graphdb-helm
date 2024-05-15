@@ -45,7 +45,7 @@ spec:
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/configmap: {{ include (print .Template.BasePath "/proxy/configmap.yaml") . | sha256sum }}
+        checksum/configmap-environment: {{ include (print .Template.BasePath "/proxy/configmap-environment.yaml") . | sha256sum }}
         checksum/configmap-properties: {{ include (print .Template.BasePath "/proxy/configmap-properties.yaml") . | sha256sum }}
         checksum/secret-properties: {{ include (print .Template.BasePath "/proxy/secret-properties.yaml") . | sha256sum }}
         {{- with .Values.proxy.podAnnotations }}
@@ -74,20 +74,20 @@ spec:
         - name: graphdb-proxy-secret-properties
           secret:
             secretName: {{ include "graphdb-proxy.fullname.secret.properties" . }}
-        {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
+        {{- if .Values.proxy.configuration.extraProperties.existingConfigmap }}
         - name: graphdb-proxy-extra-properties
           configMap:
-            name: {{ tpl .Values.proxy.extraConfiguration.properties.existingConfigmap . }}
+            name: {{ tpl .Values.proxy.configuration.extraProperties.existingConfigmap . }}
         {{- end }}
-        {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
+        {{- if .Values.proxy.configuration.extraProperties.existingSecret }}
         - name: graphdb-proxy-extra-secret-properties
           secret:
-            secretName: {{ tpl .Values.proxy.extraConfiguration.properties.existingSecret . }}
+            secretName: {{ tpl .Values.proxy.configuration.extraProperties.existingSecret . }}
         {{- end }}
-      {{- if .Values.proxy.logging.logback.existingConfigmap }}
+      {{- if .Values.proxy.configuration.logback.existingConfigmap }}
         - name: graphdb-proxy-logback-config
           configMap:
-            name: {{ tpl .Values.proxy.logging.logback.existingConfigmap . }}
+            name: {{ tpl .Values.proxy.configuration.logback.existingConfigmap . }}
       {{- end }}
       {{- with .Values.proxy.extraVolumes }}
         {{- tpl (toYaml .) $ | nindent 8 }}
@@ -148,12 +148,12 @@ spec:
               value: {{ .Values.proxy.containerPorts.http | quote }}
             - name: GRAPHDB_PROXY_RPC_PORT
               value: {{ .Values.proxy.containerPorts.rpc | quote }}
-            {{- if .Values.cluster.existingClusterSecret }}
+            {{- if .Values.cluster.token.existingSecret }}
             - name: GRAPHDB_CLUSTER_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.cluster.existingClusterSecret }}
-                  key: {{ .Values.cluster.existingClusterSecretKey }}
+                  name: {{ .Values.cluster.token.existingSecret }}
+                  key: {{ .Values.cluster.token.secretKey }}
             {{- end }}
           {{- with .Values.proxy.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
@@ -170,15 +170,15 @@ spec:
             - name: graphdb-proxy-secret-properties
               mountPath: /tmp/graphdb/graphdb-secrets.properties
               subPath: graphdb-secrets.properties
-            {{- if .Values.proxy.extraConfiguration.properties.existingConfigmap }}
+            {{- if .Values.proxy.configuration.extraProperties.existingConfigmap }}
             - name: graphdb-proxy-extra-properties
               mountPath: /tmp/graphdb/graphdb-extra.properties
-              subPath: {{ .Values.proxy.extraConfiguration.properties.configmapKey }}
+              subPath: {{ .Values.proxy.configuration.extraProperties.configmapKey }}
             {{- end }}
-            {{- if .Values.proxy.extraConfiguration.properties.existingSecret }}
+            {{- if .Values.proxy.configuration.extraProperties.existingSecret }}
             - name: graphdb-proxy-extra-secret-properties
               mountPath: /tmp/graphdb/graphdb-extra-secret.properties
-              subPath: {{ .Values.proxy.extraConfiguration.properties.secretKey }}
+              subPath: {{ .Values.proxy.configuration.extraProperties.secretKey }}
             {{- end }}
           command: [ "bash", "-c" ]
           args:
@@ -242,7 +242,7 @@ spec:
           {{- end }}
           envFrom:
             - configMapRef:
-                name: {{ include "graphdb-proxy.fullname" . }}
+                name: {{ include "graphdb-proxy.fullname.configmap.environment" . }}
             {{- with .Values.proxy.extraEnvFrom }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
@@ -260,10 +260,10 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- if .Values.proxy.logging.logback.existingConfigmap }}
+            {{- if .Values.proxy.configuration.logback.existingConfigmap }}
             - name: graphdb-proxy-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
-              subPath: {{ .Values.proxy.logging.logback.configmapKey }}
+              subPath: {{ .Values.proxy.configuration.logback.configmapKey }}
             {{- end }}
             {{- with .Values.proxy.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}

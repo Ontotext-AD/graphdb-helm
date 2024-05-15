@@ -1,4 +1,4 @@
-{{- if .Values.repositories.repositoriesConfigmap }}
+{{- if .Values.repositories.existingConfigmap }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -32,7 +32,7 @@ spec:
           emptyDir: {{ .Values.jobs.persistence.emptyDir | toYaml | nindent 12 }}
         - name: repositories-config
           configMap:
-            name: {{ .Values.repositories.repositoriesConfigmap }}
+            name: {{ .Values.repositories.existingConfigmap }}
         - name: graphdb-utils
           configMap:
             name: {{ include "graphdb.fullname.configmap.utils" . }}

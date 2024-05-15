@@ -1,11 +1,9 @@
-logging:
+configuration:
   logback:
     existingConfigmap: "graphdb-custom-logback-config"
-    configmapKey: "logback.xml"
 
-# You can use the same configuration for the proxy as well
+# You can use the same Logback configuration for the proxy as well
 proxy:
-  logging:
+  configuration:
     logback:
       existingConfigmap: "graphdb-custom-logback-config"
-      configmapKey: "logback.xml"

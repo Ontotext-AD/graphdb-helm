@@ -56,6 +56,10 @@ app.kubernetes.io/name: {{ include "graphdb-proxy.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{- define "graphdb-proxy.fullname.configmap.environment" -}}
+  {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "environment" -}}
+{{- end -}}
+
 {{- define "graphdb-proxy.fullname.configmap.properties" -}}
   {{- printf "%s-%s" (include "graphdb-proxy.fullname" .) "properties" -}}
 {{- end -}}

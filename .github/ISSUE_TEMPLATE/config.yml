@@ -1,0 +1,6 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: GraphDB Support
+    url: graphdb-support@ontotext.com
+    about: Please, report any type of vulnerability issues via email

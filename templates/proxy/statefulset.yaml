@@ -131,7 +131,7 @@ spec:
           {{- with .Values.proxy.initContainerDataPermissions.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          command: [ "sh", "-c" ]
+          command: [ "bash", "-c" ]
           args:
             - |
               set -eu
@@ -180,7 +180,7 @@ spec:
               mountPath: /tmp/graphdb/graphdb-extra-secret.properties
               subPath: {{ .Values.proxy.extraConfiguration.properties.secretKey }}
             {{- end }}
-          command: [ "sh", "-c" ]
+          command: [ "bash", "-c" ]
           args:
             - |
               set -eu

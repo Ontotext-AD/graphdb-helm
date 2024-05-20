@@ -158,7 +158,7 @@ spec:
           {{- with .Values.initContainerDataPermissions.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          command: [ "sh", "-c" ]
+          command: [ "bash", "-c" ]
           args:
             - |
               set -eu
@@ -218,7 +218,7 @@ spec:
           {{- with .Values.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
-          command: [ "sh", "-c" ]
+          command: [ "bash", "-c" ]
           args:
             - |
               set -eu

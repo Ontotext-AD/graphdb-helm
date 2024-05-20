@@ -324,7 +324,6 @@ persistence:
           storage: 5Gi
   # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
   # Used when the persistence is disabled.
-  # Note that you'd have to update resources.limits.ephemeral-storage to match your needs
   emptyDir:
     sizeLimit: 1Gi
 
@@ -437,22 +436,18 @@ topologySpreadConstraints: []
 resources:
   limits:
     memory: 2Gi
-    ephemeral-storage: 1Mi
   requests:
     memory: 2Gi
     cpu: 500m
-    ephemeral-storage: 1Mi
 
 # initContainerResources defines resource requests and limits for the node containers provisioning configurations for GraphDB.
 initContainerResources:
   limits:
     memory: 16Mi
     cpu: 50m
-    ephemeral-storage: 1Mi
   requests:
     memory: 16Mi
     cpu: 50m
-    ephemeral-storage: 1Mi
 
 #########################
 # Probes Configurations #
@@ -753,7 +748,6 @@ proxy:
             storage: 500Mi
     # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
     # Used when the persistence is disabled.
-    # Note that you'd have to update proxy.resources.limits.ephemeral-storage to match your needs
     emptyDir:
       sizeLimit: 500Mi
 
@@ -863,22 +857,18 @@ proxy:
   resources:
     limits:
       memory: 1500Mi
-      ephemeral-storage: 1Mi
     requests:
       memory: 1500Mi
       cpu: 100m
-      ephemeral-storage: 1Mi
 
   # Defines resource requests and limits for the containers provisioning configurations for GraphDB.
   initContainerResources:
     limits:
       memory: 16Mi
       cpu: 50m
-      ephemeral-storage: 1Mi
     requests:
       memory: 16Mi
       cpu: 50m
-      ephemeral-storage: 1Mi
 
   #########################
   # Probes Configurations #

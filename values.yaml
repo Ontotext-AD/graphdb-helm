@@ -50,7 +50,7 @@ image:
   # If specified, overrides Chart.AppVersion
   tag: ""
   # Expected SHA256 digest of the used GraphDB image, e.g. "sha256@abc"
-  digest: "sha256:aabf1283664b1cbeeb9880025bbea6820c4a7f5a3a54e5940534e916b8829035"
+  digest: ""
   # Defines the policy for pulling images
   pullPolicy: IfNotPresent
   # Secrets for pulling GraphDB's Docker image from secured registries.

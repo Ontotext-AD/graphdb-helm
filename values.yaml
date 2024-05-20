@@ -69,8 +69,7 @@ replicas: 1
 # GraphDB Configurations #
 ##########################
 
-# License configurations.
-# License is needed for GraphDB Enterprise Edition features
+# License is required for using GraphDB Enterprise Edition features.
 license:
   # Reference to a secret containing 'graphdb.license' file to be mounted in the GraphDB instances.
   existingSecret: ""
@@ -87,11 +86,25 @@ configuration:
   # Ingress controller implementation.
   externalUrl: http://graphdb.127.0.0.1.nip.io/
 
-  # GraphDB properties to insert in the default graphdb.properties configmap
+  # GraphDB properties to insert in the default graphdb.properties ConfigMap
   properties: {}
 
-  # Sensitive GraphDB properties to insert in the default graphdb.properties secret
+  # Sensitive GraphDB properties to insert in the default graphdb.properties Secret
+  # Note: Consider mounting existing Secret objects as environment variables or files
   secretProperties: {}
+
+  # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
+  # in the default configmap and secret resources.
+  extraProperties:
+    # Reference to an existing ConfigMap resource containing GraphDB configurations as a graphdb.properties file
+    existingConfigmap: ""
+    # Key in the existing ConfigMap that holds the properties for GraphDB
+    configmapKey: graphdb.properties
+
+    # Reference to an existing Secret resource containing sensitive GraphDB configurations as a graphdb.properties file
+    existingSecret: ""
+    # Key in the existing Secret that holds the properties for GraphDB
+    secretKey: graphdb.properties
 
   # Default Java arguments with which node instances will be launched.
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
@@ -101,45 +114,26 @@ configuration:
   # Java arguments to append after defaultJavaArguments, use to avoid overriding the default values
   javaArguments: ""
 
-#####################################
-# Additional GraphDB Configurations #
-#####################################
-
-# Additional configurations that will be provisioned to GraphDB
-extraConfiguration:
-  # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
-  # in the default configmap and secret resources.
-  properties:
-    # Reference to an existing ConfigMap resource containing GraphDB configurations
-    existingConfigmap: ""
-    # Key in the existing ConfigMap that holds the properties for GraphDB
-    configmapKey: graphdb.properties
-
-    # Reference to an existing Secret resource containing sensitive GraphDB configurations
-    existingSecret: ""
-    # Key in the existing Secret that holds the properties for GraphDB
-    secretKey: graphdb.properties
-
-###############################################
-# Initial Provisioning GraphDB Configurations #
-###############################################
-
-initialConfiguration:
-  settings:
-    existingConfigmap: ""
-    configmapKey: settings.js
-  users:
-    existingSecret: ""
-    secretKey: users.js
-
-#################################
-# GraphDB Logging Configuration #
-#################################
-
-logging:
+  # Configurations for GraphDB's Logback
   logback:
+    # Reference to an existing ConfigMap containing a Logback XML configuration
     existingConfigmap: ""
+    # Key in the existing ConfigMap that maps to the Logback XML configuration
     configmapKey: logback.xml
+
+  # Configurations for provisioning an initial settings.js to GraphDB.
+  # Note: Once provisioned, changes made to settings.js won't be re-applied.
+  #
+  # There are three cases to be aware of:
+  # - By default, no settings.js configuration is provisioned initially, so GraphDB will initialize its default one.
+  # - If the security is enabled, a default initial settings.js will be provided to GraphDB, see files/config/settings.js
+  # - If a custom existing settings.js is provided, it will be used no matter if the security is enabled or not.
+  #
+  initialSettings:
+    # Reference to an existing ConfigMap with initial GraphDB settings.js to provision.
+    existingConfigmap: ""
+    # Key in the settings ConfigMap that maps to the settings.js
+    configmapKey: settings.js
 
 ###################################
 # GraphDB Security Configurations #
@@ -147,12 +141,17 @@ logging:
 
 security:
   enabled: false
-  # Administrator user with ROLE_ADMIN authority
+
+  # Administrator user with ROLE_ADMIN authority.
+  # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   admin:
     username: admin
+    # Define an initial password for the administrator user.
     # If the password is not specified, it will use the default one for GraphDB which is "root"
-    password: ""
+    initialPassword: ""
+
   # Provisioning user with ROLE_ADMIN authority
+  # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly.
   provisioner:
     # The following user will be created in the default initial users.js and used in the cluster provisioning
@@ -161,36 +160,54 @@ security:
     # Reference to a basic authentication token of an existing user to use for provisioning instead of the default user in the initial user.js
     # Note that the user must already exist in GraphDB for this to work properly.
     existingSecret: ""
-    # Field name in the secret holding the authentication token.
+    # Key in the secret holding the authentication token.
     tokenKey: GRAPHDB_AUTH_TOKEN
-  # Additional users to insert in the default users.js (see files/config/users.js)
-  # Check the default user.js syntax for details.
-  # Note that this won't be applied if you provide a custom Secret object with user.js via initialConfiguration.users.existingSecret
-  users: {}
+
+  # Initial users to provision to GraphDB before starting for the first time.
+  # Note: If the security has already been enabled, this won't be applied.
+  #
+  # There are three cases to be aware of:
+  # - By default, no users.js configuration is provisioned initially, so GraphDB will initialize its default one.
+  # - If the security is enabled, a default initial users.js will be provided to GraphDB, see files/config/users.js
+  # - If a custom existing users.js is provided, it will be used no matter if the security is enabled or not.
+  initialUsers:
+    # Additional users to insert in the default users.js (see files/config/users.js) when the security is enabled for the first time.
+    # Check the default user.js syntax for details.
+    # Note that this won't be applied if you provide a custom Secret object with user.js via existingSecret
+    users: {}
+    # Existing initial users.js to provision to GraphDB. Overrides any users configured in users
+    # Note that this is provisioned just once and any updates on the Secret won't be re-applied on consecutive upgrades.
+    existingSecret: ""
+    # Key in the Secret object mapping to users.js
+    secretKey: users.js
 
 ##################################
 # GraphDB Cluster Configurations #
 ##################################
 
 cluster:
-  # A secret used for secure communication amongst the nodes in the cluster.
-  clusterSecret: s3cr37
-  # Reference to an existing Secret that contains the cluster secret token. This overrides cluster.clusterSecret
-  existingClusterSecret: ""
-  # Key in the existing Secret that holds the secret cluster token for GraphDB
-  existingClusterSecretKey: ""
+  # Configurations for shared token authentication in the cluster
+  token:
+    # A secret token used for secure communication amongst the nodes in the cluster.
+    secret: s3cr37
+    # Reference to an existing Secret that contains the cluster secret token. This overrides cluster.clusterToken
+    existingSecret: ""
+    # Key in the existing Secret that holds the secret cluster token for GraphDB
+    secretKey: ""
 
   # Timeout for the cluster creation CURL query.
   # Note: By default helm waits for Kubernetes commands to complete for 5 minutes. You can increase that by adding "--timeout 10m" to the helm command.
   clusterCreationTimeout: 60
-  # Use a custom JSON configuration when creating the cluster, see https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
-  # This setting overrides the values under cluster.config
-  existingConfig: ""
-  # The key in the existing cluster config configmap (if specified) that contains the cluster configuration JSON
-  existingConfigmapKey: cluster-config.json
+
   # Cluster configuration parameters:
   # Refer to https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html#creation-parameters
   config:
+    # Reference to a ConfigMap with a custom JSON configuration to use when creating the cluster.
+    # This setting overrides the values under cluster.config
+    existingConfigmap: ""
+    # The key in the cluster config configmap that contains the cluster configuration JSON
+    configmapKey: cluster-config.json
+
     # The minimum wait time in milliseconds for a heartbeat from a leader.
     electionMinTimeout: 8000
     # The variable portion of each waiting period in milliseconds for a heartbeat.
@@ -203,7 +220,9 @@ cluster:
     transactionLogMaximumSizeGB: 50
     # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
     verificationTimeout: 1500
+
   # Jobs configurations for to the cluster automation
+  # Note that there are common configurations under jobs.<> as wel
   jobs:
     createCluster:
       # Enables or disables the cluster creation Job
@@ -562,7 +581,7 @@ repositories:
   # Optional configmap containing repository configuration ttl file(s).
   # GraphDB will automatically create repositories with the provided repositories configuration files
   # Each key in the existing configmap will be treated as the config.ttl of a repository
-  repositoriesConfigmap: ""
+  existingConfigmap: ""
 
 ######################################################################################
 #                                Job Configurations                                  #
@@ -636,6 +655,19 @@ proxy:
     # Sensitive GraphDB properties to insert in the default graphdb.properties proxy Secret
     secretProperties: {}
 
+    # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
+    # in the default configmap and secret resources.
+    extraProperties:
+      # Reference to an existing ConfigMap resource containing GraphDB configurations as a graphdb.properties file
+      existingConfigmap: ""
+      # Key in the existing ConfigMap that holds the properties for GraphDB
+      configmapKey: graphdb.properties
+
+      # Reference to an existing Secret resource containing sensitive GraphDB configurations as a graphdb.properties file
+      existingSecret: ""
+      # Key in the existing Secret that holds the properties for GraphDB
+      secretKey: graphdb.properties
+
     # Java arguments with which the cluster proxy instances will be launched.
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     # Takes precedence over configurations in graphdb.properties
@@ -644,29 +676,7 @@ proxy:
     # Java arguments to append after defaultJavaArguments, use to avoid overriding the default values
     javaArguments: ""
 
-  ###########################################
-  # Additional GraphDB Proxy Configurations #
-  ###########################################
-
-  # Additional configurations that will be provisioned to GraphDB
-  extraConfiguration:
-    # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
-    # in the default configmap and secret resources.
-    properties:
-      # Reference to an existing ConfigMap resource containing GraphDB configurations
-      existingConfigmap: ""
-      # Key in the existing ConfigMap that holds the properties for GraphDB
-      configmapKey: graphdb.properties
-
-      # Reference to an existing Secret resource containing sensitive GraphDB configurations
-      existingSecret: ""
-      # Key in the existing Secret that holds the properties for GraphDB
-      secretKey: graphdb.properties
-
-  #######################################
-  # GraphDB Proxy Logging Configuration #
-  #######################################
-  logging:
+    # Configurations for GraphDB's Logback
     logback:
       existingConfigmap: ""
       configmapKey: logback.xml

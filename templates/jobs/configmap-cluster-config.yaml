@@ -1,4 +1,4 @@
-{{- if and .Values.cluster.jobs.createCluster.enabled (gt (int .Values.replicas) 1) (not .Values.cluster.existingConfig) }}
+{{- if and .Values.cluster.jobs.createCluster.enabled (gt (int .Values.replicas) 1) (not .Values.cluster.config.existingConfigmap) }}
 # Default configuration map for provisioning the GraphDB cluster configuration.
 # To change it, prepare another configuration map and update "graphdb.configs.clusterConfig"
 apiVersion: v1
@@ -13,6 +13,6 @@ metadata:
     {{- tpl (toYaml .) $ | nindent 4 }}
   {{- end }}
 data:
-  cluster-config.json: |-
+  {{ .Values.cluster.config.configmapKey }}: |-
     {{- tpl (.Files.Get "files/config/cluster-config.json" | trim) . | nindent 4 }}
 {{- end }}

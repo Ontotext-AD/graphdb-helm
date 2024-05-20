@@ -56,7 +56,7 @@ spec:
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       annotations:
-        checksum/configmap: {{ include (print .Template.BasePath "/graphdb/configmap.yaml") . | sha256sum }}
+        checksum/configmap-environment: {{ include (print .Template.BasePath "/graphdb/configmap-environment.yaml") . | sha256sum }}
         checksum/configmap-properties: {{ include (print .Template.BasePath "/graphdb/configmap-properties.yaml") . | sha256sum }}
         checksum/secret-properties: {{ include (print .Template.BasePath "/graphdb/secret-properties.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
@@ -86,50 +86,50 @@ spec:
         - name: graphdb-secret-properties
           secret:
             secretName: {{ include "graphdb.fullname.secret.properties" . }}
-        {{- if .Values.extraConfiguration.properties.existingConfigmap }}
+        {{- if .Values.configuration.extraProperties.existingConfigmap }}
         - name: graphdb-extra-properties
           configMap:
-            name: {{ tpl .Values.extraConfiguration.properties.existingConfigmap . }}
+            name: {{ tpl .Values.configuration.extraProperties.existingConfigmap . }}
         {{- end }}
-        {{- if .Values.extraConfiguration.properties.existingSecret }}
+        {{- if .Values.configuration.extraProperties.existingSecret }}
         - name: graphdb-extra-secret-properties
           secret:
-            secretName: {{ tpl .Values.extraConfiguration.properties.existingSecret . }}
+            secretName: {{ tpl .Values.configuration.extraProperties.existingSecret . }}
         {{- end }}
-        {{- if .Values.logging.logback.existingConfigmap }}
+        {{- if .Values.configuration.logback.existingConfigmap }}
         - name: graphdb-logback-config
           configMap:
-            name: {{ tpl .Values.logging.logback.existingConfigmap . }}
+            name: {{ tpl .Values.configuration.logback.existingConfigmap . }}
         {{- end }}
         {{- if .Values.license.existingSecret }}
         - name: graphdb-license
           secret:
             secretName: {{ tpl .Values.license.existingSecret . }}
         {{- end }}
-        {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
+        {{- if or .Values.security.enabled .Values.configuration.initialSettings.existingConfigmap }}
         - name: graphdb-initial-settings-config
           configMap:
-            name: {{ (tpl .Values.initialConfiguration.settings.existingConfigmap .) | default (include "graphdb.fullname.configmap.settings" .) }}
+            name: {{ (tpl .Values.configuration.initialSettings.existingConfigmap .) | default (include "graphdb.fullname.configmap.initial-settings" .) }}
         {{- end }}
-        {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
+        {{- if or .Values.security.enabled .Values.security.initialUsers.existingSecret }}
         - name: graphdb-initial-users-config
           secret:
-            secretName: {{ (tpl .Values.initialConfiguration.users.existingSecret .) | default (include "graphdb.fullname.secret.users" .) }}
+            secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
+      nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.affinity }}
-      affinity: {{- toYaml . | nindent 8 }}
+      affinity: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
+      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- toYaml . | nindent 8 }}
+      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
@@ -176,12 +176,12 @@ spec:
               value: {{ .Values.containerPorts.http | quote }}
             - name: GRAPHDB_RPC_PORT
               value: {{ .Values.containerPorts.rpc | quote }}
-            {{- if .Values.cluster.existingClusterSecret }}
+            {{- if .Values.cluster.token.existingSecret }}
             - name: GRAPHDB_CLUSTER_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.cluster.existingClusterSecret }}
-                  key: {{ .Values.cluster.existingClusterSecretKey }}
+                  name: {{ .Values.cluster.token.existingSecret }}
+                  key: {{ .Values.cluster.token.secretKey }}
             {{- end }}
           volumeMounts:
             - name: storage
@@ -192,25 +192,25 @@ spec:
             - name: graphdb-secret-properties
               mountPath: /tmp/graphdb/graphdb-secrets.properties
               subPath: graphdb-secrets.properties
-            {{- if .Values.extraConfiguration.properties.existingConfigmap }}
+            {{- if .Values.configuration.extraProperties.existingConfigmap }}
             - name: graphdb-extra-properties
               mountPath: /tmp/graphdb/graphdb-extra.properties
-              subPath: {{ .Values.extraConfiguration.properties.configmapKey }}
+              subPath: {{ .Values.configuration.extraProperties.configmapKey }}
             {{- end }}
-            {{- if .Values.extraConfiguration.properties.existingSecret }}
+            {{- if .Values.configuration.extraProperties.existingSecret }}
             - name: graphdb-extra-secret-properties
               mountPath: /tmp/graphdb/graphdb-extra-secret.properties
-              subPath: {{ .Values.extraConfiguration.properties.secretKey }}
+              subPath: {{ .Values.configuration.extraProperties.secretKey }}
             {{- end }}
-            {{- if or .Values.security.enabled .Values.initialConfiguration.settings.existingConfigmap }}
+            {{- if or .Values.security.enabled .Values.configuration.initialSettings.existingConfigmap }}
             - name: graphdb-initial-settings-config
               mountPath: /tmp/graphdb/settings.js
-              subPath: {{ .Values.initialConfiguration.settings.configmapKey }}
+              subPath: {{ .Values.configuration.initialSettings.configmapKey }}
             {{- end }}
-            {{- if or .Values.security.enabled .Values.initialConfiguration.users.existingSecret }}
+            {{- if or .Values.security.enabled .Values.security.initialUsers.existingSecret }}
             - name: graphdb-initial-users-config
               mountPath: /tmp/graphdb/users.js
-              subPath: {{ .Values.initialConfiguration.users.secretKey }}
+              subPath: {{ .Values.security.initialUsers.secretKey }}
             {{- end }}
           {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
@@ -297,7 +297,7 @@ spec:
             {{- end }}
           envFrom:
             - configMapRef:
-                name: {{ include "graphdb.fullname" . }}
+                name: {{ include "graphdb.fullname.configmap.environment" . }}
             {{- with .Values.extraEnvFrom }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
@@ -312,10 +312,10 @@ spec:
               mountPath: /opt/graphdb/home/conf/graphdb.license
               subPath: {{ .Values.license.licenseFilename }}
             {{- end }}
-            {{- if .Values.logging.logback.existingConfigmap }}
+            {{- if .Values.configuration.logback.existingConfigmap }}
             - name: graphdb-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
-              subPath: {{ .Values.logging.logback.configmapKey }}
+              subPath: {{ .Values.configuration.logback.configmapKey }}
             {{- end }}
             {{- if .Values.import.volumeMount.enabled }}
             - name: import

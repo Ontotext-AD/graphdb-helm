@@ -29,7 +29,7 @@ TODO: decide how detailed we want this to be
 - Moved all proxy configurations from `graphdb.clusterProxy` to just `proxy`
   - Renamed `proxy.persistence.enablePersistence` toggle to just `enabled`
   - Moved `proxy.serviceType` to `proxy.service.type`
-- Configmaps from `graphdb.configs` are now under `extraConfiguration`, `repositories` and `initialConfiguration` with a different structure allowing
+- Configmaps from `graphdb.configs` are now under `configuration`, `repositories`, `cluster` and `security` with a different structure allowing
   better reuse of existing configmaps
   - Users are now provided as a Secret
 - Moved job related configurations from `graphdb` (e.g. `graphdb.jobResources`) to a new root section `jobs`
@@ -85,12 +85,12 @@ TODO: decide how detailed we want this to be
 - Added a Service for single GraphDB deployments, configured with new configurations under `service`
 - Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting
 - Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
-- Added `cluster.existingConfigmapKey` to specify a custom configmap key if needed
+- Added `cluster.config.configmapKey` to specify a custom configmap key if needed
 - Added `namespaceOverride` for overriding the deployment namespace for all resources in case of multi-namespace deployment
 - Added `proxy.logging.logback` configurations for providing the proxy with a custom Logback XML configuration
 - Added `extraConfiguration.existingSecret` for appending GraphDB properties from an existing Secret resource
 - Added `proxy.extraConfiguration` for appending extra GraphDB properties from existing ConfigMap and Secret resources
-- Added `cluster.existingClusterSecret` and `cluster.existingClusterSecretKey` for using an existing Secret instead of providing the cluster secret 
+- Added `cluster.token.existingSecret` and `cluster.token.secretKey` for using an existing Secret instead of providing the cluster secret 
   token as plaintext in values.yaml
 - Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
 - Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
@@ -116,7 +116,7 @@ TODO: decide how detailed we want this to be
 - Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
 - Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
 - Added `security.admin` for configuring the username and/or the password of the administrator user
-- Added `security.users` for inserting additional users into the default initial user.js configuration
+- Added `security.initialUsers.users` for inserting additional users into the default initial user.js configuration
 - Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
 - Added `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
 
@@ -139,6 +139,7 @@ TODO: decide how detailed we want this to be
 - Overhauled NOTES.txt to be more helpful
 - Added default resource limits and requests for all init containers and provisioning jobs
 - PodDisruptionBudget are enabled by default for both GraphDB and GraphDB proxy
+- Node scheduling configurations are now processed as templates
 - Updated init containers to invoke `bash` instead of `sh`
 
 ## Version 10.6.0-R2

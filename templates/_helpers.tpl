@@ -18,9 +18,9 @@ Renders the container image for GraphDB
   {{- if $registry -}}
     {{- $image = printf "%s/%s" $registry $image -}}
   {{- end -}}
-  {{/* Add SHA if provided */}}
-  {{- if .Values.image.sha -}}
-    {{- $image = printf "%s@sha256:%s" $image .Values.image.sha -}}
+  {{/* Add SHA digest if provided */}}
+  {{- if .Values.image.digest -}}
+    {{- $image = printf "%s@%s" $image .Values.image.digest -}}
   {{- end -}}
   {{- $image -}}
 {{- end -}}
@@ -75,4 +75,12 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
 {{ print $index }}
     {{- end }}
   {{- end }}
+{{- end -}}
+
+{{- define "grahdb.security.extra-users.json" -}}
+{{- if .Values.security.users -}}
+  {{- range $user, $data := .Values.security.users -}}
+    {{- $user | quote }}: {{ $data | mustToPrettyJson }},
+  {{- end -}}
+{{- end -}}
 {{- end -}}

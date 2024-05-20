@@ -1,8 +1,8 @@
 {
   "users" : {
-    "admin" : {
-      "username" : "admin",
-      "password" : "{bcrypt}$2a$10$H7uekkF1ZFLIV5M1g9tDs.syZGtkMqrfj2Si2SHG1WgwhpNqpZwne",
+    "{{ .Values.security.admin.username }}" : {
+      "username" : "{{ .Values.security.admin.username }}",
+      "password" : {{ coalesce .Values.security.admin.password "{bcrypt}$2a$10$H7uekkF1ZFLIV5M1g9tDs.syZGtkMqrfj2Si2SHG1WgwhpNqpZwne" | quote }},
       "grantedAuthorities" : [ "ROLE_ADMIN" ],
       "appSettings" : {
         "DEFAULT_INFERENCE" : true,
@@ -13,6 +13,7 @@
       },
       "dateCreated" : 1618403171751
     },
+    {{- include "grahdb.security.extra-users.json" . | nindent 4 }}
     "{{ .Values.security.provisioner.username }}" : {
       "username" : "{{ .Values.security.provisioner.username }}",
       "password" : "{bcrypt}{{ htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username) }}",

@@ -10,8 +10,9 @@ TODO: short section about the most notable changes (decoupling, naming, plugins,
 
 TODO: decide how detailed we want this to be
 
-- Updated the chart to require Kubernetes version 1.24+
+- Updated the chart to require Kubernetes version 1.26+
 - Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
+- Enabled security context by default for all pods and containers
 - Renamed `extraLabels` to just `labels`
 - Renamed GraphDB storage PVC template name prefix to `storage` and server import folder to `import`
 - Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
@@ -51,6 +52,7 @@ TODO: decide how detailed we want this to be
   and `health.max.query.time.seconds`
 - Removed `default.min.distinct.threshold` from the default `defaultJavaArguments` values
 - Moved `provisioningUsername` and `provisioningPassword` under `security.provisioner`
+- Moved `persistence.volumeClaimTemplateSpec` to `persistence.volumeClaimTemplate.spec`
 
 ### New
 
@@ -59,8 +61,9 @@ TODO: decide how detailed we want this to be
 - Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
 - Added `conpfiguration.properties` and `proxy.configuration.properties` for inserting additional GraphDB configurations in the properties configmaps
-- Added `image.sha` to optionally provide an expected SHA checksum of the image
+- Added `image.digest` to optionally provide an expected digest of the image
 - Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
+- Added `persistence.emptyDir` and `proxy.persistence.emptyDir` configurations for an emptyDir volume that will be used when the persistence is disabled
 - Added new configuration options for the default ingress `ingress`:
   - Ability to override the `host` and `path` for GraphDB from `configuration.host` and `configuration.path`
   - Changing the `pathType`
@@ -106,12 +109,16 @@ TODO: decide how detailed we want this to be
 - Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
 - Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
 - Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
-- Added configurations for extra `labels` and `annotations` for all persistent volume claim templates: `persistence`, `proxy.persistence`
-  and `import.volumeMount`
+- Added configurations for extra `labels` and `annotations` for all persistent volume claim
+  templates: `persistence.volumeClaimTemplate`, `proxy.persistence.volumeClaimTemplate` and `import.volumeMount.volumeClaimTemplate`
 - Added `jobs.backoffLimit` for configuring the retry count for all jobs
 - Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
 - Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
 - Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
+- Added `security.admin` for configuring the username and/or the password of the administrator user
+- Added `security.users` for inserting additional users into the default initial user.js configuration
+- Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
+- Added `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
 
 ### Updates
 
@@ -130,6 +137,9 @@ TODO: decide how detailed we want this to be
   the `-XX:MaxRAMPercentage` Java option
 - Ejected the default service account token in the proxy pods
 - Overhauled NOTES.txt to be more helpful
+- Added default resource limits and requests for all init containers and provisioning jobs
+- PodDisruptionBudget are enabled by default for both GraphDB and GraphDB proxy
+- Updated init containers to invoke `bash` instead of `sh`
 
 ## Version 10.6.0-R2
 

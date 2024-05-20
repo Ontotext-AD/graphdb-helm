@@ -19,18 +19,23 @@ spec:
   selector:
     matchLabels:
       {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}
-  {{- if .Values.proxy.persistence.enabled }}
+  {{- if or .Values.proxy.persistence.enabled .Values.proxy.extraVolumeClaimTemplates }}
   volumeClaimTemplates:
+    {{- if .Values.proxy.persistence.enabled }}
     - metadata:
         name: storage
-        {{- with .Values.proxy.persistence.labels }}
+        {{- with .Values.proxy.persistence.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
-        {{- with .Values.proxy.persistence.annotations }}
+        {{- with .Values.proxy.persistence.volumeClaimTemplate.annotations }}
         annotations: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
       spec:
-        {{- toYaml .Values.proxy.persistence.volumeClaimTemplateSpec | nindent 8 }}
+        {{- toYaml .Values.proxy.persistence.volumeClaimTemplate.spec | nindent 8 }}
+    {{- end }}
+    {{- if .Values.proxy.extraVolumeClaimTemplates }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
   {{- end }}
   template:
     metadata:
@@ -59,6 +64,10 @@ spec:
       dnsPolicy: {{ .Values.proxy.dnsPolicy }}
       {{- end }}
       volumes:
+        {{- if not .Values.proxy.persistence.enabled }}
+        - name: storage
+          emptyDir: {{ .Values.proxy.persistence.emptyDir | toYaml | nindent 12 }}
+        {{- end }}
         - name: graphdb-proxy-properties
           configMap:
             name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
@@ -102,67 +111,33 @@ spec:
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
       {{- end }}
-      containers:
-        - name: {{ include "graphdb-proxy.chartName" . }}
+      initContainers:
+        {{- if and .Values.proxy.persistence.enabled .Values.proxy.initContainerDataPermissions.enabled }}
+        # Fixes the permissions in the storage volume to match the security context settings
+        - name: {{ .Chart.Name }}-fix-permissions
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.proxy.command }}
-          command: {{ toYaml .Values.proxy.command | nindent 12 }}
-          {{- else }}
-          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
-          {{- end }}
-          {{- with .Values.proxy.args }}
-          args: {{ toYaml . | nindent 12 }}
-          {{- end }}
-          envFrom:
-            - configMapRef:
-                name: {{ include "graphdb-proxy.fullname" . }}
-            {{- with .Values.proxy.extraEnvFrom }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
-            {{- end }}
-          {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
-          {{- end }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.proxy.containerPorts.http }}
-            - name: rpc
-              containerPort: {{ .Values.proxy.containerPorts.rpc }}
-            {{- with .Values.proxy.extraContainerPorts }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
+          env:
+            - name: GRAPHDB_USER_ID
+              value: {{ coalesce .Values.proxy.securityContext.runAsUser .Values.proxy.podSecurityContext.runAsUser | quote }}
+            - name: GRAPHDB_GROUP_ID
+              value: {{ coalesce .Values.proxy.securityContext.runAsGroup .Values.proxy.podSecurityContext.runAsGroup | quote }}
           volumeMounts:
-            {{- if .Values.proxy.persistence.enabled }}
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- end }}
-            {{- if .Values.proxy.logging.logback.existingConfigmap }}
-            - name: graphdb-proxy-logback-config
-              mountPath: /opt/graphdb/home/conf/logback.xml
-              subPath: {{ .Values.proxy.logging.logback.configmapKey }}
-            {{- end }}
-            {{- with .Values.proxy.extraVolumeMounts }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- with .Values.proxy.resources }}
+          {{- with .Values.proxy.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.proxy.securityContext }}
+          {{- with .Values.proxy.initContainerDataPermissions.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.proxy.startupProbe }}
-          startupProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.proxy.readinessProbe }}
-          readinessProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.proxy.livenessProbe }}
-          livenessProbe: {{- toYaml . | nindent 12 }}
-          {{- end }}
-        {{- with .Values.extraContainers }}
-          {{ tpl (toYaml .) $ | nindent 8 }}
+          command: [ "bash", "-c" ]
+          args:
+            - |
+              set -eu
+              echo "Changing ownership to ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID}"
+              chown -R ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID} /opt/graphdb/home
         {{- end }}
-      initContainers:
         - name: {{ include "graphdb-proxy.chartName" . }}-provision-settings
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -187,10 +162,8 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if .Values.proxy.persistence.enabled }}
             - name: storage
               mountPath: /opt/graphdb/home
-            {{- end }}
             - name: graphdb-proxy-properties
               mountPath: /tmp/graphdb.properties
               subPath: graphdb.properties
@@ -207,7 +180,7 @@ spec:
               mountPath: /tmp/graphdb/graphdb-extra-secret.properties
               subPath: {{ .Values.proxy.extraConfiguration.properties.secretKey }}
             {{- end }}
-          command: [ 'sh', '-c' ]
+          command: [ "bash", "-c" ]
           args:
             - |
               set -eu
@@ -254,5 +227,63 @@ spec:
               echo 'Done'
         {{- with .Values.proxy.extraInitContainers }}
           {{- toYaml . | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: {{ include "graphdb-proxy.chartName" . }}
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.proxy.command }}
+          command: {{ toYaml .Values.proxy.command | nindent 12 }}
+          {{- else }}
+          command: ["/opt/graphdb/dist/bin/cluster-proxy"]
+          {{- end }}
+          {{- with .Values.proxy.args }}
+          args: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "graphdb-proxy.fullname" . }}
+            {{- with .Values.proxy.extraEnvFrom }}
+              {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- end }}
+          {{- with .Values.proxy.extraEnv }}
+          env: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.proxy.containerPorts.http }}
+            - name: rpc
+              containerPort: {{ .Values.proxy.containerPorts.rpc }}
+            {{- with .Values.proxy.extraContainerPorts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: storage
+              mountPath: /opt/graphdb/home
+            {{- if .Values.proxy.logging.logback.existingConfigmap }}
+            - name: graphdb-proxy-logback-config
+              mountPath: /opt/graphdb/home/conf/logback.xml
+              subPath: {{ .Values.proxy.logging.logback.configmapKey }}
+            {{- end }}
+            {{- with .Values.proxy.extraVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.proxy.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.startupProbe }}
+          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.readinessProbe }}
+          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.proxy.livenessProbe }}
+          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- with .Values.extraContainers }}
+          {{ tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
 {{- end }}

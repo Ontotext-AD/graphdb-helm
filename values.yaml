@@ -49,8 +49,8 @@ image:
   repository: ontotext/graphdb
   # If specified, overrides Chart.AppVersion
   tag: ""
-  # Expected SHA256 digest of the used GraphDB image, without the "sha256@" prefix
-  sha: ""
+  # Expected SHA256 digest of the used GraphDB image, e.g. "sha256@abc"
+  digest: "sha256:aabf1283664b1cbeeb9880025bbea6820c4a7f5a3a54e5940534e916b8829035"
   # Defines the policy for pulling images
   pullPolicy: IfNotPresent
   # Secrets for pulling GraphDB's Docker image from secured registries.
@@ -147,7 +147,13 @@ logging:
 
 security:
   enabled: false
-  # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly
+  # Administrator user with ROLE_ADMIN authority
+  admin:
+    username: admin
+    # If the password is not specified, it will use the default one for GraphDB which is "root"
+    password: ""
+  # Provisioning user with ROLE_ADMIN authority
+  # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning can work properly.
   provisioner:
     # The following user will be created in the default initial users.js and used in the cluster provisioning
     username: provisioner
@@ -157,6 +163,10 @@ security:
     existingSecret: ""
     # Field name in the secret holding the authentication token.
     tokenKey: GRAPHDB_AUTH_TOKEN
+  # Additional users to insert in the default users.js (see files/config/users.js)
+  # Check the default user.js syntax for details.
+  # Note that this won't be applied if you provide a custom Secret object with user.js via initialConfiguration.users.existingSecret
+  users: {}
 
 ##################################
 # GraphDB Cluster Configurations #
@@ -296,14 +306,26 @@ headlessService:
 ##############################
 
 persistence:
+  # Toggles the persistence of GraphDB data.
+  # If enabled, the StatefulSet will use a PVC template.
+  # If disabled, it fallbacks to an emptyDir volume.
   enabled: true
-  labels: {}
-  annotations: {}
-  volumeClaimTemplateSpec:
-    accessModes: [ "ReadWriteOnce" ]
-    resources:
-      requests:
-        storage: 5Gi
+  # Configurations for PVC based persistence
+  volumeClaimTemplate:
+    # Extra labels to add to the PVC template.
+    labels: {}
+    # Extra annotations to add to the PVC template.
+    annotations: {}
+    # Specification for a PVC to be created by the StatefulSet
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi
+  # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
+  # Used when the persistence is disabled.
+  emptyDir:
+    sizeLimit: 1Gi
 
 ##############################
 # Statefulset Configurations #
@@ -357,13 +379,40 @@ podAnnotations: {}
 ###################################
 
 # Defines privilege and access control settings for the node pods.
-podSecurityContext: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
 
 # Defines privilege and access control settings for the node container running GraphDB.
-securityContext: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ "ALL" ]
+  seccompProfile:
+    type: RuntimeDefault
 
 # Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
-initContainerSecurityContext: {}
+initContainerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ "ALL" ]
+  seccompProfile:
+    type: RuntimeDefault
+
+# Optional init container that can change the permissions to match the security context settings.
+# Use when you have existing persistent volumes with mismatching permissions.
+initContainerDataPermissions:
+  enabled: false
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
 
 #############################
 # Scheduling Configurations #
@@ -391,8 +440,14 @@ resources:
     memory: 2Gi
     cpu: 500m
 
-# initContainerResources defines resource requests and limits for the node containers provisioning configurations for graphdb.
-initContainerResources: {}
+# initContainerResources defines resource requests and limits for the node containers provisioning configurations for GraphDB.
+initContainerResources:
+  limits:
+    memory: 16Mi
+    cpu: 50m
+  requests:
+    memory: 16Mi
+    cpu: 50m
 
 #########################
 # Probes Configurations #
@@ -441,6 +496,9 @@ extraVolumes: []
 # Additional volume mounts to be set for the graphdb nodes
 extraVolumeMounts: []
 
+# Additional volume claim templates to be set in GraphDB's StatefulSet
+extraVolumeClaimTemplates: []
+
 # Additional init containers inserted after the provisioning init containers
 extraInitContainers: []
 
@@ -457,7 +515,7 @@ extraContainers: []
 
 # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
 podDisruptionBudget:
-  enabled: false
+  enabled: true
   minAvailable: 51%
   maxUnavailable: ""
 
@@ -487,13 +545,14 @@ import:
   # WARNING: Setting enabled to true in most cloud providers will result in an error
   volumeMount:
     enabled: false
-    labels: {}
-    annotations: {}
-    volumeClaimTemplateSpec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 10Gi
+    volumeClaimTemplate:
+      labels: {}
+      annotations: {}
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
 
 #######################################
 ## Custom Repositories Configurations #
@@ -516,14 +575,35 @@ jobs:
   # Time in seconds before deleting finished pods
   ttlSecondsAfterFinished: 300
   # podSecurityContext defines privilege and access control settings for all the job pods
-  podSecurityContext: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
   # securityContext defines privilege and access control settings for all the job containers
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
   # resources defines resource requests and limits for all the job containers
-  resources: {}
+  resources:
+    limits:
+      memory: 16Mi
+      cpu: 50m
+      ephemeral-storage: 10Mi
+    requests:
+      memory: 16Mi
+      cpu: 50m
+      ephemeral-storage: 10Mi
   # Persistence configurations for all jobs
   persistence:
-    # Empty directory volume for temporary file storage of scripts
+    # Empty directory volume for temporary file storage and execution of scripts
     emptyDir:
       sizeLimit: 10Mi
 
@@ -650,15 +730,26 @@ proxy:
   # Persistence for storing GraphDB proxy log files.
   # See https://kubernetes.io/docs/concepts/storage/persistent-volumes/
   persistence:
-    # Enables or disables the proxy's persistence
+    # Toggles the persistence of GraphDB proxy data.
+    # If enabled, the StatefulSet will use a PVC template.
+    # If disabled, it fallbacks to an emptyDir volume.
     enabled: true
-    labels: {}
-    annotations: {}
-    volumeClaimTemplateSpec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 500Mi
+    # Configurations for PVC based persistence
+    volumeClaimTemplate:
+      # Extra labels to add to the PVC template.
+      labels: {}
+      # Extra annotations to add to the PVC template.
+      annotations: {}
+      # Specification for a PVC to be created by the StatefulSet
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 500Mi
+    # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
+    # Used when the persistence is disabled.
+    emptyDir:
+      sizeLimit: 500Mi
 
   ##############################
   # Statefulset Configurations #
@@ -711,13 +802,40 @@ proxy:
   ###################################
 
   # Defines privilege and access control settings for the proxy pods.
-  podSecurityContext: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
 
   # Defines privilege and access control settings for the proxy containers.
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
 
   # Defines privilege and access control settings for the init containers provisioning configurations for GraphDB.
-  initContainerSecurityContext: {}
+  initContainerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Optional init container that can change the permissions to match the security context settings.
+  # Use when you have existing persistent volumes with mismatching permissions.
+  initContainerDataPermissions:
+    enabled: false
+    securityContext:
+      runAsNonRoot: false
+      runAsUser: 0
 
   #############################
   # Scheduling Configurations #
@@ -744,7 +862,13 @@ proxy:
       cpu: 100m
 
   # Defines resource requests and limits for the containers provisioning configurations for GraphDB.
-  initContainerResources: {}
+  initContainerResources:
+    limits:
+      memory: 16Mi
+      cpu: 50m
+    requests:
+      memory: 16Mi
+      cpu: 50m
 
   #########################
   # Probes Configurations #
@@ -792,6 +916,9 @@ proxy:
   # Additional volume mounts to be set for each cluster proxy
   extraVolumeMounts: []
 
+  # Additional volume claim templates to be set in the proxy's StatefulSet
+  extraVolumeClaimTemplates: []
+
   # Additional init containers to be set for each cluster proxy
   extraInitContainers: []
 
@@ -808,7 +935,7 @@ proxy:
 
   # See https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
   podDisruptionBudget:
-    enabled: false
+    enabled: true
     minAvailable: 51%
     maxUnavailable: ""
 

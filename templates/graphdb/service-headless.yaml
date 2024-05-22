@@ -28,4 +28,7 @@ spec:
       targetPort: rpc
       protocol: TCP
     {{- end }}
+    {{- with .Values.headlessService.extraPorts -}}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}

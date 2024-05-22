@@ -119,6 +119,7 @@ TODO: decide how detailed we want this to be
 - Added `security.initialUsers.users` for inserting additional users into the default initial user.js configuration
 - Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
 - Added `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
+- Added `headlessService.extraPorts` and `proxy.headlessService.extraPorts` for additional ports exposed by the headless Service resources
 
 ### Updates
 

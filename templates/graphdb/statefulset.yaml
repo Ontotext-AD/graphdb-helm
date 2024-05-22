@@ -171,7 +171,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_PUBLIC_URL
-              value: {{ .Values.configuration.externalUrl }}
+              value: {{ include "graphdb.external-url" . }}
             - name: GRAPHDB_HTTP_PORT
               value: {{ .Values.containerPorts.http | quote }}
             - name: GRAPHDB_RPC_PORT
@@ -322,7 +322,7 @@ spec:
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
-              {{- toYaml . | nindent 12 }}
+              {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}

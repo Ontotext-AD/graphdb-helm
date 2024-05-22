@@ -18,7 +18,7 @@ data:
     graphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     graphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
     {{- if eq (int .Values.replicas) 1}}
-    graphdb.external-url={{ .Values.configuration.externalUrl }}
+    graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}
     {{- if .Values.configuration.properties }}
     ##### Overrides from values.yaml #####

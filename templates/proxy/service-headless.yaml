@@ -26,4 +26,7 @@ spec:
       port: {{ .Values.proxy.headlessService.ports.rpc }}
       targetPort: rpc
       protocol: TCP
+    {{- with .Values.proxy.headlessService.extraPorts -}}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}

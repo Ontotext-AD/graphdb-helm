@@ -14,6 +14,6 @@ data:
   GDB_JAVA_OPTS: >-
     -Dgraphdb.home=/opt/graphdb/home
     -Dhttp.socket.keepalive=true
-    {{ .Values.proxy.configuration.defaultJavaArguments }}
-    {{ .Values.proxy.configuration.javaArguments }}
+    {{ tpl .Values.proxy.configuration.defaultJavaArguments . }}
+    {{ tpl .Values.proxy.configuration.javaArguments . }}
 {{- end }}

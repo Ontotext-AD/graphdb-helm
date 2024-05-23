@@ -54,7 +54,7 @@ spec:
             - name: GRAPHDB_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ coalesce .Values.security.provisioner.existingSecret (include "graphdb.fullname.secret.provisioning-user" .) }}
+                  name: {{ (tpl .Values.security.provisioner.existingSecret .) | default (include "graphdb.fullname.secret.provisioning-user" .) }}
                   key: {{ .Values.security.provisioner.tokenKey }}
           {{- with .Values.jobs.securityContext }}
           securityContext: {{ toYaml . | nindent 12 }}

@@ -26,6 +26,13 @@ Renders the container image for GraphDB
 {{- end -}}
 
 {{/*
+Renders the external URL for GraphDB.
+*/}}
+{{- define "graphdb.external-url" -}}
+{{- tpl .Values.configuration.externalUrl . -}}
+{{- end -}}
+
+{{/*
 Renders the gRPC address of each GraphDB node that is part of the cluster as a JSON array. Used in the cluster JSON config.
 */}}
 {{- define "graphdb.cluster.nodes.json" -}}
@@ -58,6 +65,9 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
   {{- end -}}
 {{- end -}}
 
+{{/*
+Checks for potential issues and prints warning messages.
+*/}}
 {{- define "graphdb.notes.warnings" -}}
   {{- $warnings := list -}}
   {{- if and (gt (int .Values.replicas) 1) (not .Values.license.existingSecret) -}}
@@ -77,6 +87,9 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
   {{- end }}
 {{- end -}}
 
+{{/*
+Converts custom users YAML to a pretty JSON for insertion in users.js
+*/}}
 {{- define "grahdb.security.extra-users.json" -}}
 {{- if .Values.security.initialUsers.users -}}
   {{- range $user, $data := .Values.security.initialUsers.users -}}

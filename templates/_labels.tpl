@@ -68,5 +68,5 @@ Create the name of the service account to use
 Returns the namespace of the release.
 */}}
 {{- define "graphdb.namespace" -}}
-{{- default .Release.Namespace .Values.namespaceOverride | trunc 63 | trimSuffix "-" -}}
+{{- .Values.namespaceOverride | default .Release.Namespace | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

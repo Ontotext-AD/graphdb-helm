@@ -143,7 +143,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: GRAPHDB_PUBLIC_URL
-              value: {{ .Values.configuration.externalUrl }}
+              value: {{ include "graphdb.external-url" . }}
             - name: GRAPHDB_PROXY_HTTP_PORT
               value: {{ .Values.proxy.containerPorts.http | quote }}
             - name: GRAPHDB_PROXY_RPC_PORT

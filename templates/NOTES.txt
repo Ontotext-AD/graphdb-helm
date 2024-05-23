@@ -14,7 +14,7 @@ GraphDB cluster: {{ .Values.replicas }} replicas
 {{- else }}
 GraphDB cluster: disabled
 {{- end }}
-GraphDB workbench: {{ .Values.configuration.externalUrl }}
+GraphDB workbench: {{ include "graphdb.external-url" . }}
 
 ** Please be patient while the chart is being deployed and services are available **
 You can check their status with kubectl --namespace {{ include "graphdb.namespace" . }} get pods

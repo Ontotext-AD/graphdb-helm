@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled }}
-{{- $external_url := urlParse .Values.configuration.externalUrl -}}
+{{- $external_url := urlParse (include "graphdb.external-url" .) -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

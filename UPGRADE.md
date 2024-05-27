@@ -2,7 +2,158 @@
 
 ## From 10.x to 11
 
-TODO
+Before continuing, familiarize yourself with the new configuration structure in [values.yaml](values.yaml) as well as with
+the [changelog for version 11](CHANGELOG.md#version-1100).
+
+### Configurations
+
+Version 11 of the Helm chart introduces a lot of changes to the configurations and their structure in [values.yaml](values.yaml). 
+Here are the most notable steps that you should be aware of:
+
+**Kubernetes Version**
+
+The Helm chart is updated to require a minimum Kubernetes version of 1.26.
+Refer to the official Kubernetes documentation on how to move to a newer version if needed.
+We strongly advise to operate a Kubernetes cluster with version that has not reached its End Of Life. 
+
+**Naming**
+
+[//]: # (TODO: This might not work for everything!!!)
+
+The resource names are no longer hardcoded in version 11. If you want to keep the old ones, you can override the following configurations from 
+[values.yaml](values.yaml): `fullnameOverride` and `proxy.fullnameOverride`.
+
+**GraphDB URL**
+
+The old version 11 of the chart had several configuration properties that defined the external URL of GraphDB: `deployment.protocol`, 
+`deployment.host` and `graphdb.workbench.subpath`.
+In version 11, they have been combined into a single configuration property `configuration.externalUrl`.
+Make sure to update it accordingly.
+
+Note that the default URL configuration now uses https://nip.io/ which avoids having to edit your hosts file, compared to version 10.
+However, this is suitable only for local development, so you'd have to update it to a real resolvable URL according to your environment and
+requirements.
+
+**Ingress**
+
+If you use the Ingress for accessing GraphDB: Version 11 removes the default use of specific ingress controllers.
+It's up to you to properly configure the default ingress controller in your cluster or to properly define the default Ingress in this chart with
+the `ingress` configuration in [values.yaml](values.yaml).
+
+[//]: # (TODO: NGINX EXAMPLE!!!!!!!!)
+
+**Storage Class**
+
+Version 11 removes the hardcoded storage class from `global.storageClass`.
+If you don't have a default storage class in your cluster, you can define the storage class for GraphDB's PVC
+with `persistence.volumeClaimTemplate.spec.storageClassName` for GraphDB and `persistence.volumeClaimTemplate.spec.storageClassName` for the proxy (if
+enabled).
+
+**Persistence**
+
+[//]: # (TODO:)
+
+**Cluster**
+
+Version 11 now uses `replicas` instead of `graphdb.clusterConfig.nodesCount` to control the deployment of GraphDB proxies and the creation of the
+cluster.
+
+Note that all other cluster related configurations have been moved under the `cluster` section in [values.yaml](values.yaml).
+
+**Security**
+
+Note that all security configurations have been moved under the `security` section in [values.yaml](values.yaml).
+
+The provisioning user credentials are now under `security.provisioner`.
+
+Version 11 enables 
+
+**Other**
+
+See [11.0.0 Breaking Changes section](./CHANGELOG.md#a-id11_breakinga-breaking) for more details on migrating other configurations.
+
+### Data Migration
+
+Due to the amount of breaking changes in version 11, any volumes created by version 10 won't be reused automatically.
+Here are two options to migrate GraphDB data for version 11, each of which require some downtime.
+
+**Backup and Restore**
+
+Probably the easiest migration option is to use GraphDB's own 
+[backup and restore](https://graphdb.ontotext.com/documentation/10.6/backup-and-restore.html) functionality.
+
+1. Follow GraphDB's documentation on how to trigger a Backup, you can choose  
+   a. [Local backup](https://graphdb.ontotext.com/documentation/10.6/backup-and-restore.html#creating-a-backup)
+   b. [Cloud backup](https://graphdb.ontotext.com/documentation/10.6/backup-and-restore.html#creating-and-restoring-cloud-backups)
+2. Uninstall the old deployment. Note that this won't remove your existing PVs.
+3. Install the new version of the Helm chart
+4. Use the restore operation
+   a. Restore from [local backup](https://graphdb.ontotext.com/documentation/10.6/backup-and-restore.html#restoring-from-a-backup)
+   b. Restore from [cloud backup](https://graphdb.ontotext.com/documentation/10.6/backup-and-restore.html#restoring-from-a-cloud-backup)
+
+The downside of this option is that if there are a lot of GBs of data to be backed up and later restored, it would be the slowest.
+
+**Matching PVC claims**
+
+To minimize the downtime from backup and restore, you could reuse the existing Persistent Volumes from the deployment with version 10 of the chart. 
+The procedure is as follows:
+
+* Make note of the names of the existing PVs and PVCs:
+  * Kubernetes uses the following policy for naming PVC: `<pvc-template-name>-<statefulset-name>-<pod index>`, i.e. this would be `**graphdb-node-data-dynamic-pvc**-**graphdb-node**-**0**` for version 10 of the chart.
+  * For the new version 11, this depends on the release name or if you'll use name overrides, but it should be something like this: `storage-<statefulset-name>-<pod-index>`, i.e. `storage-test-graphdb-0` where `test` is the Helm release name.
+* Uninstall the old deployment with `helm uninstall ...`
+* Make sure that the reclaim policy of the existing PVs is set to `Retain`. For each PVC, find the corresponding PV and patch it with:
+  ```bash
+  kubectl patch pv <pv-name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+  ```
+* Patch the existing PVs with `"claimRef":null` to force them to go from status `Released` to `Available`, use:
+  ```bash
+  kubectl patch pv <pv-name> -p '{"spec":{"claimRef":null}}'
+  ```
+* Update the existing PVs `claimRef` attribute to match the PVC names that will be created by the new PVC template in version 11, use:
+  ```bash
+  kubectl patch pv <pv-name> -p '{"spec":{"claimRef":{"name":"storage-<statefulset-name>-<pod-index>","namespace":"<namespace>"}}}'
+  ```
+  where
+  * `pv-name` is the name of one of the existing persistent volumes
+  * `statefulset-name` is the name of the statefulset for GraphDB, and it depends on the release name or any name overrides
+  * `pod-index` is the ordinal index of a concrete pod, i.e. `0`, `1` and `2` for a `3` node cluster
+  * `namespace` is the Kubernetes namespace where you'll deploy the Helm chart
+  If you are not fully sure what are the correct names, you could first deploy the new version to make note of the naming and patch the PVs later.
+
+The downside of this option is that the user that owns the data in the existing PVs is `root` while the new chart runs with a non-root user. 
+[Fixing Permissions](#fixing-permissions) explains further about this.
+
+#### Fixing Permissions
+
+Version 11 of the chart includes a default security context that avoids running containers with the `root` user. 
+However, version 10 of the chart have been running containers with the `root` user.
+This requires changing ownership of the data when using existing Persistent Volumes. 
+
+Note that if you've selected to use the backup and restore option for data migration, these steps are not needed.
+
+There are 2 options that you can choose from:
+
+**Using an initContainer**
+
+The chart includes a special init container that will change the data to be owned by the configured user in the security context.
+Set `initContainerDataPermissions.enabled` to `true` to enable it for GraphDB and `proxy.initContainerDataPermissions.enabled` to `true` for the
+proxies. This should be a one time operation, so you can later disable them.
+
+You can also provide a custom init container with `extraInitContainers` and `proxy.extraInitContainers`
+
+**Reconfigure the context**
+
+Alternatively, you can reconfigure the security context configurations to use the `root` user. 
+This includes the following configurations:
+
+* `podSecurityContext`, `securityContext` and `initContainerSecurityContext` for GraphDB
+* `proxy.podSecurityContext`, `proxy.securityContext` and `proxy.initContainerSecurityContext` for the GraphDB proxies
+* `jobs.podSecurityContext` and `jobs.securityContext` for the cluster management Jobs
+
+---
+
+You can now install the new Helm chart version.
 
 ## From 9.x to 10
 
@@ -48,7 +199,7 @@ The Helm chart is completely new and not backwards-compatible.
    - Request a change in volume capacity by editing your PVC's `spec.resources.requests.storage`
    - Verify the change has taken effect with `get pvc <pvc-name> -o yaml` and checking the `status.capacity` field.
 
-7. Scale down the selected worker. In the official GraphDB every worker has it's' own statefulset.
+7. Scale down the selected worker. In the official GraphDB every worker has its own statefulset.
    List all the stateful sets to find the name of the worker you want to scale down:
    ```bash
    kubectl get statefulsets

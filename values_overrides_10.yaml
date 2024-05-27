@@ -1,0 +1,12 @@
+deployment:
+  host: graphdb.127.0.0.1.nip.io
+  ingress:
+    enabled: true
+
+graphdb:
+  clusterConfig:
+    nodesCount: 3
+  node:
+    license: graphdb-license
+  workbench:
+    subpath: /

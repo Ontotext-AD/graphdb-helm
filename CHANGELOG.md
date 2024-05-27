@@ -13,7 +13,7 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 * Security - Enabled security context by default
 * Configurations - Added multiple new configurations to customize the both GraphDB and the Kubernetes resources
 
-### Breaking
+### <a id="11_breaking"></a> Breaking
 
 - Updated the chart to require Kubernetes version 1.26+
 - Enabled security context by default for all pods and containers

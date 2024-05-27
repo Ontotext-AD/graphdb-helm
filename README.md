@@ -279,6 +279,10 @@ See the Kubernetes documentation
 https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
 about defining resource limits.
 
+## Examples
+
+Checkout the [examples/](examples) folder in this repository.
+
 ## Guides
 
 ### Updating an expired GraphDB license

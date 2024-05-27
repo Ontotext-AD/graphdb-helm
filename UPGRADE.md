@@ -18,8 +18,6 @@ We strongly advise to operate a Kubernetes cluster with version that has not rea
 
 **Naming**
 
-[//]: # (TODO: This might not work for everything!!!)
-
 The resource names are no longer hardcoded in version 11. If you want to keep the old ones, you can override the following configurations from 
 [values.yaml](values.yaml): `fullnameOverride` and `proxy.fullnameOverride`.
 
@@ -40,8 +38,6 @@ If you use the Ingress for accessing GraphDB: Version 11 removes the default use
 It's up to you to properly configure the default ingress controller in your cluster or to properly define the default Ingress in this chart with
 the `ingress` configuration in [values.yaml](values.yaml).
 
-[//]: # (TODO: NGINX EXAMPLE!!!!!!!!)
-
 **Storage Class**
 
 Version 11 removes the hardcoded storage class from `global.storageClass`.
@@ -51,7 +47,7 @@ enabled).
 
 **Persistence**
 
-[//]: # (TODO:)
+Persistence configurations have been moved to `persistence` and `proxy.persistence`.
 
 **Cluster**
 

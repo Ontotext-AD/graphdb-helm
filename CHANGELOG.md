@@ -7,13 +7,13 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 ### Highlights
 
 * Version - The Helm chart is no longer tied with the version of GraphDB and has a separate development and release cycle.
-* Naming - Removed the hardcoded resource names in favor of using the name templates from [_labels.tpl](templates/_labels.tpl)
+* Naming - Removed hardcoded resource names in favor of using the name templates from [_labels.tpl](templates/_labels.tpl)
 * Labels - Added the possibility to provide custom labels and annotations to almost every single resource
 * Implementation Agnostic - Removed the dependency of particular ingress controllers and storage classes
 * Security - Enabled security context by default
-* Configurations - Added multiple new configurations to customize the both GraphDB and the Kubernetes resources
+* Configurations - Added multiple new configurations to customize both GraphDB and the Kubernetes resources
 
-### <a id="11_breaking"></a> Breaking
+### Breaking
 
 - Updated the chart to require Kubernetes version 1.26+
 - Enabled security context by default for all pods and containers

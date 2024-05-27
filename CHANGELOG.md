@@ -2,145 +2,156 @@
 
 ## Version 11.0.0
 
-TODO: short motivational paragraph about the major version
-TODO: short info about being decoupled from GraphDB
-TODO: short section about the most notable changes (decoupling, naming, plugins, etc.)
+Version 11 of the chart addresses a bunch of legacy issues and aims to provide much better user experience and reliability.
+
+### Highlights
+
+* Version - The Helm chart is no longer tied with the version of GraphDB and has a separate development and release cycle.
+* Naming - Removed the hardcoded resource names in favor of using the name templates from [_labels.tpl](templates/_labels.tpl)
+* Labels - Added the possibility to provide custom labels and annotations to almost every single resource
+* Implementation Agnostic - Removed the dependency of particular ingress controllers and storage classes
+* Security - Enabled security context by default
+* Configurations - Added multiple new configurations to customize the both GraphDB and the Kubernetes resources
 
 ### Breaking
 
-TODO: decide how detailed we want this to be
-
 - Updated the chart to require Kubernetes version 1.26+
-- Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Enabled security context by default for all pods and containers
-- Renamed `extraLabels` to just `labels`
-- Renamed GraphDB storage PVC template name prefix to `storage` and server import folder to `import`
-- Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the init containers
-- Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration
-- Renamed `java_args` to `defaultJavaArguments` and added a separate `javaArguments` that can be used for additional configurations
-- Removed the default logback XML configuration and configmap in favor of an [example](examples/custom-logback) and a new configuration options
-  under `logging.logback`
-- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
-  use `global.storageClass`.
-- Updated the GraphDB deployment URL to be http://graphdb.127.0.0.1.nip.io/ by default
-- Removed the default value from `global.imageRegistry`, the chart now uses the value from `image.registry`
+- Updated the GraphDB deployment URL to be http://graphdb.127.0.0.1.nip.io/ by default, see `configuration.externalUrl`
+- Resource names are no longer hardcoded and are using the templates for `nameOverride` and `fullnameOverride`
 - Updated the ingress to be agnostic to the ingress implementation. It will no longer assume that NGINX is the ingress controller in the
   cluster and will no longer deploy NGINX specific annotations by default. Removed anything related to NGINX as configurations.
-- Moved all proxy configurations from `graphdb.clusterProxy` to just `proxy`
-  - Renamed `proxy.persistence.enablePersistence` toggle to just `enabled`
-  - Moved `proxy.serviceType` to `proxy.service.type`
-- Configmaps from `graphdb.configs` are now under `configuration`, `repositories`, `cluster` and `security` with a different structure allowing
-  better reuse of existing configmaps
-  - Users are now provided as a Secret
-- Moved job related configurations from `graphdb` (e.g. `graphdb.jobResources`) to a new root section `jobs`
+- Removed setting FQDN as hostnames in GraphDB and the proxy in favor of dynamically resolving and configuring the hostnames in the provisioning init
+  containers
+- Removed the default value from `global.imageRegistry`, the chart now uses the value from `image.registry`
+- Removed `global.storageClass` in favor of using by default the default storage class in the cluster. Templates will no longer
+  use `global.storageClass`.
+- Renamed `extraLabels` to just `labels`
 - Moved `images.graphdb` configurations to just `image`
 - Moved `deployment.imagePullPolicy` to `image.pullPolicy` and `deployment.imagePullSecret` to `image.pullSecrets`
-  - Updated `imagePullSecret` to be a list, e.g. `imagePullSecrets`
-- Moved `graphdb.import_directory_mount` configurations to `import.volumeMount`
+  - Note that `image.pullSecrets` is now a list
 - Moved `deployment.ingress` to just `ingress`
-  - Moved `deployment.tls` to `ingress.tls`
-- Renamed `graphdb.node.service` to `headlessService`
+- Moved `deployment.tls` to `ingress.tls`
 - Moved `graphdb` and `graphdb.node` configurations on the root level
-  - Moved `graphdb.pdb` to `pdb`
+- Moved all proxy configurations from `graphdb.clusterProxy` to just `proxy`
+- Renamed `proxy.persistence.enablePersistence` toggle to just `enabled`
+- Moved `proxy.serviceType` to `proxy.service.type`
+- Configmaps from `graphdb.configs` are now under `configuration`, `repositories`, `cluster` and `security` with a different structure allowing
+  better reuse of existing configmaps
 - Moved `graphdb.clusterConfig` configurations
   - Moved `graphdb.clusterConfig.nodesCount` to `replicas`
-  - Moved the rest of `graphdb.clusterConfig` configurations under `cluster` and `cluster.config`
+  - Moved the rest of `graphdb.clusterConfig` configurations under `cluster`, `cluster.config` and `cluster.config.params`
 - Moved `graphdb.security` configurations to `security`
-- Updated the Service type of the proxy to be ClusterIP by default
+  - Moved `provisioningUsername` and `provisioningPassword` under `security.provisioner`
+- Moved job related configurations from `graphdb` (e.g. `graphdb.jobResources`) to a new root section `jobs`
+- Moved `graphdb.node.service` configurations to `headlessService`
+- Moved `graphdb.import_directory_mount` configurations to `import.volumeMount`
 - Renamed `pdb` to `podDisruptionBudget` and renamed `podDisruptionBudget.create` to `podDisruptionBudget.enabled` for consistency
+- Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration in `cluster.config.params`
+- Renamed `java_args` to `defaultJavaArguments` and added a separate `javaArguments` that can be used for additional configurations,
+  see `configuration` and `proxy.configuration`
+- Removed `default.min.distinct.threshold` property from the default `defaultJavaArguments` values
 - Removed configuration overrides from the default `GDB_JAVA_OPTS`: `enable-context-index`, `entity-pool-implementation`
   and `health.max.query.time.seconds`
-- Removed `default.min.distinct.threshold` from the default `defaultJavaArguments` values
-- Moved `provisioningUsername` and `provisioningPassword` under `security.provisioner`
+- Removed the default logback XML configuration and configmap in favor of an [example](examples/custom-logback) and a new configuration options
+  under `configuration.logback` and `proxy.configuration.logback`
+- Renamed GraphDB storage PVC template name prefix to `storage` and server import folder to `import`
 - Moved `persistence.volumeClaimTemplateSpec` to `persistence.volumeClaimTemplate.spec`
+- Updated the Service type of the proxy to be ClusterIP by default, see `proxy.service.type`
+- And more, please refer to [values.yaml](values.yaml)
 
 ### New
 
-- Added `annotations` for common annotations across resources
-- Added `serviceAccount` allowing you to create or use an existing service account for GraphDB pods
-- Added separate `labels` and `annotations` for the cluster proxy
 - Added GraphDB and GraphDB proxy hostnames resolution in the init containers
-- Added `conpfiguration.properties` and `proxy.configuration.properties` for inserting additional GraphDB configurations in the properties configmaps
-- Added `image.digest` to optionally provide an expected digest of the image
-- Added `persistence.enabled` toggle flag for enabling or disabling the persistence of GraphDB
-- Added `persistence.emptyDir` and `proxy.persistence.emptyDir` configurations for an emptyDir volume that will be used when the persistence is disabled
-- Added new configuration options for the default ingress `ingress`:
-  - Ability to override the `host` and `path` for GraphDB from `configuration.host` and `configuration.path`
-  - Changing the `pathType`
-  - Inserting additional hosts and TLS configurations with `extraHosts` and `extraTLS`
-- Added `labels` for each service resource for insertion of additional labels
-- Added `containerPorts` and `proxy.containerPorts` for mapping the ports on which GraphDB listens on
-- Added `ports` mappings in each service
-- Added `extraContainerPorts` and `proxy.extraContainerPorts`
-- Added `imagePullPolicy` to the jobs containers
-- Added feature toggles
-  - `cluster.jobs.createCluster.enabled`
-  - `cluster.jobs.patchCluster.enabled`
-  - `cluster.jobs.scaleCluster.enabled`
+- Added new annotation checksums for GraphDB and GraphDB proxy in order to detect changes in the properties configmaps
+  and ultimately trigger rolling update
+- Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
+- Added `serviceAccount` configurations allowing you to create or use an existing service account for the GraphDB pods
+- Added more feature toggles:
   - `headlessService.enabled`
   - `proxy.service.enabled`
   - `proxy.headlessService.enabled`
-- Added new annotation checksums for GraphDB and GraphDB proxy in order to detect changes in the properties configmaps 
-  and ultimately trigger rolling update
-- Added a Service for single GraphDB deployments, configured with new configurations under `service`
-- Added new proxy configurations `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting
+  - `persistence.enabled`
+  - `proxy.persistence.enabled`
+  - `cluster.jobs.createCluster.enabled` - Enables or disables the cluster creation Job
+  - `cluster.jobs.patchCluster.enabled` - Enables or disables the Job for patching the cluster configuration
+  - `cluster.jobs.scaleCluster.enabled` - Enables or disables the Jobs for scaling up or down the cluster
+- Added `image.digest` to optionally provide an expected digest of the image
+- Added `annotations` for additional common annotations across all resources
+- Added separate `proxy.labels` and `proxy.annotations` configurations for the cluster proxy
 - Added new `global.clusterDomain` for reconfiguring the default Kubernetes cluster domain suffix in case it is different than `cluster.local`
-- Added `cluster.config.configmapKey` to specify a custom configmap key if needed
 - Added `namespaceOverride` for overriding the deployment namespace for all resources in case of multi-namespace deployment
-- Added `proxy.logging.logback` configurations for providing the proxy with a custom Logback XML configuration
-- Added `extraConfiguration.existingSecret` for appending GraphDB properties from an existing Secret resource
-- Added `proxy.extraConfiguration` for appending extra GraphDB properties from existing ConfigMap and Secret resources
-- Added `cluster.token.existingSecret` and `cluster.token.secretKey` for using an existing Secret instead of providing the cluster secret 
+- Added new configuration options for the default ingress `ingress`:
+  - Ability to override the `host` and `path` for GraphDB from `configuration.externalUrl`
+  - Ability to change the Ingress path type with `ingress.pathType`
+  - Inserting additional hosts and TLS configurations with `ingress.extraHosts` and `ingress.extraTLS`
+- Added `security.admin` for configuring the username and/or the password of the administrator user
+- Added `security.initialUsers.users` for inserting additional users into the default initial user.js configuration
+- Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
+- Added `cluster.token.existingSecret` and `cluster.token.secretKey` for using an existing Secret instead of providing the cluster secret
   token as plaintext in values.yaml
-- Added default Secret objects for GraphDB and the proxy that contain sensitive GraphDB configurations
-- Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional sensitive GraphDB configurations if needed
-- Added `proxy.pdb` for configuring a pod disruption budget for the GraphDB Proxy
-- Added `updateStrategy` and `proxy.updateStrategy` for controlling the strategy when updating pods
-- Added `podManagementPolicy` and `proxy.podManagementPolicy` for configuring how the pods are created and scaled
-- Added `automountServiceAccountToken` with default value `false` effectively ejecting the service account token by default
-- Added `schedulerName` and `proxy.schedulerName` for overriding the default Kubernetes scheduler
-- Added `dnsConfig`, `dnsPolicy`, `proxy.dnsConfig` and `proxy.dnsPolicy` for customizing the DNS resolution if needed
-- Added `proxy.initContainerSecurityContext` and `proxy.initContainerResources` to avoid using the configurations from GraphDB
-- Added `extraContainers` and `proxy.extraContainers` for inserting additional containers into the pods of GraphDB and the GraphDB proxy
-- Added `extraObjects` as a way to insert additional Kubernetes objects into the deployment
+- Added `cluster.config.existingConfigmap` to specify a custom configmap key if needed
+- Added `configuration.properties` and `proxy.configuration.properties` for appending additional inline GraphDB configurations in their properties
+  configmaps
+- Added `configuration.secretProperties` and `proxy.secretProperties` for appending additional inline sensitive GraphDB configurations if needed
+- Added `configuration.extraProperties.existingConfigmap` and `proxy.configuration.extraProperties.existingConfigmap` for appending GraphDB properties
+  from an existing ConfigMap resource
+- Added `configuration.extraProperties.existingSecret` and `proxy.configuration.extraProperties.existingSecret` for appending GraphDB properties from
+  an existing Secret resource
+- Added a Service for single GraphDB deployments, configured with new configurations under `service`
+- Added new configurations for the Service resources `service`, `headlessService`, `proxy.service` and `proxy.headlessService`:
+  - Added `labels` configurations for insertion of additional labels
+  - Added `ports` mappings in each Service
+  - Added `extraPorts` for mapping additional ports, use in combination with `extraContainerPorts`
+- Added `containerPorts` and `proxy.containerPorts` for mapping the ports on which GraphDB listens on
+- Added `extraContainerPorts` and `proxy.extraContainerPorts` to open additional container ports
 - Added `service.externalTrafficPolicy` and `service.proxy.externalTrafficPolicy` to override the policy to Local if needed
 - Added `service.healthCheckNodePort` and `service.proxy.healthCheckNodePort` to define a specific node port for LB health checks
 - Added `service.loadBalancerClass` and `service.proxy.loadBalancerClass` to select a specific load balancer implementation
 - Added `service.loadBalancerSourceRanges` and `service.proxy.loadBalancerSourceRanges` to restrict the external ingress traffic from the LB
 - Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
-- Added `service.extraPorts` and `service.proxy.extraPorts` for exposing additional ports
+- Added `persistence.emptyDir` and `proxy.persistence.emptyDir` configurations for an emptyDir volume that will be used when the persistence is
+  disabled
 - Added configurations for extra `labels` and `annotations` for all persistent volume claim
   templates: `persistence.volumeClaimTemplate`, `proxy.persistence.volumeClaimTemplate` and `import.volumeMount.volumeClaimTemplate`
+- Added `imagePullPolicy` configuration to the Jobs containers
 - Added `jobs.backoffLimit` for configuring the retry count for all jobs
 - Added `jobs.ttlSecondsAfterFinished` for configuring the time in seconds for all jobs before deleting finished pods
 - Added `jobs.persistence.emptyDir` configurations for the default temporary storage for all jobs
-- Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
-- Added `security.admin` for configuring the username and/or the password of the administrator user
-- Added `security.initialUsers.users` for inserting additional users into the default initial user.js configuration
+- Added `proxy.command` and `proxy.args` that override the default container entrypoint and command, use for troubleshooting
+- Added `proxy.pdb` for configuring a pod disruption budget for the GraphDB Proxy
+- Added `proxy.logback` configurations for providing the proxy with a custom Logback XML configuration
+- Added `proxy.initContainerSecurityContext` and `proxy.initContainerResources` to avoid using the configurations from GraphDB
+- Added `automountServiceAccountToken` with default value `false` effectively ejecting the service account token by default
+- Added `updateStrategy` and `proxy.updateStrategy` for controlling the strategy when updating pods
+- Added `podManagementPolicy` and `proxy.podManagementPolicy` for configuring how the pods are created and scaled
+- Added `schedulerName` and `proxy.schedulerName` for overriding the default Kubernetes scheduler
+- Added `dnsConfig`, `dnsPolicy`, `proxy.dnsConfig` and `proxy.dnsPolicy` for customizing the DNS resolution if needed
+- Added `extraContainers` and `proxy.extraContainers` for inserting additional containers into the pods of GraphDB and the GraphDB proxy
 - Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
 - Added `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
-- Added `headlessService.extraPorts` and `proxy.headlessService.extraPorts` for additional ports exposed by the headless Service resources
+- Added `extraObjects` as a way to insert additional Kubernetes objects into the deployment
 
 ### Updates
 
-- GraphDB properties configmap is now applied by default
+- GraphDB and GraphDB proxy properties configmaps are now applied by default
+- References to existing configmaps and secrets are now processed as templates
+- Node scheduling configurations are now processed as templates
 - Values in `labels`, `annotations` and `imagePullSecrets` are now evaluated as templates
 - Removed unused busybox image configurations from `images.busybox`
-- Service resources and probes now refer to the target ports by their nicknames
 - Renamed the port mappings of GraphDB and GraphDB proxy to `http` and `rpc`
-- References to existing configmaps and secrets are now processed as templates
+- Service resources and probes now refer to the target ports by their nicknames instead of explicit port numbers
 - Added trimming when loading files in the configmaps and secrets
-- Cluster jobs now automatically resolves the cluster domain
+- Cluster jobs now automatically resolve the cluster domain
 - Removed `files/config/graphdb.properties` and `files/config/proxy/graphdb.properties` and moved any defined properties directly into the ConfigMap
   declarations
 - Moved GraphDB specific properties from `GDB_JAVA_OPTS` into the properties ConfigMaps
 - Added `-XX:-UseCompressedOops` in the default Java arguments to allow allocating heap sizes larger than 32GBs when the max heap size is based on
   the `-XX:MaxRAMPercentage` Java option
-- Ejected the default service account token in the proxy pods
+- Ejected the default service account token in the GraphDB proxy pods
 - Overhauled NOTES.txt to be more helpful
 - Added default resource limits and requests for all init containers and provisioning jobs
 - PodDisruptionBudget are enabled by default for both GraphDB and GraphDB proxy
-- Node scheduling configurations are now processed as templates
 - Updated init containers to invoke `bash` instead of `sh`
 
 ## Version 10.6.0-R2

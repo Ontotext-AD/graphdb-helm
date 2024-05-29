@@ -49,11 +49,6 @@ TODO: Info about the basic Helm chart features ?
 * Kubernetes v1.26+
 * Helm v3.8+
 
-<!--
-TODO: Could mention about 3 node cluster with at least GBs
-TODO: Could mention about CSI and ingress
--->
-
 ### Getting Started
 
 If this is your first time installing a Helm chart, you should read the following introductions before continuing:

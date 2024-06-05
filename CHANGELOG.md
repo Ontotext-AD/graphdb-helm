@@ -85,7 +85,7 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
   - Ability to override the `host` and `path` for GraphDB from `configuration.externalUrl`
   - Ability to change the Ingress path type with `ingress.pathType`
   - Inserting additional hosts and TLS configurations with `ingress.extraHosts` and `ingress.extraTLS`
-- Added `security.admin` for configuring the username and/or the password of the administrator user
+- Added `security.admin` for configuring the initial password of the administrator user
 - Added `security.initialUsers.users` for inserting additional users into the default initial user.js configuration
 - Added `security.provisioner.existingSecret` and `security.provisioner.tokenKey` to provide an existing authentication token
 - Added `cluster.token.existingSecret` and `cluster.token.secretKey` for using an existing Secret instead of providing the cluster secret

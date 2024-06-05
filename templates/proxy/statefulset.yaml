@@ -23,7 +23,7 @@ spec:
   volumeClaimTemplates:
     {{- if .Values.proxy.persistence.enabled }}
     - metadata:
-        name: storage
+        name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}
         {{- with .Values.proxy.persistence.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
@@ -65,7 +65,7 @@ spec:
       {{- end }}
       volumes:
         {{- if not .Values.proxy.persistence.enabled }}
-        - name: storage
+        - name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}
           emptyDir: {{ .Values.proxy.persistence.emptyDir | toYaml | nindent 12 }}
         {{- end }}
         - name: graphdb-proxy-properties
@@ -123,7 +123,7 @@ spec:
             - name: GRAPHDB_GROUP_ID
               value: {{ coalesce .Values.proxy.securityContext.runAsGroup .Values.proxy.podSecurityContext.runAsGroup | quote }}
           volumeMounts:
-            - name: storage
+            - name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
           {{- with .Values.proxy.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -162,7 +162,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: storage
+            - name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
             - name: graphdb-proxy-properties
               mountPath: /tmp/graphdb.properties
@@ -258,7 +258,7 @@ spec:
               {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
-            - name: storage
+            - name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
             {{- if .Values.proxy.configuration.logback.existingConfigmap }}
             - name: graphdb-proxy-logback-config
@@ -283,7 +283,7 @@ spec:
           {{- with .Values.proxy.livenessProbe }}
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- with .Values.extraContainers }}
+        {{- with .Values.proxy.extraContainers }}
           {{ tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
 {{- end }}

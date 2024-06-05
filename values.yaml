@@ -19,7 +19,7 @@ global:
   # Values are processed as Helm templates.
   # Ref: https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets
   #
-  # e.g.:
+  # Example:
   # imagePullSecrets:
   #   - name: my-pull-secret
   imagePullSecrets: []
@@ -42,7 +42,8 @@ nameOverride: ""
 # Note: To override the GraphDB proxy's full name, use .Values.proxy.fullnameOverride
 fullnameOverride: ""
 
-# Overrides the deployment namespace in case of multi-namespace deployments, i.e. using umbrella charts.
+# Overrides the deployment namespace in case of multi-namespace deployments, for example when using umbrella charts where some sub charts should be
+# deployed in different namespaces.
 # This affects every resource deployed by this chart.
 # The default value is .Release.Namespace if this is left unspecified.
 namespaceOverride: ""
@@ -51,7 +52,7 @@ namespaceOverride: ""
 # Values are processed as Helm templates.
 # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 #
-# e.g.:
+# Example:
 # labels:
 #   foo: bar
 #   some-label: {{ .Values.someValue }}
@@ -61,7 +62,7 @@ labels: {}
 # Values are processed as Helm templates.
 # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 #
-# e.g.:
+# Example:
 # annotations:
 #   foo: bar
 #   some-annotation: {{ .Values.someValue }}
@@ -88,7 +89,7 @@ image:
   tag: ""
 
   # Expected SHA256 digest of the used GraphDB image, e.g. "sha256@abc"
-  # Use the digest to make sure you would be deploying the same and exact GraphDB image always.
+  # Use the digest to make sure you are always deploying the exact same GraphDB image.
   # Defining this would override .Chart.AppVersion and image.tag
   digest: ""
 
@@ -100,7 +101,7 @@ image:
   # Values are processed as Helm templates.
   # Ref: https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets
   #
-  # e.g.:
+  # Example:
   # pullSecrets:
   #   - name: my-pull-secret
   pullSecrets: []
@@ -110,7 +111,8 @@ image:
 ##########################
 
 # Number of GraphDB nodes to be deployed as part of the StatefulSet.
-# Set value to 1 to run a standalone GraphDB instance or set to more to form a GraphDB cluster with GraphDB cluster proxies.
+# Set value to 1 to run a standalone GraphDB instance
+# Set value to more than 1 to form a GraphDB cluster with GraphDB cluster proxies.
 # This setting control the deployment of the cluster proxies and cluster jobs as well.
 # Ref: https://graphdb.ontotext.com/documentation/10.6/creating-a-cluster.html
 replicas: 1
@@ -147,7 +149,7 @@ configuration:
   # GraphDB properties to insert in the default graphdb.properties ConfigMap.
   # Values are processed as Helm templates.
   #
-  # e.g.:
+  # Example:
   # properties:
   #   graphdb.append.request.id.headers: "true"
   properties: {}
@@ -157,7 +159,7 @@ configuration:
   # Values are processed as Helm templates.
   # Note: Consider mounting existing Secret objects as environment variables or files
   #
-  # e.g.:
+  # Example:
   # secretProperties:
   #   graphdb.connector.keystorePass: "xxxx"
   secretProperties: {}
@@ -166,7 +168,7 @@ configuration:
   # in the default graphdb.properties ConfigMap and Secret resources.
   # Note: The exact processing and order of precedence is visible in the initContainers.
   #
-  # e.g.:
+  # Example:
   # extraProperties:
   #   existingConfigmap: my-graphdb-properties
   #   existingSecret: my-secret-graphdb-properties
@@ -198,7 +200,7 @@ configuration:
   # Configurations for GraphDB's Logback
   # Ref: https://graphdb.ontotext.com/documentation/10.6/diagnosing-and-reporting-critical-errors.html#logs
   #
-  # e.g.:
+  # Example:
   # logback:
   #   existingConfigmap: custom-logback-config
   logback:
@@ -216,7 +218,7 @@ configuration:
   # - If the security is enabled, a default initial settings.js will be provided to GraphDB, see files/config/settings.js
   # - If a custom existing settings.js is provided, it will be used no matter if the security is enabled or not.
   #
-  # e.g.:
+  # Example:
   # initialSettings:
   #   existingConfigmap: custom-initial-settings
   initialSettings:
@@ -242,9 +244,9 @@ security:
   # Administrator user with ROLE_ADMIN authority.
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   admin:
-    username: admin
     # Define an initial password for the administrator user.
     # If the password is not specified, it will use the default one for GraphDB which is "root"
+    # Important: This value must be a bcrypt encrypted hash, not a plaintext string. The format is "{bcrypt}<the-encrypted-hash>"
     initialPassword: ""
 
   # Provisioning user with ROLE_ADMIN authority
@@ -274,7 +276,7 @@ security:
     # Check the default user.js syntax for details.
     # Note that this won't be applied if you provide a custom Secret object with user.js via existingSecret below.
     #
-    # e.g.:
+    # Example:
     # users:
     #   tester:
     #     username: tester
@@ -426,7 +428,7 @@ service:
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # Ports exposed by the Service.
-  # Note: Cannot add custom ports here, use .Values.service.extraPorts instead.
+  # Note: If you want to add additional ports, use .Values.service.extraPorts.
   ports:
     # Port mapped to GraphDB's HTTP API.
     http: 7200
@@ -465,7 +467,7 @@ headlessService:
   # Values are processed as Helm templates.
   annotations: {}
   # Ports exposed by the Service
-  # Note: Cannot add custom ports here, use .Values.headlessService.extraPorts instead.
+  # Note: If you want to add additional ports, use .Values.headlessService.extraPorts.
   ports:
     # Port mapped to GraphDB's HTTP API.
     http: 7200
@@ -488,6 +490,8 @@ persistence:
   # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates
   # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
   volumeClaimTemplate:
+    # Prefix used when naming the PVCs for the StatefulSet
+    name: "storage"
     # Additional labels to add to the PVC template.
     # Values are processed as Helm templates.
     labels: {}
@@ -557,7 +561,7 @@ command: []
 args: []
 
 # Ports used by the GraphDB container
-# Note: Cannot add custom ports here, use .Values.extraContainerPorts instead.
+# Note: If you want to add additional ports, use .Values.extraContainerPorts.
 containerPorts:
   # Port mapped to GraphDB's HTTP API.
   http: 7200
@@ -778,6 +782,8 @@ import:
     # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates
     # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
     volumeClaimTemplate:
+      # Prefix used when naming the PVCs for the StatefulSet
+      name: "import"
       # Additional labels to add to the PVC template.
       # Values are processed as Helm templates.
       labels: {}
@@ -962,7 +968,7 @@ proxy:
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: ClusterIP
     # Ports exposed by the Service.
-    # Note: Cannot add custom ports here, use .Values.proxy.service.extraPorts instead.
+    # Note: If you want to add additional ports, use .Values.proxy.service.extraPorts.
     ports:
       # Port mapped to GraphDB proxy's HTTP API.
       http: 7200
@@ -1000,7 +1006,7 @@ proxy:
     # Values are processed as Helm templates.
     annotations: {}
     # Ports exposed by the Service
-    # Note: Cannot add custom ports here, use .Values.proxy.headlessService.extraPorts instead.
+    # Note: If you want to add additional ports, use .Values.proxy.headlessService.extraPorts.
     ports:
       # Port mapped to GraphDB's HTTP API.
       http: 7200
@@ -1024,6 +1030,8 @@ proxy:
     # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates
     # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
     volumeClaimTemplate:
+      # Prefix used when naming the PVCs for the StatefulSet
+      name: "storage"
       # Additional labels to add to the PVC template.
       # Values are processed as Helm templates.
       labels: {}
@@ -1092,7 +1100,7 @@ proxy:
   args: []
 
   # Ports used by the GraphDB proxy container
-  # Note: Cannot add custom ports here, use .Values.proxy.extraContainerPorts instead.
+  # Note: If you want to add additional ports, use .Values.proxy.extraContainerPorts.
   containerPorts:
     # Port mapped to GraphDB's HTTP API.
     http: 7200

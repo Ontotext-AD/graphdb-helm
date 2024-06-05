@@ -22,7 +22,7 @@ spec:
   volumeClaimTemplates:
     {{- if .Values.persistence.enabled }}
     - metadata:
-        name: storage
+        name: {{ .Values.persistence.volumeClaimTemplate.name }}
         {{- with .Values.persistence.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
@@ -34,7 +34,7 @@ spec:
     {{- end }}
     {{- if .Values.import.volumeMount.enabled }}
     - metadata:
-        name: import
+        name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
         {{- with .Values.import.volumeMount.volumeClaimTemplate.labels }}
         labels: {{ tpl (toYaml .) $ | nindent 10 }}
         {{- end }}
@@ -77,7 +77,7 @@ spec:
       {{- end }}
       volumes:
         {{- if not .Values.persistence.enabled }}
-        - name: storage
+        - name: {{ .Values.persistence.volumeClaimTemplate.name }}
           emptyDir: {{ .Values.persistence.emptyDir | toYaml | nindent 12 }}
         {{- end }}
         - name: graphdb-properties
@@ -150,7 +150,7 @@ spec:
             - name: GRAPHDB_GROUP_ID
               value: {{ coalesce .Values.securityContext.runAsGroup .Values.podSecurityContext.runAsGroup | quote }}
           volumeMounts:
-            - name: storage
+            - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
           {{- with .Values.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -184,7 +184,7 @@ spec:
                   key: {{ .Values.cluster.token.secretKey }}
             {{- end }}
           volumeMounts:
-            - name: storage
+            - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
             - name: graphdb-properties
               mountPath: /tmp/graphdb/graphdb.properties
@@ -305,7 +305,7 @@ spec:
           env: {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: storage
+            - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
             {{- if .Values.license.existingSecret }}
             - name: graphdb-license
@@ -318,7 +318,7 @@ spec:
               subPath: {{ .Values.configuration.logback.configmapKey }}
             {{- end }}
             {{- if .Values.import.volumeMount.enabled }}
-            - name: import
+            - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
             {{- with .Values.extraVolumeMounts }}

@@ -1,7 +1,7 @@
 {
   "users" : {
-    "{{ .Values.security.admin.username }}" : {
-      "username" : "{{ .Values.security.admin.username }}",
+    "admin" : {
+      "username" : "admin",
       "password" : {{ .Values.security.admin.initialPassword | default "{bcrypt}$2a$10$H7uekkF1ZFLIV5M1g9tDs.syZGtkMqrfj2Si2SHG1WgwhpNqpZwne" | quote }},
       "grantedAuthorities" : [ "ROLE_ADMIN" ],
       "appSettings" : {

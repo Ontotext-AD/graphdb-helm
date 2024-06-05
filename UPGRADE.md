@@ -193,7 +193,7 @@ The Helm chart is completely new and not backwards-compatible.
    kubectl get pod graphdb-worker-<selected-worker> -o yaml | grep -B 2 memory
    ```
 
-5. Make sure all the important settings saved in the settings.js of the master are present in the worker's. Their only difference
+5. Make sure all the important settings saved in the settings.js of the master are present in the workers. Their only difference
    should be the lack of locations in the worker's settings.
    ```bash
    kubectl cp graphdb-master-1-0:/opt/graphdb/home/work/workbench/settings.js settings_m.js
@@ -211,7 +211,7 @@ The Helm chart is completely new and not backwards-compatible.
    - Request a change in volume capacity by editing your PVC's `spec.resources.requests.storage`
    - Verify the change has taken effect with `get pvc <pvc-name> -o yaml` and checking the `status.capacity` field.
 
-7. Scale down the selected worker. In the official GraphDB every worker has its own statefulset.
+7. Scale down the selected worker. In the official GraphDB chart, every worker has its own statefulset.
    List all the stateful sets to find the name of the worker you want to scale down:
    ```bash
    kubectl get statefulsets
@@ -221,7 +221,7 @@ The Helm chart is completely new and not backwards-compatible.
    kubectl scale statefulsets <stateful-set-name> --replicas=0
    ```
 
-8. Once the worker is down patch the worker's PV with `"persistentVolumeReclaimPolicy":"Retain"`:
+8. Once the worker is down, patch the worker's PV with `"persistentVolumeReclaimPolicy":"Retain"`:
    ```bash
    kubectl patch pv <worker-pv-name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
    ```

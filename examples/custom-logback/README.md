@@ -1,7 +1,7 @@
 # GraphDB with Custom Logback Configuration
 
 GraphDB comes with a pre-configured Logback XML using sensible configuration defaults. 
-However, for certain use cases, it might need to be finely tuned. 
+However, for certain use cases, it might need to be fine-tuned. 
 
 This example shows how to use a custom Logback XML configuration with GraphDB's Helm chart.
 

@@ -6,7 +6,6 @@ metadata:
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.deployment.ingress.class }}
     {{- if .Values.deployment.tls.enabled }}
     ingress.kubernetes.io/force-ssl-redirect: "true"
     {{- end }}
@@ -24,6 +23,7 @@ metadata:
       {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  ingressClassName: {{ .Values.deployment.ingress.class }}
   {{- if .Values.deployment.tls.enabled }}
   tls:
     - hosts:

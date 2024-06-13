@@ -37,12 +37,12 @@ global:
 # Note: To override the GraphDB proxy's resource names, use .Values.proxy.nameOverride
 nameOverride: ""
 
-# Overrides the naming of all GraphDB resources, effectively removing the chart's name and release name prefix.
+# Overrides the naming of all GraphDB resources, effectively removing the chart's name and the release name prefix.
 # This override takes precedence over anything in .Values.nameOverride
 # Note: To override the GraphDB proxy's full name, use .Values.proxy.fullnameOverride
 fullnameOverride: ""
 
-# Overrides the deployment namespace in case of multi-namespace deployments, for example when using umbrella charts where some sub charts should be
+# Overrides the deployment namespace in case of multi-namespace deployments, for example when using umbrella charts where some sub-charts should be
 # deployed in different namespaces.
 # This affects every resource deployed by this chart.
 # The default value is .Release.Namespace if this is left unspecified.
@@ -455,7 +455,7 @@ service:
   extraPorts: []
 
 # Configurations for GraphDB headless Service.
-# This Service is deployed regardless of the amount of .Values.replicas, so it exists for both singe node and for cluster mode.
+# This Service is deployed regardless of the amount of .Values.replicas, so it exists for both single node and for cluster mode.
 # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
 headlessService:
   # Enables or disables the headless Service deployment.
@@ -483,7 +483,7 @@ headlessService:
 persistence:
   # Toggles the persistence of GraphDB data.
   # - If enabled, the StatefulSet will use a PVC template and rely on the CSI to dynamically provision Persistent Volumes.
-  # - If disabled, it fallbacks to an emptyDir volume.
+  # - If disabled, it falls back to an emptyDir volume.
   enabled: true
 
   # Configurations for PVC based persistence.
@@ -508,9 +508,25 @@ persistence:
 
   # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
   # Used when the persistence is disabled with .Values.persistence.enabled
+  # Ref: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
   emptyDir:
     # Default emptyDir limit, override to your needs.
     sizeLimit: 1Gi
+
+# Configurations for an emptyDir volume for the /tmp folder in each GraphDB container.
+# Because the default security context in .Values.securityContext configures the root filesystem to be in read-only mode, certain GraphDB features
+# cannot create and write files in /tmp. If you don't use a read-only root filesystem, you can disable this with .Values.tempPersistence.enabled
+tempVolume:
+  # Toggles the temp folder emptyDir volume creation.
+  # - If enabled, the StatefulSet will use an emptyDir volume for /tmp.
+  # - If disabled, the chart won't create and mount ephemeral volumes for /tmp.
+  enabled: true
+
+  # Configurations for an emptyDir volume to be used for /tmp.
+  # Ref: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
+  emptyDir:
+    # Default emptyDir limit, override to your needs.
+    sizeLimit: 128Mi
 
 ##############################
 # StatefulSet Configurations #
@@ -549,6 +565,10 @@ dnsConfig: {}
 # Defines the Pod's policy for DNS resolution.
 # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
 dnsPolicy: ""
+
+# Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
+# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
+priorityClassName: ""
 
 # Overrides the default GraphDB container command.
 # Use only for troubleshooting!
@@ -648,9 +668,9 @@ topologySpreadConstraints: []
 # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
 resources:
   limits:
-    memory: 2Gi
+    memory: 4Gi
   requests:
-    memory: 2Gi
+    memory: 4Gi
     cpu: 500m
 
 # Resource configurations for the init containers in the GraphDB Pod.
@@ -667,7 +687,7 @@ initContainerResources:
 #########################
 
 # Configurations for the GraphDB container startup probe.
-# Note: Misconfigured probe can lead to a failing GraphDB cluster!
+# Note: A misconfigured probe can lead to a failing GraphDB cluster!
 startupProbe:
   httpGet:
     path: /protocol
@@ -677,7 +697,7 @@ startupProbe:
   periodSeconds: 10
 
 # Configurations for the GraphDB container readiness probe.
-# Note: Misconfigured probe can lead to a failing GraphDB cluster!
+# Note: A misconfigured probe can lead to a failing GraphDB cluster!
 readinessProbe:
   httpGet:
     path: /protocol
@@ -687,7 +707,7 @@ readinessProbe:
   periodSeconds: 10
 
 # Configurations for the GraphDB container liveness probe.
-# Note: Misconfigured probe can lead to a failing GraphDB cluster!
+# Note: A misconfigured probe can lead to a failing GraphDB cluster!
 livenessProbe:
   httpGet:
     path: /protocol
@@ -1023,7 +1043,7 @@ proxy:
   persistence:
     # Toggles the persistence of GraphDB proxy data.
     # - If enabled, the StatefulSet will use a PVC template and rely on the CSI to dynamically provision Persistent Volumes.
-    # - If disabled, it fallbacks to an emptyDir volume.
+    # - If disabled, it falls back to an emptyDir volume.
     enabled: true
 
     # Configurations for PVC based persistence.
@@ -1048,6 +1068,7 @@ proxy:
 
     # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
     # Used when the persistence is disabled with .Values.proxy.persistence.enabled
+    # Ref: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
     emptyDir:
       # Default emptyDir limit, override to your needs.
       sizeLimit: 500Mi
@@ -1088,6 +1109,10 @@ proxy:
   # Defines the proxy Pod's policy for DNS resolution.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
   dnsPolicy: ""
+
+  # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
+  priorityClassName: ""
 
   # Overrides the default GraphDB proxy container command.
   # Use only for troubleshooting!
@@ -1206,7 +1231,7 @@ proxy:
   #########################
 
   # Configurations for the GraphDB proxy container startup probe.
-  # Note: Misconfigured probe can lead to a failing GraphDB cluster!
+  # Note: A misconfigured probe can lead to a failing GraphDB cluster!
   startupProbe:
     httpGet:
       path: /proxy/ready
@@ -1216,7 +1241,7 @@ proxy:
     periodSeconds: 5
 
   # Configurations for the GraphDB proxy container readiness probe.
-  # Note: Misconfigured probe can lead to a failing GraphDB cluster!
+  # Note: A misconfigured probe can lead to a failing GraphDB cluster!
   readinessProbe:
     httpGet:
       path: /proxy/ready
@@ -1225,7 +1250,7 @@ proxy:
     periodSeconds: 10
 
   # Configurations for the GraphDB proxy container liveness probe.
-  # Note: Misconfigured probe can lead to a failing GraphDB cluster!
+  # Note: A misconfigured probe can lead to a failing GraphDB cluster!
   livenessProbe:
     httpGet:
       path: /proxy/health

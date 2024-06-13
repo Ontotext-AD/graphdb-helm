@@ -63,6 +63,9 @@ spec:
       {{- if .Values.proxy.dnsPolicy }}
       dnsPolicy: {{ .Values.proxy.dnsPolicy }}
       {{- end }}
+      {{- if .Values.proxy.priorityClassName }}
+      priorityClassName: {{ .Values.proxy.priorityClassName }}
+      {{- end }}
       volumes:
         {{- if not .Values.proxy.persistence.enabled }}
         - name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}

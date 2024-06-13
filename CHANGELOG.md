@@ -112,6 +112,7 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 - Added `service.externalIPs` and `service.proxy.externalIPs` to use existing external IPs
 - Added `persistence.emptyDir` and `proxy.persistence.emptyDir` configurations for an emptyDir volume that will be used when the persistence is
   disabled
+- Added `tempVolume` configurations for an emptyDir volume mapped to the /tmp folder in the GraphDB containers
 - Added configurations for extra `labels` and `annotations` for all persistent volume claim
   templates: `persistence.volumeClaimTemplate`, `proxy.persistence.volumeClaimTemplate` and `import.volumeMount.volumeClaimTemplate`
 - Added `imagePullPolicy` configuration to the Jobs containers
@@ -131,6 +132,7 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 - Added `initContainerDataPermissions` and `proxy.initContainerDataPermissions` for changing permissions in the storage volumes if needed
 - Added `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
 - Added `extraObjects` as a way to insert additional Kubernetes objects into the deployment
+- Added `priorityClassName` and `proxy.priorityClassName` configurations
 
 ### Updates
 
@@ -153,6 +155,7 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 - Added default resource limits and requests for all init containers and provisioning jobs
 - PodDisruptionBudget are enabled by default for both GraphDB and GraphDB proxy
 - Updated init containers to invoke `bash` instead of `sh`
+- Updated the default memory limits and requests to 4Gi 
 
 ## Version 10.6.0-R2
 

@@ -1,0 +1,23 @@
+#
+# This example shows how to deploy GraphDB behind the context path "/graphdb" and how to properly configure the Ingress resource to serve GraphDB
+# behind that path.
+# See https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
+#
+
+configuration:
+  # Note the hostname and the context path
+  externalUrl: http://127.0.0.1.nip.io/graphdb
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    # Allows larger payloads to GraphDB, i.e. import from the workbench
+    nginx.ingress.kubernetes.io/proxy-body-size: 512M
+    # Strips /graphdb from the upstream requests
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/x-forwarded-prefix: /graphdb
+  # Required to use regex in the path
+  pathType: ImplementationSpecific
+  # Matches everything that begins with /graphdb
+  path: /graphdb(/|$)(.*)

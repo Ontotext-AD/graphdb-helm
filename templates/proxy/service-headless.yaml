@@ -1,0 +1,32 @@
+{{- if and .Values.proxy.headlessService.enabled (gt (int .Values.replicas) 1) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphdb-proxy.fullname.service.headless" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb-proxy.labels" . | nindent 4 }}
+    {{- with .Values.proxy.headlessService.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations .Values.proxy.headlessService.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.proxy.headlessService.ports.http }}
+      targetPort: http
+      protocol: TCP
+    - name: rpc
+      port: {{ .Values.proxy.headlessService.ports.rpc }}
+      targetPort: rpc
+      protocol: TCP
+    {{- with .Values.proxy.headlessService.extraPorts -}}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

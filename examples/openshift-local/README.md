@@ -2,7 +2,7 @@
 
 Example configurations for deploying GraphDB cluster in [OpenShift Local](https://developers.redhat.com/products/openshift-local/overview).
 
-The primary purpose is to show an example of the necessary OpenShift local overrides and the proper `securityContext` configurations so 
+The primary purpose is to show an example of the necessary OpenShift local overrides and the proper `podSecurityContext` configurations so 
 GraphDB can be deployed without policy violations.
 
 Read more about Kubernetes security context and OpenShift security context constraints:
@@ -45,7 +45,9 @@ Instances are configured for being accessed at [https://graphdb.apps-crc.testing
 You'll have to use the `oc` utility provided by `crc` (from step 1):
 
 ```bash
-oc create route edge --service=graphdb-cluster-proxy --port=7200 --hostname=graphdb.apps-crc.testing --namespace graphdb
+oc create route edge --service=graphdb-proxy --port=7200 --hostname=graphdb.apps-crc.testing --namespace graphdb
 ```
+
+Note: You might need to update your hosts file to resolve `graphdb.apps-crc.testing`
 
 You can now access GraphDB at [https://graphdb.apps-crc.testing/](https://graphdb.apps-crc.testing/).

@@ -1,0 +1,76 @@
+{{- if and .Values.cluster.jobs.createCluster.enabled (gt (int .Values.replicas) 1) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "graphdb.fullname.job.create-cluster" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
+    "helm.sh/hook-weight": "-1"
+    {{- with .Values.annotations }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.jobs.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.jobs.ttlSecondsAfterFinished }}
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jobs.podSecurityContext }}
+      securityContext: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: job-temp
+          emptyDir: {{ .Values.jobs.persistence.emptyDir | toYaml | nindent 12 }}
+        - name: cluster-config
+          configMap:
+            name: {{ (tpl .Values.cluster.config.existingConfigmap .) | default (include "graphdb.fullname.configmap.cluster" .) }}
+        - name: graphdb-utils
+          configMap:
+            name: {{ include "graphdb.fullname.configmap.utils" . }}
+      containers:
+        - name: create-graphdb-cluster
+          image: {{ include "graphdb.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: GRAPHDB_POD_NAME
+              value: {{ include "graphdb.fullname" . }}
+            - name: GRAPHDB_SERVICE_NAME
+              value: {{ include "graphdb.fullname.service.headless" . }}
+            - name: GRAPHDB_SERVICE_PORT
+              value: {{ .Values.headlessService.ports.http | quote }}
+            - name: GRAPHDB_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ (tpl .Values.security.provisioner.existingSecret .) | default (include "graphdb.fullname.secret.provisioning-user" .) }}
+                  key: {{ .Values.security.provisioner.tokenKey }}
+          {{- with .Values.jobs.securityContext }}
+          securityContext: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.jobs.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: job-temp
+              mountPath: /tmp
+            - name: graphdb-utils
+              mountPath: /tmp/utils
+            - name: cluster-config
+              mountPath: /tmp/cluster-config/cluster-config.json
+              subPath: {{ .Values.cluster.config.configmapKey }}
+          command: ["bash"]
+          args:
+            - "/tmp/utils/graphdb.sh"
+            - createCluster
+            - "{{ .Values.replicas }}"
+            - "/tmp/cluster-config/cluster-config.json"
+            - "{{ .Values.cluster.clusterCreationTimeout }}"
+{{- end }}

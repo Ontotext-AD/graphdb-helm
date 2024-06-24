@@ -1,0 +1,27 @@
+{{- if gt (int .Values.replicas) 1 }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "graphdb-proxy.fullname.configmap.properties" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb-proxy.labels" . | nindent 4 }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+data:
+  graphdb.properties: |-
+    ##### GraphDB configurations #####
+    # See https://graphdb.ontotext.com/documentation/ for supported properties
+    graphdb.connector.port={{ .Values.proxy.containerPorts.http }}
+    graphdb.proxy.hosts={{ include "graphdb-proxy.cluster.nodes" . }}
+    {{- if .Values.proxy.configuration.properties }}
+    ##### Overrides from values.yaml #####
+    {{- range $key, $val := .Values.proxy.configuration.properties -}}
+    {{- if ne $val nil }}
+    {{ $key }}={{ tpl ($val | toString) $ | quote }}
+    {{- end }}
+    {{- end -}}
+    {{- end -}}
+{{- end }}

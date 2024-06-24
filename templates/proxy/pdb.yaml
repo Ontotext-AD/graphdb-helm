@@ -1,0 +1,23 @@
+{{- if .Values.proxy.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "graphdb-proxy.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb-proxy.labels" . | nindent 4 }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.proxy.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.proxy.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.proxy.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.proxy.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.proxy.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}
+{{- end }}

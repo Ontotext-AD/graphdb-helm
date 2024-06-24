@@ -3,11 +3,11 @@
 #
 apiVersion: v2
 name: graphdb
-description: GraphDB is an enterprise ready Semantic Graph Database
+description: GraphDB is a highly efficient, scalable and robust graph database with RDF and SPARQL support.
 type: application
-version: 10.6.4
+version: 11.0.0
 appVersion: 10.6.4
-kubeVersion: ^1.22.0-0
+kubeVersion: ^1.26.0-0
 home: https://graphdb.ontotext.com/
 icon: https://graphdb.ontotext.com/home/images/visual_Logo_GraphDB_02_12_2015.png
 maintainers:

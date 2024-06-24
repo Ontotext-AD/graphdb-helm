@@ -14,7 +14,7 @@ This Helm chart makes it easy to deploy and manage [GraphDB](https://www.ontotex
 
 ---
 
-:warning: **Important**: Beginning from version 11, the Helm chart has its own release cycle and is no longer tied to the version of GraphDB!
+:warning: **Important**: Beginning from version 11, the Helm chart has its own release cycle and is no longer tied to the version of GraphDB.
 
 ---
 
@@ -88,10 +88,12 @@ to refer to the correct ones. Note that the licenses can be set for all node ins
 
 ### Version Compatability
 
+The next table highlights the version mapping between the Helm chart and the deployed GraphDB.
+
 | Helm chart version | GraphDB version |
 |--------------------|-----------------|
-| 10.x               | 10.0 - 10.6     |
-| 11.0               | 10.7            |
+| 10.x               | 10.0 - 10.6.4   |
+| 11.0               | 10.6.4          |
 
 ### Install from Repository
 
@@ -194,7 +196,7 @@ Note: If `1` is selected as node count, the launched node will be standalone and
 
 - The section `cluster.config` can be used to configure a GraphDB cluster.
 
-See more about the cluster here: https://graphdb.ontotext.com/documentation/10.0/cluster-basics.html
+See more about the cluster here: https://graphdb.ontotext.com/documentation/10.6/cluster-basics.html
 
 ### Deploying GraphDB with security
 
@@ -209,7 +211,7 @@ Note that the `provisioning` user is required when security is turned on!
 By default, if the security is turned on, GraphDB's basic security method is used. More complicated security configurations
 can be configured using additional configurations in `graphdb.properties`.
 
-See https://graphdb.ontotext.com/documentation/10.0/access-control.html
+See https://graphdb.ontotext.com/documentation/10.6/access-control.html
 
 Prior to GraphDB 10.0.0 the users and their settings were saved in the `settings.js` file.
 
@@ -228,8 +230,9 @@ Note the `settings.js` must contain `security.enabled" : true` property when sec
 GraphDB uses Logback to configure logging using the `logback.xml` file.
 The file can be provisioned before GraphDB's startup with the `configuration.logback.existingConfigmap` configuration.
 
-See https://graphdb.ontotext.com/documentation/10.0/configuring-graphdb.html?highlight=properties
-See https://graphdb.ontotext.com/documentation/10.0/access-control.html
+See https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html#configuration-properties
+
+See https://graphdb.ontotext.com/documentation/10.6/access-control.html
 
 ### Importing data from existing persistent volume
 

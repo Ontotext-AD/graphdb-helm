@@ -190,7 +190,7 @@ configuration:
   # Takes precedence over any configurations provided in graphdb.properties
   # The value is processed as a Helm template.
   # Ref: https://graphdb.ontotext.com/documentation/10.6/directories-and-config-properties.html#configuration
-  defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops
+  defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops -Ddefault.min.distinct.threshold=100m
 
   # Java arguments to append after .Values.configuration.defaultJavaArguments
   # Use this one in order to avoid overriding the default values.

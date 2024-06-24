@@ -50,7 +50,6 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 - Renamed `messageSize` to `messageSizeKB` in the cluster creation configuration in `cluster.config.params`
 - Renamed `java_args` to `defaultJavaArguments` and added a separate `javaArguments` that can be used for additional configurations,
   see `configuration` and `proxy.configuration`
-- Removed `default.min.distinct.threshold` property from the default `defaultJavaArguments` values
 - Removed configuration overrides from the default `GDB_JAVA_OPTS`: `enable-context-index`, `entity-pool-implementation`
   and `health.max.query.time.seconds`
 - Removed the default logback XML configuration and configmap in favor of an [example](examples/custom-logback) and a new configuration options

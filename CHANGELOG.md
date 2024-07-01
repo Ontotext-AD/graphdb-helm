@@ -1,5 +1,15 @@
 # GraphDB Helm chart release notes
 
+## Version 11.0.1
+
+GraphDB Helm 11.0.1 is a patch release that includes bug fixes.
+
+### Fixed
+
+- Updated all cluster jobs to explicitly use `/tmp` as a working directory to avoid permission errors due to the default security
+  context's `readOnlyRootFilesystem` when the container has a starting folder different from `/tmp`.
+- Updated all utility scripts to use temporary files under `/tmp` for the same reason.
+
 ## Version 11.0.0
 
 Version 11 of the chart addresses a bunch of legacy issues and aims to provide much better user experience and reliability.

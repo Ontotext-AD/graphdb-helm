@@ -183,6 +183,7 @@ spec:
               mountPath: /tmp/graphdb/graphdb-extra-secret.properties
               subPath: {{ .Values.proxy.configuration.extraProperties.secretKey }}
             {{- end }}
+          workingDir: /tmp
           command: [ "bash", "-c" ]
           args:
             - |

@@ -65,6 +65,7 @@ spec:
               mountPath: /tmp/utils
             - name: repositories-config
               mountPath: /tmp/repositories-config
+          workingDir: /tmp
           command: ["bash"]
           args:
             - "/tmp/utils/graphdb.sh"

@@ -66,6 +66,7 @@ spec:
               mountPath: /tmp
             - name: graphdb-utils
               mountPath: /tmp/utils
+          workingDir: /tmp
           command: ["bash"]
           args:
             - "/tmp/utils/update-cluster.sh"

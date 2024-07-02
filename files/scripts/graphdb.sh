@@ -5,25 +5,29 @@ set -o nounset
 set -o pipefail
 
 function createCluster {
-  waitAllNodes $1
+  local node_count=$1
   local configLocation=$2
   local timeout=$3
+  local response
+
+  waitAllNodes "$node_count"
 
   echo "Creating cluster"
-  curl -o response.json -isSL -m "${timeout}" -X POST \
+  response=$(mktemp)
+  curl -o "$response" -isSL -m "${timeout}" -X POST \
        -d @"$configLocation" \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: */*' \
        "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
 
-  if grep -q 'HTTP/1.1 201' "response.json"; then
+  if grep -q 'HTTP/1.1 201' "$response"; then
     echo "Cluster creation successful!"
-  elif grep -q 'Cluster already exists.\|HTTP/1.1 409' "response.json" ; then
+  elif grep -q 'Cluster already exists.\|HTTP/1.1 409' "$response" ; then
     echo "Cluster already exists"
   else
     echo "Cluster creation failed, received response:"
-    cat response.json
+    cat "$response"
     echo
     exit 1
   fi
@@ -59,10 +63,12 @@ function waitAllNodes {
 }
 
 function createRepositoryFromFile {
-  waitAllNodes $1
+  local node_count=$1
   local repositoriesConfigsLocation=$2
   local timeout=60
   local success=true
+
+  waitAllNodes "$node_count"
 
   echo "Creating repositories"
   for filename in ${repositoriesConfigsLocation}/*.ttl; do

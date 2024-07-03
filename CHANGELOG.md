@@ -13,6 +13,9 @@
     - Added `job.priorityClassName` for defining the pods scheduling importance
     - Added `job.nodeSelector`, `job.affinity`, `job.tolerations` and `job.topologySpreadConstraints` for customizing the
       node scheduling
+- Added `persistence.volumeClaimRetentionPolicy` and `proxy.persistence.volumeClaimRetentionPolicy` to control the
+  retention policy of the PVCs when the StatefulSets are scaled and deleted. These configurations are used only for
+  Kubernetes 1.27 and above.
 
 ## Version 11.0.1
 

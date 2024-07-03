@@ -16,6 +16,9 @@ spec:
   updateStrategy: {{ .Values.proxy.updateStrategy | toYaml | nindent 4 }}
   podManagementPolicy: {{ .Values.proxy.podManagementPolicy }}
   revisionHistoryLimit: {{ .Values.proxy.revisionHistoryLimit }}
+  {{- if and .Values.proxy.persistence.volumeClaimRetentionPolicy (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) }}
+  persistentVolumeClaimRetentionPolicy: {{ .Values.proxy.persistence.volumeClaimRetentionPolicy | toYaml | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}

@@ -20,6 +20,30 @@ spec:
     spec:
       restartPolicy: Never
       automountServiceAccountToken: false
+      {{- if .Values.jobs.schedulerName }}
+      schedulerName: {{ .Values.jobs.schedulerName }}
+      {{- end }}
+      {{- with .Values.jobs.dnsConfig }}
+      dnsConfig: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.jobs.dnsPolicy }}
+      dnsPolicy: {{ .Values.jobs.dnsPolicy }}
+      {{- end }}
+      {{- if .Values.jobs.priorityClassName }}
+      priorityClassName: {{ .Values.jobs.priorityClassName }}
+      {{- end }}
+      {{- with .Values.jobs.nodeSelector }}
+      nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jobs.affinity }}
+      affinity: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jobs.tolerations }}
+      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jobs.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
       imagePullSecrets:
         {{- include "graphdb.combinedImagePullSecrets" . | nindent 8 }}

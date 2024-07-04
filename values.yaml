@@ -648,6 +648,18 @@ nodeSelector: {}
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
 affinity: {}
 
+# Default podAntiAffinity rule ensuring that GraphDB pods are scheduled on different Kubernetes nodes.
+# Note that this would take effect when GraphDB is deployed in a cluster.
+#
+# Possible values for .Values.podAntiAffinity.preset are:
+# - "soft" (default) - Configures a preferredDuringSchedulingIgnoredDuringExecution rule.
+# - "hard" - Configures a requiredDuringSchedulingIgnoredDuringExecution rule.
+# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+podAntiAffinity:
+  enabled: true
+  preset: soft
+  topology: kubernetes.io/hostname
+
 # List of taint tolerations.
 # Values are processed as Helm templates.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
@@ -1191,6 +1203,18 @@ proxy:
   # Values are processed as Helm templates.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+
+  # Default podAntiAffinity rule ensuring that GraphDB pods are scheduled on different Kubernetes nodes.
+  # Note that this would take effect when GraphDB is deployed in a cluster.
+  #
+  # Possible values for .Values.podAntiAffinity.preset are:
+  # - "soft" (default) - Configures a preferredDuringSchedulingIgnoredDuringExecution rule.
+  # - "hard" - Configures a requiredDuringSchedulingIgnoredDuringExecution rule.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  podAntiAffinity:
+    enabled: true
+    preset: soft
+    topology: kubernetes.io/hostname
 
   # List of taint tolerations.
   # Values are processed as Helm templates.

@@ -864,6 +864,44 @@ jobs:
   # Time in seconds before deleting finished pods
   ttlSecondsAfterFinished: 300
 
+  # Overrides the default Kubernetes scheduler.
+  # See https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/#specify-schedulers-for-pods
+  schedulerName: ""
+
+  # Overrides the Job's DNS settings.
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+  dnsConfig: {}
+
+  # Defines the Job's policy for DNS resolution.
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+  dnsPolicy: ""
+
+  # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
+  priorityClassName: ""
+
+  # Selector labels to match when selecting nodes.
+  # Values are processed as Helm templates.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+  # See https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
+  nodeSelector: {}
+
+  # Node and pod affinity & anti affinity configurations for constraining the Pod scheduling.
+  # Values are processed as Helm templates.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+
+  # List of taint tolerations.
+  # Values are processed as Helm templates.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  tolerations: []
+
+  # Configurations for spreading Pods across different failure domains.
+  # Values are processed as Helm templates.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+  topologySpreadConstraints: []
+
   # Defines privilege and access control settings for all containers in the Jobs.
   # See https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
   podSecurityContext:

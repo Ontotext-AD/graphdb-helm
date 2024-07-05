@@ -506,6 +506,16 @@ persistence:
         requests:
           storage: 5Gi
 
+  # Overrides the retention policy of the StatefulSet's PVC.
+  # This requires Kubernetes v1.27 or greater.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention
+  #
+  # Example:
+  # volumeClaimRetentionPolicy:
+  #   whenScaled: Retain
+  #   whenDeleted: Delete
+  volumeClaimRetentionPolicy: {}
+
   # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
   # Used when the persistence is disabled with .Values.persistence.enabled
   # Ref: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
@@ -515,7 +525,7 @@ persistence:
 
 # Configurations for an emptyDir volume for the /tmp folder in each GraphDB container.
 # Because the default security context in .Values.securityContext configures the root filesystem to be in read-only mode, certain GraphDB features
-# cannot create and write files in /tmp. If you don't use a read-only root filesystem, you can disable this with .Values.tempPersistence.enabled
+# cannot create and write files in /tmp. If you don't use a read-only root filesystem, you can disable this with .Values.tempVolume.enabled
 tempVolume:
   # Toggles the temp folder emptyDir volume creation.
   # - If enabled, the StatefulSet will use an emptyDir volume for /tmp.
@@ -729,7 +739,7 @@ livenessProbe:
   periodSeconds: 10
 
 #########################################
-# Additional Statefulset Configurations #
+# Additional StatefulSet Configurations #
 #########################################
 
 # Additional environment variables to be set for the GraphDB containers.
@@ -1116,6 +1126,16 @@ proxy:
           requests:
             storage: 500Mi
 
+    # Overrides the retention policy of the StatefulSet's PVC.
+    # This requires Kubernetes v1.27 or greater.
+    # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention
+    #
+    # Example:
+    # volumeClaimRetentionPolicy:
+    #   whenScaled: Retain
+    #   whenDeleted: Delete
+    volumeClaimRetentionPolicy: {}
+
     # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
     # Used when the persistence is disabled with .Values.proxy.persistence.enabled
     # Ref: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
@@ -1124,7 +1144,7 @@ proxy:
       sizeLimit: 500Mi
 
   ##############################
-  # Statefulset Configurations #
+  # StatefulSet Configurations #
   ##############################
 
   # Number of cluster proxies used to access the GraphDB cluster.
@@ -1322,7 +1342,7 @@ proxy:
     periodSeconds: 10
 
   #########################################
-  # Additional Statefulset Configurations #
+  # Additional StatefulSet Configurations #
   #########################################
 
   # Additional environment variables to be set for the GraphDB proxy containers.

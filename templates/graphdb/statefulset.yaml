@@ -15,6 +15,9 @@ spec:
   updateStrategy: {{ .Values.updateStrategy | toYaml | nindent 4 }}
   podManagementPolicy: {{ .Values.podManagementPolicy }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- if and .Values.persistence.volumeClaimRetentionPolicy (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) }}
+  persistentVolumeClaimRetentionPolicy: {{ .Values.persistence.volumeClaimRetentionPolicy | toYaml | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "graphdb.selectorLabels" . | nindent 6 }}

@@ -1,5 +1,13 @@
 # GraphDB Helm chart release notes
 
+## Version 11.1.0
+
+### New
+
+- Added `podAntiAffinity` and `proxy.podAntiAffinity` for configuring a default podAntiAffinity for the GraphDB pods and
+  GraphDB proxy pods. The default values configure a "soft" podAntiAffinity that tries to schedule GraphDB pods across
+  different Kubernetes hosts but does not enforce it.
+
 ## Version 11.0.1
 
 GraphDB Helm 11.0.1 is a patch release that includes bug fixes.

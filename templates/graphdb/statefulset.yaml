@@ -129,8 +129,31 @@ spec:
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
-      affinity: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- if or .Values.affinity .Values.podAntiAffinity.enabled }}
+      affinity:
+        {{- if .Values.affinity  }}
+          {{- tpl (toYaml .Values.affinity) $ | nindent 8 }}
+        {{- end }}
+        {{- if and .Values.podAntiAffinity.enabled (not .Values.affinity.podAntiAffinity) }}
+        podAntiAffinity:
+          {{- if eq .Values.podAntiAffinity.preset "soft" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinity.topology }}
+                labelSelector:
+                  matchLabels:
+                    {{- include "graphdb.selectorLabels" . | nindent 20 }}
+          {{- else if eq .Values.podAntiAffinity.preset "hard" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: {{ .Values.podAntiAffinity.topology }}
+              labelSelector:
+                matchLabels:
+                  {{- include "graphdb.selectorLabels" . | nindent 18 }}
+          {{- else }}
+            {{- fail (printf "Unknown podAntiAffinity preset '%s'" .Values.podAntiAffinity.preset) }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations: {{- tpl (toYaml .) $ | nindent 8 }}

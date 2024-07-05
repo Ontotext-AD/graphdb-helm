@@ -16,6 +16,9 @@ spec:
   updateStrategy: {{ .Values.proxy.updateStrategy | toYaml | nindent 4 }}
   podManagementPolicy: {{ .Values.proxy.podManagementPolicy }}
   revisionHistoryLimit: {{ .Values.proxy.revisionHistoryLimit }}
+  {{- if and .Values.proxy.persistence.volumeClaimRetentionPolicy (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) }}
+  persistentVolumeClaimRetentionPolicy: {{ .Values.proxy.persistence.volumeClaimRetentionPolicy | toYaml | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}
@@ -98,8 +101,31 @@ spec:
       {{- with .Values.proxy.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.proxy.affinity }}
-      affinity: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- if or .Values.proxy.affinity .Values.proxy.podAntiAffinity.enabled }}
+      affinity:
+        {{- if .Values.proxy.affinity  }}
+          {{- tpl (toYaml .Values.proxy.affinity) $ | nindent 8 }}
+        {{- end }}
+        {{- if and .Values.proxy.podAntiAffinity.enabled (not .Values.proxy.affinity.podAntiAffinity) }}
+        podAntiAffinity:
+          {{- if eq .Values.proxy.podAntiAffinity.preset "soft" }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: {{ .Values.proxy.podAntiAffinity.topology }}
+                labelSelector:
+                  matchLabels:
+                    {{- include "graphdb-proxy.selectorLabels" . | nindent 20 }}
+          {{- else if eq .Values.proxy.podAntiAffinity.preset "hard" }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: {{ .Values.proxy.podAntiAffinity.topology }}
+              labelSelector:
+                matchLabels:
+                  {{- include "graphdb-proxy.selectorLabels" . | nindent 18 }}
+          {{- else }}
+            {{- fail (printf "Unknown podAntiAffinity preset '%s'" .Values.proxy.podAntiAffinity.preset) }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       {{- with .Values.proxy.tolerations }}
       tolerations: {{- tpl (toYaml .) $ | nindent 8 }}

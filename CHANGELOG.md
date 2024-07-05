@@ -1,5 +1,23 @@
 # GraphDB Helm chart release notes
 
+## Version 11.1.0
+
+### New
+
+- Updated to GraphDB [10.7.0](https://graphdb.ontotext.com/documentation/10.7/release-notes.html#graphdb-10-7-0)
+- Added `podAntiAffinity` and `proxy.podAntiAffinity` for configuring a default podAntiAffinity for the GraphDB pods and
+  GraphDB proxy pods. The default values configure a "soft" podAntiAffinity that tries to schedule GraphDB pods across
+  different Kubernetes hosts but does not enforce it.
+- Added new configuration options for the Jobs
+    - Added `job.schedulerName` for overriding the default Kubernetes scheduler
+    - Added `job.dnsConfig` and `job.dnsPolicy` for customizing the DNS resolution
+    - Added `job.priorityClassName` for defining the pods scheduling importance
+    - Added `job.nodeSelector`, `job.affinity`, `job.tolerations` and `job.topologySpreadConstraints` for customizing the
+      node scheduling
+- Added `persistence.volumeClaimRetentionPolicy` and `proxy.persistence.volumeClaimRetentionPolicy` to control the
+  retention policy of the PVCs when the StatefulSets are scaled and deleted. These configurations are used only for
+  Kubernetes 1.27 and above.
+
 ## Version 11.0.1
 
 GraphDB Helm 11.0.1 is a patch release that includes bug fixes.

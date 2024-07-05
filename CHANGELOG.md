@@ -4,6 +4,7 @@
 
 ### New
 
+- Updated to GraphDB [10.7.0](https://graphdb.ontotext.com/documentation/10.7/release-notes.html#graphdb-10-7-0)
 - Added `podAntiAffinity` and `proxy.podAntiAffinity` for configuring a default podAntiAffinity for the GraphDB pods and
   GraphDB proxy pods. The default values configure a "soft" podAntiAffinity that tries to schedule GraphDB pods across
   different Kubernetes hosts but does not enforce it.

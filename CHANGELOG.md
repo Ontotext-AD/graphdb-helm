@@ -13,6 +13,11 @@
       with `backup.cloud`
     - Added a new example under [examples/backup-local](examples/backup-local) showing how to use the local backup feature
 
+### Fixed
+
+- Updated the GraphDB containers to explicitly use `/tmp` as a working directory to avoid permission errors due to the
+  default security context's `readOnlyRootFilesystem` when the container has a starting folder different from `/tmp`.
+
 ## Version 11.1.2
 
 ### New 

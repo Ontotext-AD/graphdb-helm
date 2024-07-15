@@ -262,6 +262,7 @@ spec:
         - name: {{ include "graphdb-proxy.chartName" . }}
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          workingDir: /tmp
           {{- if .Values.proxy.command }}
           command: {{ toYaml .Values.proxy.command | nindent 12 }}
           {{- else }}

@@ -1,0 +1,21 @@
+backup:
+  enabled: true
+
+  type: local
+
+  local:
+    existingPVC: local-backups
+
+# Example of a simple PVC that can be used as local backup storage.
+# Ideally, you should provide something that is replicated across AZs or even regions.
+extraObjects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: local-backups
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi

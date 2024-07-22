@@ -167,6 +167,7 @@ configuration:
   # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
   # in the default graphdb.properties ConfigMap and Secret resources.
   # Note: The exact processing and order of precedence is visible in the initContainers.
+  # Note: These as processed as graphdb.properties files, not as separate configurations.
   #
   # Example:
   # extraProperties:
@@ -537,6 +538,111 @@ tempVolume:
   emptyDir:
     # Default emptyDir limit, override to your needs.
     sizeLimit: 128Mi
+
+####################################
+# Scheduled Backups Configurations #
+####################################
+
+# Configurations for scheduling regular GraphDB backups with a Kubernetes CronJob.
+# The type of the backups are defined with .Values.backup.type and supports either cloud backup or local backup.
+#
+# Note that you will be responsible for rotating backups, either cloud or local.
+# Note that you can configure backup specific configurations with one of the available mechanics in .Values.configuration
+# Note that the CronJob will use the provisioner credentials from .Values.security.provisioner
+# Note that the CronJob configurations are affected from the common settings in .Values.jobs
+#
+# Ref: https://graphdb.ontotext.com/documentation/10.7/backup-and-restore.html#creating-a-cloud-backup
+backup:
+
+  # Toggles the creation of the CronJob for scheduled GraphDB backups.
+  enabled: false
+
+  # Defines the type of backup to schedule, possible values are:
+  # - cloud - Configures the CronJob to perform a cloud GraphDB backup in a compatible cloud object storage service.
+  #           Configured with .Values.backup.cloud
+  # - local - Configures the CronJob to perform a local GraphDB backup that downloads and stores the backup in the persistence volume .
+  #           Configured with .Values.backup.local
+  type: cloud
+
+  # Specifies the backups schedule as a Cron expression.
+  #
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax
+  schedule: "@midnight"
+
+  # Backup options that will be injected as JSON in the default backup options Secret. \
+  # These configurations define the backup behaviour such as including or excluding repositories or system data.
+  #
+  # Ref: https://graphdb.ontotext.com/documentation/10.7/backup-and-restore.html#backup-options
+  options:
+    backupSystemData: true
+
+  # GraphDB specific configuration options when creating backups.
+  # These options are not bound to the type of the backup (local or cloud).
+  # These will be projected in the default backup options Secret object as JSON.
+  #
+  # Ref: https://graphdb.ontotext.com/documentation/10.7/backup-and-restore.html#backup-options
+  optionsSecret:
+    # Reference to an existing Secret that contains the backup options.
+    # This overrides any value defined under .Values.backup.options
+    # The value is processed as a Helm template.
+    existingSecret: ""
+    # The key in the backup options Secret that contains the options JSON
+    secretKey: backup_options.json
+
+  # Configurations for a cloud GraphDB backup.
+  # Used when .Values.backup.type is set to "cloud".
+  cloud:
+    # This specifies the URI of the used cloud object storage service.
+    #
+    # Possible configurations include:
+    # - AWS S3: s3:///<bucket-name>/${BACKUP_NAME}?region=<AWSRegion>
+    # - AWS compatible S3: s3://[<endpoint-hostname>:<endpoint-port>]/<bucket-name>/${BACKUP_NAME}?region=<AWSRegion>
+    # - Azure Storage Account: az://<container-name>/${BACKUP_NAME}?blob_storage_account=<storage_account_name>
+    #
+    # This value is interpolated by the CronJob, so you can use environment variables in the following syntax: ${VARIABLE_NAME}
+    # This allows you to provide credentials with .Values.backup.extraEnv .Values.backup.extraEnvFrom and render them in the bucketUri
+    # without hardcoding anything in values.yaml
+    #
+    # To avoid hardcoding credentials in the bucketUri, you can utilize IAM roles with a ServiceAccount (IRSA).
+    #
+    # Special environment variables that are rendered by the CronJob are:
+    # - ${BACKUP_TIMESTAMP} - Timestamp in the format of %Y-%m-%d_%H-%M-%S
+    # - ${BACKUP_NAME} - A timestamped archive name in the format of graphdb-backup-%Y-%m-%d_%H-%M-%S.tar
+    # You can use these to create backups with a dynamic name.
+    #
+    # Note: This won't be used if an existing secret has been provided with .Values.backup.optionsSecret.existingSecret
+    #
+    # Ref: https://graphdb.ontotext.com/documentation/10.7/backup-and-restore.html#creating-and-restoring-cloud-backups
+    bucketUri:
+
+  # Configurations for a local GraphDB backup.
+  # Used when .Values.backup.type is set to "local".
+  local:
+    # Reference to an existing PVC that will be used by the CronJob to store local backups.
+    # Note that this is a required field when .Values.backup.type is set to "local".
+    #
+    # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+    existingPVC: ""
+    # Defines the volume path within the backup pod when mounting the existing PVC for local backups.
+    mountPath: /opt/graphdb/backups/
+
+  # Defines the number of successful backup jobs to keep.
+  #
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#jobs-history-limits
+  successfulJobsHistoryLimit: 3
+
+  # Defines the number of failed backup jobs to keep.
+  #
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#jobs-history-limits
+  failedJobsHistoryLimit: 3
+
+  # Additional environment variables to be set for the backup container.
+  # Values are processed as Helm templates.
+  extraEnvFrom: []
+
+  # Additional environment variables to be set for the backup container.
+  # Values are processed as Helm templates.
+  extraEnv: []
 
 ##############################
 # StatefulSet Configurations #

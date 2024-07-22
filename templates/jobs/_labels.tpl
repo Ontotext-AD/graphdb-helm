@@ -14,6 +14,10 @@ Helper functions for labels related to Job and provisioning resources
   {{- printf "%s-%s" (include "graphdb.fullname" .) "provisioning-user" -}}
 {{- end -}}
 
+{{- define "graphdb.fullname.secret.backup-options" -}}
+  {{- printf "%s-%s" (include "graphdb.fullname" .) "backup-options" -}}
+{{- end -}}
+
 {{- define "graphdb.fullname.job.create-cluster" -}}
   {{- printf "%s-%s" (include "graphdb.fullname" .) "create-cluster" -}}
 {{- end -}}
@@ -34,3 +38,6 @@ Helper functions for labels related to Job and provisioning resources
   {{- printf "%s-%s" (include "graphdb.fullname" .) "scale-up-cluster" -}}
 {{- end -}}
 
+{{- define "graphdb.fullname.cronjob.backup" -}}
+  {{- printf "%s-%s" (include "graphdb.fullname" .) "backup" -}}
+{{- end -}}

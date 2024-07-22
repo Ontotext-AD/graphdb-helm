@@ -14,6 +14,7 @@ GraphDB cluster: {{ .Values.replicas }} replicas
 {{- else }}
 GraphDB cluster: disabled
 {{- end }}
+GraphDB backup schedule: {{ .Values.backup.enabled | ternary .Values.backup.type "disabled"  }}
 GraphDB workbench: {{ include "graphdb.external-url" . }}
 
 ** Please be patient while the chart is being deployed and services are available **

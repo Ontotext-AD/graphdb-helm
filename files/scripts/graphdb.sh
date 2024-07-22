@@ -4,6 +4,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+function log {
+    local message="$1"
+    local timestamp
+    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo "[$timestamp] $message"
+}
+
 function createCluster {
   local node_count=$1
   local configLocation=$2
@@ -96,6 +103,87 @@ function createRepositoryFromFile {
   if [ $success != true ]; then
     exit 1
   fi
+}
+
+function interpolate {
+  local input=""
+  while IFS='' read -r line || [ -n "$line" ]; do
+    input="$input$line"$'\n'
+  done
+
+  vars=$(echo "${input}" | grep -o "\${[^}]*}" | sed 's/[${}]//g' | uniq)
+
+  local output="$input"
+  for var in $vars; do
+    value=${!var:-''}
+    if [ -n "$value" ]; then
+      output=${output//\$\{$var\}/$value}
+    fi
+  done
+  echo "${output}"
+}
+
+function cloudBackup {
+  BACKUP_TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
+  BACKUP_NAME="graphdb-backup-${BACKUP_TIMESTAMP}.tar"
+
+  local backup_options=
+  backup_options=$(interpolate < "$1")
+
+  log "Creating cloud backup ${BACKUP_NAME}"
+
+  local response=
+  local response_status
+  response=$(mktemp)
+  response_status=$(curl -X POST \
+    -isSL \
+    -o "${response}" \
+    -w "Status=%{response_code}" \
+    --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json' \
+    --data-binary "${backup_options}" \
+    --url "http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/cloud-backup")
+
+  if ! echo "${response_status}" | grep -q 'Status=200' ; then
+    log "ERROR: Backup ${BACKUP_NAME} creation failed, response: ${response_status}"
+    cat "${response}"
+    echo ""
+    exit 1
+  fi
+
+  log "Backup ${BACKUP_NAME} completed successfully!"
+}
+
+function localBackup() {
+  BACKUP_TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
+  BACKUP_NAME="graphdb-backup-${BACKUP_TIMESTAMP}.tar"
+
+  local backup_options=
+  backup_options=$(interpolate < "$1")
+
+  local backup_path
+  backup_path="${2%/}/$BACKUP_NAME"
+
+  log "Creating local backup ${backup_path}"
+
+  local response
+  response=$(curl -X POST \
+    -sSL \
+    -o "${backup_path}" \
+    -w "Status=%{response_code}" \
+    --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json' \
+    --data-binary "${backup_options}" \
+    --url "http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/backup")
+
+  if ! echo "${response}" | grep -q 'Status=200' ; then
+    log "ERROR: Backup ${BACKUP_NAME} creation failed, response: ${response}"
+    exit 1
+  fi
+
+  log "Backup ${BACKUP_NAME} completed successfully!"
 }
 
 "$@"

@@ -1,0 +1,14 @@
+# This example shows how to deploy and expose GraphDB with AWS Load Balancer Controller Ingress without SSL.
+
+configuration:
+  externalUrl: http://graphdb-example-dns-name.com/ # Change this to your ALB DNS name or Route53 if you use it.
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+   alb.ingress.kubernetes.io/load-balancer-name: graphdb-ingress
+   alb.ingress.kubernetes.io/target-type: ip
+   alb.ingress.kubernetes.io/scheme: internet-facing
+   alb.ingress.kubernetes.io/inbound-cidrs: "0.0.0.0/0"
+   alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'

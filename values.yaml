@@ -400,7 +400,7 @@ ingress:
     # Name of a Kubernetes Secret object with the key and certificate.
     # If TLS is enabled, it's required to be provided, depending on the deployment.
     # This could be an existing Secret or one that is not yet created.
-    secretName:
+    secretName: ""
   # List of additional hostnames to append to the Ingress resource.
   # Values are processed as Helm templates.
   extraHosts: []
@@ -613,7 +613,7 @@ backup:
     # Note: This won't be used if an existing secret has been provided with .Values.backup.optionsSecret.existingSecret
     #
     # Ref: https://graphdb.ontotext.com/documentation/10.7/backup-and-restore.html#creating-and-restoring-cloud-backups
-    bucketUri:
+    bucketUri: ""
 
   # Configurations for a local GraphDB backup.
   # Used when .Values.backup.type is set to "local".

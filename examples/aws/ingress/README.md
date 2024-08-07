@@ -16,4 +16,5 @@ This document describes the steps on how to configure the GraphDB Helm chart to 
 * [values_https.yaml](values_https.yaml) - Example of how to deploy and expose GraphDB with Ingress with SSL enabled.
 
 ## Note
+
 After you deploy and the ingress is created please change the externalUrl value to the DNS name of the ALB or Route53.

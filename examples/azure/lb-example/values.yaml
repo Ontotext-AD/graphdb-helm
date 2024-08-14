@@ -1,0 +1,9 @@
+# This example shows how to deploy and expose GraphDB with Service Type Load Balancer without SSL enabled.
+
+service:
+  enabled: true
+  ports:
+   http: 80
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"

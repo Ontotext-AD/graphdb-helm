@@ -10,8 +10,10 @@ service:
    service.beta.kubernetes.io/aws-load-balancer-name: "graphdb-lb"
    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-   service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"  # This ensures the load balancer is internet-facing
+    # This ensures the load balancer is public
+   service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
    service.beta.kubernetes.io/load-balancer-source-ranges: "0.0.0.0/0"
-   service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "" # ARN of the ACM SSL Certificate that will be used
-   service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443" # Ports to be used for the SSL
+    # ARN of the ACM SSL Certificate that will be used
+   service.beta.kubernetes.io/aws-load-balancer-ssl-cert: ""
+   service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: "ELBSecurityPolicy-TLS13-1-2-2021-06"

@@ -1,0 +1,10 @@
+# This example shows how to deploy and expose GraphDB with Application Gateway Ingress without SSL.
+
+configuration:
+  # Change this to your AzureDNS domain name or use nip.io which you can do after you deploy the chart since you
+  # need to map the public IP address of the Application Gateway to the nip.io.
+  externalUrl: http://ip.address.nip.io/
+
+ingress:
+  enabled: true
+  className: azure-application-gateway

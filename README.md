@@ -651,6 +651,16 @@ DNS is broken. This is a common issue with Minikube between system restarts or w
 Minikube driver is used. Please refer to
 https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/.
 
+**Filesystem provisioning errors (in Multi-Node Minikube Cluster)**
+
+When expanding your Minikube cluster from one to two or more nodes to deploy different GraphDB
+instances across multiple nodes to ensure high availability, you may encounter errors when
+setting up persistent storage. These issues are due to implementation problems with the storage
+provisioner included with Minikube. To resolve this, you need to adjust your environment accordingly.
+Follow the steps outlined in the official Minikube documentation under the ["CSI Driver and Volume
+Snapshots"](https://minikube.sigs.k8s.io/docs/tutorials/volume_snapshots_and_csi/) section, specifically
+in the "Multi-Node Clusters" chapter.
+
 ## Maintainers
 
 | Name | Email | Url |

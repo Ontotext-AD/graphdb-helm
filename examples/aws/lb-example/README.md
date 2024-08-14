@@ -11,4 +11,4 @@ This folder contains examples of using GraphDB with the AWS Network Load Balance
 ## Example
 
 * [values.yaml](values.yaml) - Example of how to deploy and expose GraphDB with Network Load Balancer without SSL enabled.
-* [values_https.yaml] - Example of how to deploy and expose GraphDB with Network Load Balancer with SSL enabled.
+* [values_https.yaml](values_https.yaml) - Example of how to deploy and expose GraphDB with Network Load Balancer with SSL enabled.

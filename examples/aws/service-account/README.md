@@ -2,7 +2,8 @@
 
 This folder contains examples of using GraphDB with the Service account to gain access to the AWS services.
 
-The main reason that we want to use service accounts is that GraphDB relies on S3 for the Cloud Backups. But you can use that service account to use other AWS services from the EKS cluster as well, 
+The main reason that we want to use service accounts is that GraphDB relies on S3 for the Cloud Backups. 
+But you can use that service account to use other AWS services from the EKS cluster as well, 
 when you have configured your IAM policies properly.
 
 ## Pre-requisites
@@ -15,4 +16,3 @@ when you have configured your IAM policies properly.
 ## Example
 
 * [values.yaml](values.yaml) - Example of how to deploy the service account.
-

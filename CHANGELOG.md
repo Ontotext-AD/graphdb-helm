@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 11.1.4
+
+### Fixed
+
+- Updated StatefulSets templates in graphdb and proxy to properly render `extraVolumeClaimtemplates`.
+  Replaced `if` statement with `with`.
+
 ## Version 11.1.3
 
 ### New

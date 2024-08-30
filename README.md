@@ -1,7 +1,7 @@
 # Helm Chart for GraphDB
 
 [![CI](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml/badge.svg)](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml)
-![Version: 11.1.3](https://img.shields.io/badge/Version-11.1.3-informational?style=flat-square)
+![Version: 11.1.4](https://img.shields.io/badge/Version-11.1.4-informational?style=flat-square)
 ![AppVersion: 10.7.3](https://img.shields.io/badge/AppVersion-10.7.3-informational?style=flat-square)
 
 <!--

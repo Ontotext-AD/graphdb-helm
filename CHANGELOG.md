@@ -5,7 +5,7 @@
 ### Fixed
 
 - Updated StatefulSets templates in graphdb and proxy to properly render `extraVolumeClaimtemplates`.
-  Replace `if` statement with `with`.
+  Replaced `if` statement with `with`.
 
 ## Version 11.1.3
 

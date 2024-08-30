@@ -47,7 +47,7 @@ spec:
       spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
-    {{- if .Values.extraVolumeClaimTemplates }}
+    {{- with .Values.extraVolumeClaimTemplates }}
       {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
   {{- end }}

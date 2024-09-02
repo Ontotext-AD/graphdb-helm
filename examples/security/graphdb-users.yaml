@@ -1,0 +1,26 @@
+# This YAML file defines a Kubernetes Secret named "graphdb-users."
+#
+# Place this Secret under the templates directory of the Helm chart.
+# Or create it by using:
+# kubectl apply -f https://raw.githubusercontent.com/Ontotext-AD/graphdb-helm/main/examples/security/graphdb-users.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: graphdb-users
+stringData:
+  users.js: >
+    {
+      "users" : {
+          "admin" : {
+              "username" : "admin",
+              "password" : "{bcrypt}$2a$12$EgGOH5kMwtrmBooSu/iRnOSkP712nLYOdLNQsZZ2dvM28XTgzvSKq",
+              "grantedAuthorities" : [ "ROLE_ADMIN" ]
+          },
+          "tester": {
+              "username" : "tester",
+              "password" : "{bcrypt}$2a$12$MYBDxuw9ziuYwnOyYbt1P.yqzkG.ufxR3r7nw8QKuHa/Cu0gpnR5a",
+              "grantedAuthorities" : [ "ROLE_USER" ]
+          }
+      }
+    }

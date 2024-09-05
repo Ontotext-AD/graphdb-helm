@@ -1,0 +1,17 @@
+# This example shows how to deploy and expose GraphDB with GCP Load Balancer Controller Ingress with SSL enabled.
+
+configuration:
+  # Change this to your Google Domains domain name or use nip.io which you can do after you deploy the chart since you
+  # need to map the public IP address of the GCP Ingress to the nip.io.
+  externalUrl: https://ip.address.nip.io/
+ingress:
+  enabled: true
+  className: gce
+  annotations:
+    # This line could be omitted as GKE controller processes any Ingress that does not have
+    # the annotation kubernetes.io/ingress.class, or has the annotation with the value gce
+    kubernetes.io/ingress.class: gce
+    # Defines the name of the static IP address which the Ingress should use
+    kubernetes.io/ingress.global-static-ip-name: ""
+    # ManagedCertificate object which contains the domains for the SSL certificate
+    networking.gke.io/managed-certificates: ""

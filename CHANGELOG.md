@@ -9,9 +9,9 @@
       cloud and more.
     - Local backups support saving the GraphDB backup archives in volume from an existing persistent volume claim, configured
       with `backup.local`
-    - Cloud backups support uploading the GraphDB backup archives in one of the supported cloud object storage services, configured
-      with `backup.cloud`
-    - Added a new example under [examples/backup-local](examples/backup-local) showing how to use the local backup feature
+    - Cloud backups support uploading the GraphDB backup archives in one of the supported cloud object storage services, configured with `backup.cloud`
+    - Added a new example under [examples/backup-local](examples/backup-local) showing how to use the local backup feature with `backup.local`
+- Added a new property `security.provisioner.passwordHash` to define an initial password for the provisioner user as a bcrypt hash.
 
 ### Fixed
 

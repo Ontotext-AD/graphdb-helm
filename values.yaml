@@ -258,6 +258,10 @@ security:
     # Note: The user is created regardless of if the existingSecret is provided or not.
     username: provisioner
     password: iHaveSuperpowers
+    # Define an initial password for the provisioner user as a bcrypt hash.
+    # If the password is not specified, it will use the default one specified in the provisioner.password.
+    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
+    passwordHash: ""
     # Reference to Secret with a basic authentication token of an existing user to use for provisioning tasks instead of the default user in the initial
     # user.js that is created using the plaintext username and password configurations from above.
     # Note that the user must already exist in GraphDB for this to work properly.

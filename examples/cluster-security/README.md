@@ -25,14 +25,14 @@ or specify the domain of each node explicitly(graphdb-0.graphdb-headless.default
 2. Configure the Helm chart to use the secrets in [values_existing_certificate.yaml](values_existing_certificate.yaml)
 and [values_existing_keystore.yaml](values_existing_keystore.yaml)
    ```yaml
-   "extraVolumes:
+   extraVolumes:
      - name: my-volume
        secret:
          secretName: my-secret 
     extraVolumeMounts:
      - name: my-volume
        mountPath: /opt/graphdb/home/myasset 
-       subPath: myasset"
+       subPath: myasset
 3. Apply this at cluster creating since once a cluster is created, graphdb.raft.* properties can not be changed.
    ```bash
    helm install graphdb ontotext/graphdb -f values.yaml 

@@ -38,8 +38,8 @@ and [values_existing_keystore.yaml](values_existing_keystore.yaml)
    helm install graphdb ontotext/graphdb -f values.yaml 
    ```
 ## Example
-* [values_certificate_chain.yaml](values_existing_certificate.yaml) - Example of how to configure cluster security in GraphDB with existing certificate and private key
-* [values_keystore.yaml](values_existing_keystore.yaml) - Example of how to configure cluster security in GraphDB with existing keystore 
+* [values_existing_certificate.yaml](values_existing_certificate.yaml) - Example of how to configure cluster security in GraphDB with existing certificate and private key
+* [values_existing_keystore.yaml](values_existing_keystore.yaml) - Example of how to configure cluster security in GraphDB with existing keystore 
 
 ## Note
 * The above examples use a single self-signed certificate that is shared across all nodes since configuring 

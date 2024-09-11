@@ -4,7 +4,7 @@ This folder contains examples of using GraphDB with the GCP Application Load Bal
 
 ## Pre-requisites
 
-* EKS Cluster: Ensure you have an EKS cluster up and running.
+* Ensure you have a GKE cluster up and running.
 * [GCP Application Load Balancer Overview](https://cloud.google.com/load-balancing/docs/https)
 
 ## Example

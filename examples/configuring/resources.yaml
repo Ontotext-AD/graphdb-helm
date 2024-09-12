@@ -1,0 +1,40 @@
+# This YAML defines two ConfigMaps and two Secrets for a Kubernetes cluster.
+# - ConfigMap "custom-graphdb-properties" stores non-sensitive properties for GraphDB.
+# - Secret "custom-graphdb-secret-properties" stores sensitive properties for GraphDB, base64-encoded.
+# - ConfigMap "connector-properties" stores non-sensitive properties for a connector, including GPT model settings.
+# - Secret "connector-secret-properties" stores a sensitive token for the connector, base64-encoded.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-graphdb-properties
+data:
+  graphdb.properties: |-
+    graphdb.connector.port=7200
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: custom-graphdb-secret-properties
+data:
+  graphdb-secrets.properties: {{ "graphdb.connector.keystorePass: xxxx" | b64enc | quote }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: connector-properties
+data:
+  graphdb.connector.port: "7201"
+  graphdb.gpt.model: "gpt-3.5-turbo"
+  graphdb.gpt.timeout: "180"
+  graphdb.gpt.url: "https://api.openai.com/v1/chat/completions"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: connector-secret-properties
+data:
+  graphdb.gpt.token: {{ "<secret-token>" | b64enc | quote }}

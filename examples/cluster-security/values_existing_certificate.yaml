@@ -7,11 +7,7 @@ configuration:
     -Dgraphdb.raft.security.rootCerts=
     -Dgraphdb.raft.security.certificateFile=
     -Dgraphdb.raft.security.certificateKeyFile=
-    -Dgraphdb.raft.security.certificateKeyPassword=  
-    -Dgraphdb.raft.security.truststoreType=JKS
-    -Dgraphdb.raft.security.truststoreProvider=SUN
-    -Dgraphdb.raft.security.truststorePass=changeit
-    -Dgraphdb.raft.security.truststoreFile=/opt/java/openjdk/lib/security/cacerts
+    -Dgraphdb.raft.security.certificateKeyPassword=
 extraVolumes:
   - name: certificate-volume
     secret:

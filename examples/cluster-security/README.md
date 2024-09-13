@@ -7,7 +7,8 @@ with the default java truststore.
 
 ## References
 
-* [GraphDB official documentation](https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties)
+* [GraphDB official documentation](https://graphdb.ontotext.com/documentation/10.7/)
+* [Raft security configurations](https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties)
 
 ## Prerequisites
 * Self-signed certificate and private key. Since we are using a shared certificate for all nodes it must 
@@ -34,7 +35,7 @@ and [values_existing_keystore.yaml](values_existing_keystore.yaml)
        mountPath: /opt/graphdb/home/myasset 
        subPath: myasset 
    ```
-3. Apply this at cluster creating since once a cluster is created, graphdb.raft.* properties can not be changed.
+3. Apply the configurations.
    ```bash
    helm install graphdb ontotext/graphdb -f values.yaml 
    ```
@@ -46,4 +47,3 @@ and [values_existing_keystore.yaml](values_existing_keystore.yaml)
 * The above examples use a single self-signed certificate that is shared across all nodes since configuring 
 a separate certificate for each node is possible but introduces a lot of configuration overhead. For more information
 see https://graphdb.ontotext.com/documentation/10.7/encryption.html#use-self-signed-certificates
-* 

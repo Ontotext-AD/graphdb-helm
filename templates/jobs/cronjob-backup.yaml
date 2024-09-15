@@ -69,7 +69,7 @@ spec:
                 claimName: {{ required "backup.local.existingPVC is required" .Values.backup.local.existingPVC }}
             {{- end }}
           containers:
-            - name: create-graphdb-cluster
+            - name: create-graphdb-backup
               image: {{ include "graphdb.image" . }}
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               {{- with .Values.backup.extraEnvFrom }}

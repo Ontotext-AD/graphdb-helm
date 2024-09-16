@@ -1,0 +1,5 @@
+# This example shows how to deploy and expose GraphDB with External Application Load Balancer.
+
+service:
+  enabled: true
+  type: LoadBalancer

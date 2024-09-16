@@ -83,13 +83,13 @@ It also supports GraphDB properties in the form of `-Dproperty=value`
 
 ```yaml
 configuration:
-  javaArguments: "-Xms4G -Xmx4G"
+  javaArguments: "-Xms4G -Xmx4G -Dgraphdb.external-url=example.com"
 ```
 
 ## Extra Environment Variables from a source
 
 This section explains how to configure GraphDB with environment variables
-using existing Kubernetes ConfigMaps and Secrets. This approach 
+using an existing Kubernetes ConfigMap or an existing Secrets. This approach 
 ensures that additional configurations are injected alongside existing 
 ones without mixing different contexts. 
 

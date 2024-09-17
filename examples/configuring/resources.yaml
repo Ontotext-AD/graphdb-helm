@@ -18,7 +18,7 @@ kind: Secret
 metadata:
   name: custom-graphdb-secret-properties
 data:
-  graphdb-secrets.properties: {{ "graphdb.connector.keystorePass: xxxx" | b64enc | quote }}
+  graphdb-secrets.properties: <base64-encoded secret properties>
 
 ---
 apiVersion: v1
@@ -37,4 +37,5 @@ kind: Secret
 metadata:
   name: connector-secret-properties
 data:
-  graphdb.gpt.token: {{ "<secret-token>" | b64enc | quote }}
+  graphdb.gpt.token: <base64-encoded secret token>
+  

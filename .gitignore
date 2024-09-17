@@ -11,6 +11,7 @@
 # Helm
 values_overrides.yaml
 template_output.yaml
+*.tgz
 
 # Sensitive files
 *.license

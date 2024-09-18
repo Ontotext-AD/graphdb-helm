@@ -102,5 +102,5 @@ Converts custom users YAML to a pretty JSON for insertion in users.js
 Calculate provisoner's bcrypt-hashed password
 */}}
 {{- define "graphdb.security.provisioner.passwordHash" -}}
-  {{- printf "{bcrypt}%s" ( htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username)) -}}
+  {{- printf "%s" ( htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username)) -}}
 {{- end -}}

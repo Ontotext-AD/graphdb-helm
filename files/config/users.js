@@ -16,7 +16,7 @@
     {{- include "grahdb.security.extra-users.json" . | nindent 4 }}
     "{{ .Values.security.provisioner.username }}" : {
       "username" : "{{ .Values.security.provisioner.username }}",
-      "password" : {{ .Values.security.provisioner.passwordHash | default ( include "graphdb.security.provisioner.passwordHash" . ) | quote }},
+      "password" : {{ printf "{bcrypt}%s" ( .Values.security.provisioner.passwordHash | default ( include "graphdb.security.provisioner.passwordHash" . ) ) | quote }},
       "grantedAuthorities" : [ "ROLE_ADMIN" ],
       "appSettings" : {
         "DEFAULT_INFERENCE" : true,

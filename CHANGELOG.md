@@ -1,5 +1,16 @@
 # GraphDB Helm chart release notes
 
+## Version 11.1.5
+
+### New
+
+- Updated to GraphDB [10.7.4](https://graphdb.ontotext.com/documentation/10.7/release-notes.html#graphdb-10-7-4)
+
+### Improvement
+
+- Added GraphDB configuration examples
+- Added GraphDB security configration examples
+
 ## Version 11.1.4
 
 ### Fixed
@@ -15,7 +26,7 @@
 
 ## Version 11.1.2
 
-### New 
+### New
 
 - Updated to GraphDB [10.7.2](https://graphdb.ontotext.com/documentation/10.7/release-notes.html#graphdb-10-7-2)
 
@@ -211,7 +222,7 @@ Version 11 of the chart addresses a bunch of legacy issues and aims to provide m
 - Added default resource limits and requests for all init containers and provisioning jobs
 - PodDisruptionBudget are enabled by default for both GraphDB and GraphDB proxy
 - Updated init containers to invoke `bash` instead of `sh`
-- Updated the default memory limits and requests to 4Gi 
+- Updated the default memory limits and requests to 4Gi
 
 ## Version 10.6.0-R2
 

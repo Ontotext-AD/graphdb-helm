@@ -33,6 +33,13 @@ Renders the external URL for GraphDB.
 {{- end -}}
 
 {{/*
+Render the protocol of the Tomcat connector.
+*/}}
+{{- define "graphdb.tomcat.protocol" -}}
+{{- ternary "http" "https" (eq (.Values.configuration.tls.keystore.existingSecret | default "" | trim) "") -}}
+{{- end -}}
+
+{{/*
 Renders the gRPC address of each GraphDB node that is part of the cluster as a JSON array. Used in the cluster JSON config.
 */}}
 {{- define "graphdb.cluster.nodes.json" -}}
@@ -57,8 +64,9 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
   {{- $namespace := include "graphdb.namespace" . -}}
   {{- $cluster_domain := .Values.global.clusterDomain -}}
   {{- $service_http_port := .Values.headlessService.ports.http -}}
+  {{- $protocol := include "graphdb.tomcat.protocol" . }}
   {{- range $i, $node_index := until (int .Values.replicas) -}}
-    http://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $namespace }}.svc.{{ $cluster_domain }}:{{ $service_http_port }}
+    {{ $protocol }}://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $namespace }}.svc.{{ $cluster_domain }}:{{ $service_http_port }}
     {{- if gt (sub (int $.Values.replicas) 1) $node_index -}}
       {{- ", " -}}
     {{- end -}}

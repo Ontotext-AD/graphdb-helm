@@ -20,6 +20,20 @@
   - Added `license.mountPath` to configure where the license volume is mounted
   - Added `license.optional` to configure the license volume as optional if needed
   - Added `license.readOnly` to configure the read/write mode of the license volume mount
+- Added new configuration properties for GraphDB Tomcat connector SSL/TLS
+  - Added `configuration.tls.keystore` to configure a keystore with its properties
+  - Added `configuration.tls.truststore` to configure a truststore with its properties
+  - Added `configuration.tls.certificateRevocationList` to configure a certificate revocation list
+- Added new configuration properties for configuring GraphDB cluster security (SSL/TLS)
+  - Added `cluster.tls.mode` to configure cluster security mode
+  - Added `cluster.tls.keystore` to configure a keystore with its properties
+  - Added `cluster.tls.truststore` to configure a truststore with its properties
+  - Added `cluster.tls.certificate` to configure a certificate
+  - Added `cluster.tls.certificateChain` to configure a certificate chain
+  - Added `cluster.tls.certificateKey` to configure a private key with its properties
+  - Added `cluster.tls.rootCerts` to configure root certificates to be trusted
+  - Added `cluster.tls.certificateRevocationList` to configure a certificate revocation list
+- Updated jobs and scripts to use `https` or `http` depending on whether the Tomcat connector security is configured
 
 - Updated to GraphDB [10.8.0](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-10-8-0)
 
@@ -29,6 +43,11 @@
 - Changed the license directory to `/opt/graphdb/home/conf/license/` with `license.mountPath` in order to avoid using a `subPath` volume
   mount. This allows kubelet to update the license when the Secret has been updated.
 - Changed the license volume mount as read-only by default with `license.readOnly`
+
+### Fixed
+
+- Removed the `quotes` tag from graphdb and proxy `configmap-properties` and `secret-properties` templates
+  which caused invalid rendering of extra properties.
 
 ## Version 11.2.2
 
@@ -70,7 +89,7 @@
 ### Improvement
 
 - Added GraphDB configuration examples
-- Added GraphDB security configration examples
+- Added GraphDB security configuration examples
 
 ## Version 11.1.4
 

@@ -24,11 +24,74 @@ data:
     {{- if eq (int .Values.replicas) 1}}
     graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}
+    {{- if .Values.configuration.tls.keystore.existingSecret }}
+    # Tomcat keystore configurations
+    graphdb.connector.SSLEnabled=true
+    graphdb.connector.scheme=https
+    graphdb.connector.secure=true
+    graphdb.connector.keystoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystoreKey }}
+    graphdb.connector.keyAlias={{ .Values.configuration.tls.keystore.keyAlias }}
+    graphdb.connector.keystoreProvider={{ .Values.configuration.tls.keystore.keystoreProvider }}
+    graphdb.connector.keystoreType={{ .Values.configuration.tls.keystore.keystoreType }}
+    graphdb.connector.keystorePass@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
+    {{- end }}
+    {{- if .Values.configuration.tls.truststore.existingSecret }}
+    # Tomcat truststore configurations
+    graphdb.connector.truststoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{
+    .Values.configuration.tls.truststore.truststoreKey }}
+    graphdb.connector.truststoreProvider={{ .Values.configuration.tls.truststore.truststoreProvider }}
+    graphdb.connector.truststoreType={{ .Values.configuration.tls.truststore.truststoreType }}
+    graphdb.connector.truststorePass@file={{ .Values.configuration.tls.mountPath | trimSuffix "/"
+    }}/truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
+    {{- end }}
+    {{- if .Values.configuration.tls.certificateRevocationList.existingSecret}}
+    # Tomcat truststore CRL
+    graphdb.connector.certificateRevocationListFile={{ .Values.configuration.tls.mountPath | trimSuffix "/"
+    }}/crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
+    {{- end }}
+    graphdb.raft.security.mode={{ .Values.cluster.tls.mode }}
+    {{- if .Values.cluster.tls.keystore.existingSecret }}
+    # Cluster gRPC TLS keystore configurations
+    graphdb.raft.security.keystoreFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.cluster.tls.keystore.keystoreKey }}
+    graphdb.raft.security.keyAlias={{ .Values.cluster.tls.keystore.keyAlias }}
+    graphdb.raft.security.keystoreProvider={{ .Values.cluster.tls.keystore.keystoreProvider }}
+    graphdb.raft.security.keystoreType={{ .Values.cluster.tls.keystore.keystoreType }}
+    graphdb.raft.security.keystorePass@file={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.cluster.tls.keystore.keystorePasswordKey }}
+    {{- end }}
+    {{- if .Values.cluster.tls.truststore.existingSecret }}
+    # Cluster gRPC TLS truststore configurations
+    graphdb.raft.security.truststoreFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.cluster.tls.truststore.truststoreKey }}
+    graphdb.raft.security.truststoreProvider={{ .Values.cluster.tls.truststore.truststoreProvider }}
+    graphdb.raft.security.truststoreType={{ .Values.cluster.tls.truststore.truststoreType }}
+    graphdb.raft.security.truststorePass@file={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.cluster.tls.truststore.truststorePasswordKey }}
+    {{- end }}
+    {{- if .Values.cluster.tls.certificateKey.existingSecret }}
+    graphdb.raft.security.certificateKeyFile={{ .Values.cluster.tls.mountPath | trimSuffix "/"
+    }}/certificateKey/{{ .Values.cluster.tls.certificateKey.privateKeyKey }}
+    graphdb.raft.security.certificateKeyPassword@file={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificateKey/{{
+    .Values.cluster.tls.certificateKey.privateKeyPasswordKey }}
+    {{- end }}
+    {{- if .Values.cluster.tls.certificate.existingSecret }}
+    graphdb.raft.security.certificateFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificate/{{
+    .Values.cluster.tls.certificate.certificateKey }}
+    {{- end }}
+    {{- if .Values.cluster.tls.certificateChain.existingSecret }}
+    graphdb.raft.security.certificateChainFile={{ .Values.cluster.tls.mountPath | trimSuffix "/"
+    }}/certificateChain/{{ .Values.cluster.tls.certificateChain.certificateChainKey }}
+    {{- end }}
+    {{- if .Values.cluster.tls.rootCerts.existingSecret }}
+    graphdb.raft.security.rootCerts={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/rootCertificates/{{
+    .Values.cluster.tls.rootCerts.rootCertsKey }}
+    {{- end }}
+    {{- if .Values.cluster.tls.certificateRevocationList.existingSecret }}
+    graphdb.raft.security.certificateRevocationListFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/crl/{{
+    .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
+    {{- end }}
     {{- if .Values.configuration.properties }}
     ##### Overrides from values.yaml #####
     {{- range $key, $val := .Values.configuration.properties -}}
     {{- if ne $val nil }}
-    {{ $key }}={{ tpl ($val | toString) $ | quote }}
+    {{ $key }}={{ tpl ($val | toString) $ }}
     {{- end }}
     {{- end -}}
     {{- end -}}

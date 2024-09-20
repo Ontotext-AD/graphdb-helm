@@ -209,6 +209,73 @@ configuration:
   # The value is processed as a Helm template.
   javaArguments: ""
 
+  # Security SSL/TLS configurations for the embedded Tomcat server.
+  #
+  # GraphDB uses the Java implementation of SSL, which requires a configured key in the Java keystore.
+  # There are 3 scenarios for configuring the security of the GraphDB instance:
+  # - By providing a keystore and its corresponding properties.
+  # - By providing keystore and truststore and their corresponding properties - used to configure mTLS.
+  # - By providing only a truststore in cases where GraphDB should trust an external service.
+  #
+  # NOTE: Since the GraphDB container and proxy container probes also have to use https, they need to be manually
+  # configured when using a keystore, e.g.:
+  # startupProbe:
+  #   httpGet:
+  #     scheme: HTTPS # Add scheme
+  # Configurations for the liveness and readiness probes need to be added as well.
+  #
+  # If the GraphDB instance is configured with SSL, the cluster security properties will
+  # default to the values defined in the connector unless explicitly specified otherwise with .Values.cluster.tls
+  #
+  # References
+  # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Connector_-_NIO_and_NIO2_(deprecated)
+  # - GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/encryption.html#configuring-graphdb-instance-with-ssl
+  tls:
+    # If keystore secret is provided, it enables connector security by setting the following GraphDB properties:
+    # graphdb.connector.SSLEnabled = true
+    # graphdb.connector.scheme = https
+    # graphdb.connector.secure = true
+    keystore:
+      # Reference to an existing Secret resource containing the keystore for configuring GraphDB's Tomcat connector.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the keystore file where you have stored the server certificate and key to be loaded.
+      keystoreKey: keystore.jks
+      # Key in the existing Secret that holds the password to use to access the keystore containing
+      # the server's private key and certificate.
+      keystorePasswordKey: keystore_password
+      # The alias used for the server key and certificate in the keystore.
+      keyAlias: graphdb
+      # The name of the keystore provider to be used for the server certificate.
+      keystoreProvider: SUN
+      # The type of keystore file to be used for the server certificate.
+      keystoreType: JKS
+
+    truststore:
+      # Reference to an existing Secret resource containing the trust store for configuring GraphDB's Tomcat connector.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the trust store file to use to validate client certificates.
+      truststoreKey: truststore.jks
+      # Key in the existing Secret that holds the password to access the trust store.
+      truststorePasswordKey: truststore_password
+      # The name of the truststore provider to be used for the server certificate.
+      # If not explicitly defined, it will be created.
+      truststoreProvider: SUN
+      # The type of key store used for the trust store.
+      # If not explicitly defined, it will be created.
+      truststoreType: JKS
+
+    certificateRevocationList:
+      # Reference to an existing Secret resource containing the certificate revocation list for configuring GraphDB's Tomcat connector.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the certificate revocation list file.
+      certificateRevocationListKey: crl.pem
+
+    # The path where the keystore/truststore will be mounted inside the container.
+    mountPath: /etc/graphdb/tls/tomcat/
+
   # Configurations for GraphDB's Logback
   # Ref: https://graphdb.ontotext.com/documentation/10.8/diagnosing-and-reporting-critical-errors.html#logs
   #
@@ -329,6 +396,111 @@ cluster:
 
   # Timeout for cURL queries used for the cluster creation and update.
   clusterCreationTimeout: 60
+
+  # Dedicated configurations for configuring the raft cluster TLS security.
+  #
+  # There are 3 combinations of TLS assets that could be provided in order to set up cluster security:
+  # - Using JSSE: By providing keystore and truststore and their corresponding properties.
+  # - Using OpenSSL: By providing certificate file, certificate chain, private key, truststore and their corresponding
+  #   properties.
+  # - Using a certificate without chain path: By providing certificate file, private key, truststore and their
+  #   corresponding properties.
+  #
+  # Warning: If the TLS assets for all scenarios are provided at once, GraphDB startup will result in an error!
+  tls:
+    # There are 3 types of security mode configurations
+    # - NONE: Unsecured communication will be used for the gRPC client-server communications. If mode is not specified it will use this one by default.
+    # - DEFAULT: TLS encryption will be used if the TLS assets for configuring the security communications are found.
+    # - TLS: TLS encryption will be enforced for the cluster communication. TLS assets need to be provided and If not properly configured the server will fail to start!
+    #
+    # Most of the possible properties can be seen from the official tomcat connector documentation without the graphdb.raft.security prefix.
+    # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
+    # - GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties
+    mode: DEFAULT
+
+    keystore:
+      # Reference to an existing Secret resource containing the keystore for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the keystore file where you have stored the
+      # server certificate and key to be loaded.
+      keystoreKey: keystore.jks
+      # Key in the existing Secret that holds the password to use to access the keystore containing
+      # the server's private key and certificate. If not specified, a default of "changeit" will be used.
+      keystorePasswordKey: keystore_password
+      # The alias used for the server key and certificate in the keystore.
+      keyAlias: graphdb
+      # The name of the keystore provider to be used for the server certificate.
+      # If it isn't set the list of registered providers is traversed in preference
+      # order and the first provider that supports the keystoreType is used.
+      keystoreProvider: SUN
+      # The type of keystore file to be used for the server certificate.
+      # If not set a default value of "JKS" is used.
+      keystoreType: JKS
+
+    truststore:
+      # Reference to an existing Secret resource containing the trust store for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the trust store file to use to validate client certificates.
+      truststoreKey: truststore.jks
+      # Key in the existing Secret that holds the password to access the trust store.
+      truststorePasswordKey: truststore_password
+      # The name of the truststore provider to be used for the server certificate.
+      # If it isn't set the list of registered providers is traversed in preference
+      # order and the first provider that supports the truststoreProvider is used.
+      truststoreProvider: SUN
+      # The type of key store used for the trust store.
+      # If not set a default value of "JKS" is used.
+      truststoreType: JKS
+
+    certificate:
+      # Reference to an existing Secret resource containing the certificate for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the file that contains the server certificate.
+      # The format is PEM-encoded.
+      certificateKey: certificate.pem
+
+    certificateChain:
+      # Reference to an existing Secret resource containing the certificate chain for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the file that contains the certificate chain associated with
+      # the server certificate used.
+      # The format is PEM-encoded.
+      certificateChainKey: certChain.pem
+
+    certificateKey:
+      # Reference to an existing Secret resource containing the certificate private key for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the file that contains the server private key.
+      # The format is PEM-encoded.
+      privateKeyKey: privatekey.pem
+      # The key in the existing Secret that holds the password used to access the private key associated
+      # with the server certificate from the specified file.
+      privateKeyPasswordKey: privatekey_password
+
+    # Specifies the root certificates that the system should trust when establishing security connections.
+    rootCerts:
+      # Reference to an existing Secret resource containing the root certificates for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the root certs file.
+      rootCertsKey: rootCerts.pem
+
+    # Determines a list of digital certificates that have been revoked by the issuing certificate authority (CA)
+    # before their actual or assigned expiration date.
+    certificateRevocationList:
+      # Reference to an existing Secret resource containing the certificate revocation list for configuring the gRPC security.
+      # The value is processed as a Helm template.
+      existingSecret: ""
+      # Key in the existing Secret that holds the certificate revocation list file.
+      certificateRevocationListKey: crl.pem
+
+    # The path where the TLS files will be mounted inside the container.
+    mountPath: /etc/graphdb/tls/grpc/
 
   # Cluster configuration parameters.
   # Changing the parameters would trigger a Job that patches the configuration.

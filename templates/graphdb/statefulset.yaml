@@ -126,6 +126,16 @@ spec:
           secret:
             secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
+        {{- if .Values.cluster.config.tls.enabled }}
+        - name: graphdb-keystore-properties
+          secret:
+            secretName: {{ .Values.cluster.config.tls.keystore.secretName }}
+        {{- end }}
+        {{- if .Values.cluster.config.tls.enabled }}
+        - name: graphdb-truststore-properties
+          secret:
+            secretName: {{ .Values.cluster.config.tls.trustStore.secretName }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
@@ -356,6 +366,16 @@ spec:
             {{- if .Values.import.volumeMount.enabled }}
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
+            {{- end }}
+            {{- if .Values.cluster.config.tls.keystore.secretName }}
+            - name: graphdb-keystore-properties
+              mountPath: /opt/graphdb/home/conf/keystore.jks
+              subPath: {{ .Values.cluster.config.tls.keystore.keystoreKey }}
+            {{- end }}
+            {{- if .Values.cluster.config.tls.trustStore.secretName }}
+            - name: graphdb-truststore-properties
+              mountPath: /opt/graphdb/home/conf/truststore.jks
+              subPath: {{ .Values.cluster.config.tls.trustStore.truststoreKey }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
               {{- tpl (toYaml .) $ | nindent 12 }}

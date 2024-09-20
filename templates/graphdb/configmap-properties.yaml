@@ -20,6 +20,12 @@ data:
     {{- if eq (int .Values.replicas) 1}}
     graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}
+    {{- with .Values.cluster.config.tls }}
+    {{- if .enabled }}
+    graphdb.raft.security.mode={{ . | quote }}
+    graphdb.raft.security.keyAlias={{ .keystore.keyAlias | quote }}
+    {{- end }}
+    {{- end }}
     {{- if .Values.configuration.properties }}
     ##### Overrides from values.yaml #####
     {{- range $key, $val := .Values.configuration.properties -}}

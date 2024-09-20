@@ -340,6 +340,35 @@ cluster:
       transactionLogMaximumSizeGB: 50
       # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
       verificationTimeout: 1500
+    tls:
+      enabled: false
+      # There are 3 possible security mode configurations
+      # NONE
+      # Unsecured communication will be used for the gRPC client-server communications.
+      # If mode is not specified it will use this configuration by default.
+      # DEFAULT
+      # TLS encryption will be used if the TLS assets for configuring the security communications are found.
+      # TLS
+      # TLS encryption will be enforced for the cluster communication.
+      # TLS assets need to be provided and If not properly configured the server will fail to start!
+      mode: DEFAULT
+      keystore:
+        # The value is processed as a helm template
+        secretName: ""
+        # Key in the existing Secret that holds the keystore value
+        keystoreKey: ""
+        # Key in the existing Secret that holds the keystore password value
+        keystorePasswordKey: ""
+        # Alias of the certificate inside the keystore
+        keyAlias: ""
+      trustStore:
+        # The value is processed as a helm template
+        # If the secret name is not specified the default java trust store will be used
+        secretName: ""
+        # Key in the existing Secret that holds the trust store value
+        truststoreKey: ""
+        # Key in the existing Secret that holds the trust store password value
+        truststorePasswordKey: ""
 
   # Configurations for the cluster automation Jobs.
   # Note that there are common configurations under jobs.<> as well.

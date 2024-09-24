@@ -360,7 +360,7 @@ cluster:
         keystorePasswordKey: ""
         # Alias of the certificate inside the keystore
         keyAlias: ""
-      trustStore:
+      truststore:
         # The value is processed as a helm template
         # If the secret name is not specified the default java trust store will be used
         secretName: ""

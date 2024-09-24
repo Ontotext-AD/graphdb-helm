@@ -22,10 +22,10 @@ data:
     {{- end }}
     {{- with .Values.cluster.config.tls }}
     {{- if ne .mode "NONE" }}
-    graphdb.raft.security.mode={{ .mode | quote }}
+    graphdb.raft.security.mode={{ .mode  }}
     graphdb.raft.security.keystoreFile=/opt/graphdb/home/conf/keystore.jks
     graphdb.raft.security.truststoreFile=/opt/graphdb/home/conf/truststore.jks
-    graphdb.raft.security.keyAlias={{ .keystore.keyAlias | quote }}
+    graphdb.raft.security.keyAlias={{ .keystore.keyAlias }}
     {{- end }}
     {{- end }}
     {{- if .Values.configuration.properties }}

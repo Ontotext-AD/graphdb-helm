@@ -23,9 +23,22 @@ data:
     {{- with .Values.cluster.config.tls }}
     {{- if ne .mode "NONE" }}
     graphdb.raft.security.mode={{ .mode  }}
+    {{- if .keystore.secretName}}
     graphdb.raft.security.keystoreFile=/opt/graphdb/home/conf/keystore.jks
-    graphdb.raft.security.truststoreFile=/opt/graphdb/home/conf/truststore.jks
     graphdb.raft.security.keyAlias={{ .keystore.keyAlias }}
+    {{- end }}
+    {{- if .truststore.secretName}}
+    graphdb.raft.security.truststoreFile=/opt/graphdb/home/conf/truststore.jks
+    {{- end }}
+    {{- if .privateKey.secretName }}
+    graphdb.raft.security.certificateKeyFile=/opt/graphdb/home/conf/privatekey.pem
+    {{- end }}
+    {{- if .certificate.secretName }}
+    graphdb.raft.security.certificateFile=/opt/graphdb/home/conf/certificate.pem
+    {{- end }}
+    {{- if .certificateChain.secretName }}
+    graphdb.raft.security.certificateChainFile=/opt/graphdb/home/conf/certificatechain.pem
+    {{- end }}
     {{- end }}
     {{- end }}
     {{- if .Values.configuration.properties }}

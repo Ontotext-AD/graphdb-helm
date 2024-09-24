@@ -351,6 +351,23 @@ cluster:
       # TLS encryption will be enforced for the cluster communication.
       # TLS assets need to be provided and If not properly configured the server will fail to start!
       mode: DEFAULT
+      privateKey:
+        # The value is processed as a helm template
+        secretName: ""
+        # Key in the existing Secret that holds the private key value
+        privatekeyKey: ""
+        # Key in the existing Secret that holds the private key password
+        privatekeyPasswordKey: ""
+      certificate:
+        # The value is processed as a helm template
+        secretName: ""
+        # Key in the existing Secret that holds the certificate value
+        secretKey: ""
+      certificateChain:
+        # The value is processed as a helm template
+        secretName:
+        # Key in the existing Secret that holds the certificate chain value
+        certificateChainKey:
       keystore:
         # The value is processed as a helm template
         secretName: ""

@@ -126,13 +126,34 @@ spec:
           secret:
             secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
-        {{- if .Values.cluster.config.tls.enabled }}
+        {{- with .Values.cluster.config.tls }}
+        {{- if ne .mode "NONE" }}
+        {{- if .keystore.secretName}}
         - name: graphdb-keystore-properties
           secret:
-            secretName: {{ .Values.cluster.config.tls.keystore.secretName }}
+            secretName: {{ .keystore.secretName }}
+        {{- end }}
+        {{- if .truststore.secretName}}
         - name: graphdb-truststore-properties
           secret:
-            secretName: {{ .Values.cluster.config.tls.truststore.secretName }}
+            secretName: {{ .truststore.secretName }}
+        {{- end }}
+        {{- if .privateKey.secretName }}
+        - name: graphdb-privatekey-properties
+          secret:
+            secretName: {{ .privateKey.secretName }}
+        {{- end }}
+        {{- if .certificate.secretName }}
+        - name: graphdb-certificate-properties
+          secret:
+            secretName: {{ .certificate.secretName }}
+        {{- end }}
+        {{- if .certificateChain.secretName }}
+        - name: graphdb-certificatechain-properties
+          secret:
+            secretName: {{ .certificateChain.secretName }}
+        {{- end }}
+        {{- end }}
         {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl (toYaml .) $ | nindent 8 }}
@@ -347,16 +368,31 @@ spec:
             {{- with .Values.extraEnv }}
              {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
+            {{- with .Values.cluster.config.tls }}
+            {{- if ne .mode "NONE" }}
+            {{- if .keystore.secretName }}
             - name: graphdb.raft.security.keystorePass
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.cluster.config.tls.keystore.secretName }}
-                  key: {{ .Values.cluster.config.tls.keystore.keystorePasswordKey }}
+                  name: {{ .keystore.secretName }}
+                  key: {{ .keystore.keystorePasswordKey }}
+            {{- end }}
+            {{- if .truststore.secretName }}
             - name: graphdb.raft.security.truststorePass
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.cluster.config.tls.truststore.secretName }}
-                  key: {{ .Values.cluster.config.tls.truststore.truststorePasswordKey }}
+                  name: {{ .truststore.secretName }}
+                  key: {{ .truststore.truststorePasswordKey }}
+            {{- end }}
+            {{- if .privateKey.secretName}}
+            - name: graphdb.raft.security.certificateKeyPassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .privateKey.secretName }}
+                  key: {{ .privateKey.privatekeyPasswordKey }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
@@ -376,15 +412,34 @@ spec:
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
-            {{- if .Values.cluster.config.tls.keystore.secretName }}
+            {{- with .Values.cluster.config.tls }}
+            {{- if ne .mode "NONE" }}
+            {{- if .keystore.secretName}}
             - name: graphdb-keystore-properties
               mountPath: /opt/graphdb/home/conf/keystore.jks
-              subPath: {{ .Values.cluster.config.tls.keystore.keystoreKey }}
+              subPath: {{ .keystore.keystoreKey }}
             {{- end }}
-            {{- if .Values.cluster.config.tls.truststore.secretName }}
+            {{- if .truststore.secretName}}
             - name: graphdb-truststore-properties
               mountPath: /opt/graphdb/home/conf/truststore.jks
-              subPath: {{ .Values.cluster.config.tls.truststore.truststoreKey }}
+              subPath: {{ .truststore.truststoreKey }}
+            {{- end }}
+            {{- if .privateKey.secretName }}
+            - name: graphdb-privatekey-properties
+              mountPath: /opt/graphdb/home/conf/privatekey.pem
+              subPath: {{ .privateKey.privatekeyKey }}
+            {{- end }}
+            {{- if .certificate.secretName }}
+            - name: graphdb-certificate-properties
+              mountPath: /opt/graphdb/home/conf/certificate.pem
+              subPath: {{ .certificate.secretName }}
+            {{- end }}
+            {{- if .certificateChain.secretName }}
+            - name: graphdb-certificatechain-properties
+              mountPath: /opt/graphdb/home/conf/certificatechain.pem
+              subPath: {{ .certificateChain.certificateChainKey }}
+            {{- end }}
+            {{- end }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
               {{- tpl (toYaml .) $ | nindent 12 }}

@@ -130,8 +130,6 @@ spec:
         - name: graphdb-keystore-properties
           secret:
             secretName: {{ .Values.cluster.config.tls.keystore.secretName }}
-        {{- end }}
-        {{- if .Values.cluster.config.tls.enabled }}
         - name: graphdb-truststore-properties
           secret:
             secretName: {{ .Values.cluster.config.tls.trustStore.secretName }}
@@ -347,7 +345,17 @@ spec:
             {{- end }}
           {{- with .Values.extraEnv }}
           env: {{- tpl (toYaml .) $ | nindent 12 }}
-          {{- end }}
+          - name: graphdb.raft.security.keystorePass
+            valueFrom:
+              secretKeyRef:
+                name: {{- $.Values.cluster.config.tls.keystore.secretName }}
+                key: {{- $.Values.cluster.config.tls.keystore.keystorePasswordKey }}
+          - name: graphdb.raft.security.truststorePass
+            valueFrom:
+              secretKeyRef:
+                name: {{- $.Values.cluster.config.tls.trustStore.secretName }}
+                key: {{- $.Values.cluster.config.tls.trustStore.truststorePasswordKey }}
+          {{- end }}}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home

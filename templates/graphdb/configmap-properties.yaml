@@ -21,8 +21,10 @@ data:
     graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}
     {{- with .Values.cluster.config.tls }}
-    {{- if .enabled }}
-    graphdb.raft.security.mode={{ . | quote }}
+    {{- if ne .mode "NONE" }}
+    graphdb.raft.security.mode={{ .mode | quote }}
+    graphdb.raft.security.keystoreFile=/opt/graphdb/home/conf/keystore.jks
+    graphdb.raft.security.truststoreFile=/opt/graphdb/home/conf/truststore.jks
     graphdb.raft.security.keyAlias={{ .keystore.keyAlias | quote }}
     {{- end }}
     {{- end }}

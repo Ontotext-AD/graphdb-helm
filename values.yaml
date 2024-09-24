@@ -341,7 +341,6 @@ cluster:
       # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
       verificationTimeout: 1500
     tls:
-      enabled: false
       # There are 3 possible security mode configurations
       # NONE
       # Unsecured communication will be used for the gRPC client-server communications.

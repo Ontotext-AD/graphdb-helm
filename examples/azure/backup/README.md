@@ -73,7 +73,7 @@ the ServiceAccount to a Managed Identity:
 backup:
   enabled: true
   type: cloud
-  schedule: @midnight
+  schedule: "@midnight"
   cloud:
     bucketUri: az://<storage_container>/${BACKUP_NAME}?blob_storage_account=<storage_account>
 serviceAccount:

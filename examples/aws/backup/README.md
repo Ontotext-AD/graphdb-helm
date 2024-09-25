@@ -75,7 +75,7 @@ ServiceAccount to an IAM role:
 backup:
   enabled: true
   type: cloud
-  schedule: @midnight
+  schedule: "@midnight"
   cloud:
     bucketUri: s3:///<bucket>/${BACKUP_NAME}?region=<region>
 serviceAccount:

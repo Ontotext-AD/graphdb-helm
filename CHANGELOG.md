@@ -12,6 +12,7 @@
     - Cloud backups support uploading the GraphDB backup archives in one of the supported cloud object storage services, configured with `backup.cloud`
     - Added a new example under [examples/backup-local](examples/backup-local) showing how to use the local backup feature with `backup.local`
 - Added a new property `security.provisioner.passwordHash` to define an initial password for the provisioner user as a bcrypt hash.
+- Configured `graphdb.extra.plugins` to load plugins from `/opt/graphdb/home/extra-plugins` by default
 
 ### Fixed
 

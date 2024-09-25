@@ -350,19 +350,23 @@ cluster:
       # TLS
       # TLS encryption will be enforced for the cluster communication.
       # TLS assets need to be provided and If not properly configured the server will fail to start!
+      # Most of the possible properties can be seen from the official tomcat connector documentation without
+      # the graphdb.raft.security prefix.
+      # Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
+      # Official GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties
       mode: DEFAULT
       privateKey:
         # The value is processed as a helm template
         secretName: ""
         # Key in the existing Secret that holds the private key value
-        privatekeyKey: ""
+        privateKeyKey: ""
         # Key in the existing Secret that holds the private key password
-        privatekeyPasswordKey: ""
+        privateKeyPasswordKey: ""
       certificate:
         # The value is processed as a helm template
         secretName: ""
         # Key in the existing Secret that holds the certificate value
-        secretKey: ""
+        certificateKey: ""
       certificateChain:
         # The value is processed as a helm template
         secretName:
@@ -377,14 +381,27 @@ cluster:
         keystorePasswordKey: ""
         # Alias of the certificate inside the keystore
         keyAlias: ""
+        # If not explicitly defined, it will be created.
+        keystoreProvider: ""
+        # If not explicitly defined, it will be created.
+        keystoreType: ""
       truststore:
         # The value is processed as a helm template
-        # If the secret name is not specified the default java trust store will be used
         secretName: ""
         # Key in the existing Secret that holds the trust store value
         truststoreKey: ""
         # Key in the existing Secret that holds the trust store password value
         truststorePasswordKey: ""
+        # If not explicitly defined, it will be created.
+        truststoreProvider: ""
+        # If not explicitly defined, it will be created.
+        truststoreType: ""
+      # Specifies the root certificates that the system should trust when establishing security connections.
+      rootCerts:
+        # The value is processed as a helm template
+        secretName: ""
+        # Key in the existing Secret that holds the root certs value
+        rootCertsKey: ""
 
   # Configurations for the cluster automation Jobs.
   # Note that there are common configurations under jobs.<> as well.

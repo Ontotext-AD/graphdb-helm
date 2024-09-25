@@ -139,7 +139,7 @@ spec:
             secretName: {{ .truststore.secretName }}
         {{- end }}
         {{- if .privateKey.secretName }}
-        - name: graphdb-privatekey-properties
+        - name: graphdb-private-key-properties
           secret:
             secretName: {{ .privateKey.secretName }}
         {{- end }}
@@ -149,9 +149,14 @@ spec:
             secretName: {{ .certificate.secretName }}
         {{- end }}
         {{- if .certificateChain.secretName }}
-        - name: graphdb-certificatechain-properties
+        - name: graphdb-certificate-chain-properties
           secret:
             secretName: {{ .certificateChain.secretName }}
+        {{- end }}
+        {{- if .rootCerts.secretName }}
+        - name: graphdb-root-certs-properties
+          secret:
+            secretName: {{ .rootCerts.secretName }}
         {{- end }}
         {{- end }}
         {{- end }}
@@ -365,9 +370,6 @@ spec:
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           env:
-            {{- with .Values.extraEnv }}
-             {{- tpl (toYaml .) $ | nindent 12 }}
-            {{- end }}
             {{- with .Values.cluster.config.tls }}
             {{- if ne .mode "NONE" }}
             {{- if .keystore.secretName }}
@@ -389,9 +391,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .privateKey.secretName }}
-                  key: {{ .privateKey.privatekeyPasswordKey }}
+                  key: {{ .privateKey.privateKeyPasswordKey }}
             {{- end }}
             {{- end }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+             {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
@@ -425,19 +430,24 @@ spec:
               subPath: {{ .truststore.truststoreKey }}
             {{- end }}
             {{- if .privateKey.secretName }}
-            - name: graphdb-privatekey-properties
-              mountPath: /opt/graphdb/home/conf/privatekey.pem
-              subPath: {{ .privateKey.privatekeyKey }}
+            - name: graphdb-private-key-properties
+              mountPath: /opt/graphdb/home/conf/private-key.pem
+              subPath: {{ .privateKey.privateKeyKey }}
             {{- end }}
             {{- if .certificate.secretName }}
             - name: graphdb-certificate-properties
               mountPath: /opt/graphdb/home/conf/certificate.pem
-              subPath: {{ .certificate.secretName }}
+              subPath: {{ .certificate.certificateKey }}
             {{- end }}
             {{- if .certificateChain.secretName }}
-            - name: graphdb-certificatechain-properties
-              mountPath: /opt/graphdb/home/conf/certificatechain.pem
+            - name: graphdb-certificate-chain-properties
+              mountPath: /opt/graphdb/home/conf/certificate-chain.pem
               subPath: {{ .certificateChain.certificateChainKey }}
+            {{- end }}
+            {{- if .rootCerts.secretName }}
+            - name: graphdb-root-certs-properties
+              mountPath: /opt/graphdb/home/conf/root-certs.pem
+              subPath: {{ .rootCerts.rootCertsKey }}
             {{- end }}
             {{- end }}
             {{- end }}

@@ -17,6 +17,7 @@ data:
     graphdb.append.request.id.headers=true
     graphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     graphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
+    graphdb.extra.plugins=/opt/graphdb/home/extra-plugins
     {{- if eq (int .Values.replicas) 1}}
     graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}

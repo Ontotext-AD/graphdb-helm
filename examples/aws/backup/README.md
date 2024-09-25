@@ -55,7 +55,7 @@ backup:
   cloud:
     bucketUri: s3:///<bucket>/${BACKUP_NAME}?region=<region>&AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID}&AWS_SECRET_ACCESS_KEY=${ACCESS_KEY}
   extraEnvFrom:
-    secretRef:
+  - secretRef:
       name: graphdb-backup-s3-credentials
 ```
 

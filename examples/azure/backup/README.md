@@ -53,7 +53,7 @@ backup:
   cloud:
     bucketUri: az://<storage_container>/${BACKUP_NAME}?blob_storage_account=<storage_account>&blob_access_key=${ACCESS_KEY}
   extraEnvFrom:
-    secretRef:
+  - secretRef:
       name: graphdb-backup-azure-credentials
 ```
 

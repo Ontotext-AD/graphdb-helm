@@ -1,0 +1,15 @@
+# This example shows how to deploy and expose GraphDB with Application Gateway Ingress with SSL certificate hosted in the KeyVault Service.
+
+configuration:
+  # Change this to your AzureDNS domain name or use nip.io which you can do after you deploy the chart since you
+  # need to map the public IP address of the Application Gateway to the nip.io.
+  externalUrl: https://ip.address.nip.io/
+
+ingress:
+  enabled: true
+  className: azure-application-gateway
+  annotations:
+    # Set the name of the SSL certificate that you have in the KeyVault Service
+    appgw.ingress.kubernetes.io/appgw-ssl-certificate: "name-of-appgw-installed-certificate"
+    # Enable SSL redirect on the listener
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"

@@ -1,5 +1,24 @@
 # GraphDB Helm chart release notes
 
+## Version 11.2.0
+
+### New
+
+- Added CronJob for scheduling GraphDB backups. The CronJob supports both local and cloud backups.
+    - Added new configurations under `backup`: `backup.enabled` for toggling the backup CronJob, `backup.type` for selecting between local and
+      cloud and more.
+    - Local backups support saving the GraphDB backup archives in volume from an existing persistent volume claim, configured
+      with `backup.local`
+    - Cloud backups support uploading the GraphDB backup archives in one of the supported cloud object storage services, configured with `backup.cloud`
+    - Added a new example under [examples/backup-local](examples/backup-local) showing how to use the local backup feature with `backup.local`
+- Added a new property `security.provisioner.passwordHash` to define an initial password for the provisioner user as a bcrypt hash.
+- Configured `graphdb.extra.plugins` to load plugins from `/opt/graphdb/home/extra-plugins` by default
+
+### Fixed
+
+- Updated the GraphDB containers to explicitly use `/tmp` as a working directory to avoid permission errors due to the
+  default security context's `readOnlyRootFilesystem` when the container has a starting folder different from `/tmp`.
+
 ## Version 11.1.5
 
 ### New

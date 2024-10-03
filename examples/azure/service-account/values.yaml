@@ -1,0 +1,4 @@
+serviceAccount:
+  create: true
+  annotations:
+    azure.workload.identity/client-id: <YOUR_MANAGED_IDENTITY_CLIENT_ID>

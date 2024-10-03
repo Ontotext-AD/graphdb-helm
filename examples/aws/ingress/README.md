@@ -17,4 +17,8 @@ This document describes the steps on how to configure the GraphDB Helm chart to 
 
 ## Note
 
-After you deploy and the ingress is created please change the externalUrl value to the DNS name of the ALB or Route53.
+After you deploy the GraphDB chart you should either point an DNS name to the ALB and set
+the externalUrl property in the chart and re-apply it, or the other option you can use nip.io and map it's
+public ip address to nip.io. In order to do that use the kubectl get ingress commands and copy the Public IP
+for the GraphDB ingress, then go to the values file and set the externalUrl property to http://ip.address.nip.io/.
+Otherwise Workbench won't be accessible.

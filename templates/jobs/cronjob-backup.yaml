@@ -1,0 +1,132 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "graphdb.fullname.cronjob.backup" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.jobs.backoffLimit }}
+      ttlSecondsAfterFinished: {{ .Values.jobs.ttlSecondsAfterFinished }}
+      template:
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          {{- if .Values.jobs.schedulerName }}
+          schedulerName: {{ .Values.jobs.schedulerName }}
+          {{- end }}
+          {{- with .Values.jobs.dnsConfig }}
+          dnsConfig: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.jobs.dnsPolicy }}
+          dnsPolicy: {{ .Values.jobs.dnsPolicy }}
+          {{- end }}
+          {{- if .Values.jobs.priorityClassName }}
+          priorityClassName: {{ .Values.jobs.priorityClassName }}
+          {{- end }}
+          {{- with .Values.jobs.nodeSelector }}
+          nodeSelector: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+          {{- with .Values.jobs.affinity }}
+          affinity: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+          {{- with .Values.jobs.tolerations }}
+          tolerations: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+          {{- with .Values.jobs.topologySpreadConstraints }}
+          topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+          {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
+          imagePullSecrets:
+            {{- include "graphdb.combinedImagePullSecrets" . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.jobs.podSecurityContext }}
+          securityContext: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumes:
+            - name: job-temp
+              emptyDir: {{ .Values.jobs.persistence.emptyDir | toYaml | nindent 16 }}
+            - name: graphdb-utils
+              configMap:
+                name: {{ include "graphdb.fullname.configmap.utils" . }}
+            - name: backup-options
+              secret:
+                secretName: {{ (tpl .Values.backup.optionsSecret.existingSecret .) | default (include "graphdb.fullname.secret.backup-options" .) }}
+            {{- if eq .Values.backup.type "local" }}
+            - name: local-backups
+              persistentVolumeClaim:
+                claimName: {{ required "backup.local.existingPVC is required" .Values.backup.local.existingPVC }}
+            {{- end }}
+          containers:
+            - name: create-graphdb-backup
+              image: {{ include "graphdb.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              {{- with .Values.backup.extraEnvFrom }}
+              envFrom:
+                {{- tpl (toYaml .) $ | nindent 16 }}
+              {{- end }}
+              env:
+                {{- if gt (int .Values.replicas) 1 }}
+                - name: GRAPHDB_SERVICE_NAME
+                  value: {{ include "graphdb-proxy.fullname" . }}
+                - name: GRAPHDB_SERVICE_PORT
+                  value: {{ .Values.proxy.service.ports.http | quote }}
+                {{- else }}
+                - name: GRAPHDB_SERVICE_NAME
+                  value: {{ include "graphdb.fullname" . }}
+                - name: GRAPHDB_SERVICE_PORT
+                  value: {{ .Values.service.ports.http | quote }}
+                {{- end }}
+                - name: GRAPHDB_AUTH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ (tpl .Values.security.provisioner.existingSecret .) | default (include "graphdb.fullname.secret.provisioning-user" .) }}
+                      key: {{ .Values.security.provisioner.tokenKey }}
+                {{- with .Values.backup.extraEnv }}
+                  {{- tpl (toYaml .) $ | nindent 16 }}
+                {{- end }}
+              {{- with .Values.jobs.securityContext }}
+              securityContext: {{ toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.jobs.resources }}
+              resources: {{ toYaml . | nindent 16 }}
+              {{- end }}
+              volumeMounts:
+                - name: job-temp
+                  mountPath: /tmp
+                - name: graphdb-utils
+                  mountPath: /tmp/utils
+                - name: backup-options
+                  mountPath: /tmp/backup_options.json
+                  subPath: {{ .Values.backup.optionsSecret.secretKey }}
+                {{- if eq .Values.backup.type "local" }}
+                - name: local-backups
+                  mountPath: {{ .Values.backup.local.mountPath }}
+                {{- end }}
+              workingDir: /tmp
+              command: [ "bash" ]
+              args:
+                {{- if eq .Values.backup.type "cloud" }}
+                - /tmp/utils/graphdb.sh
+                - cloudBackup
+                - /tmp/backup_options.json
+                {{- else if eq .Values.backup.type "local" }}
+                - /tmp/utils/graphdb.sh
+                - localBackup
+                - /tmp/backup_options.json
+                - {{ .Values.backup.local.mountPath }}
+                {{- else }}
+                  {{- fail (printf "Unknown backup.type '%s'" .Values.backup.type) }}
+                {{- end }}
+{{- end }}

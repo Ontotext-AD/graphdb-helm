@@ -126,6 +126,40 @@ spec:
           secret:
             secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
+        {{- with .Values.cluster.config.tls }}
+        {{- if ne .mode "NONE" }}
+        {{- if .keystore.secretName}}
+        - name: graphdb-keystore-properties
+          secret:
+            secretName: {{ .keystore.secretName }}
+        {{- end }}
+        {{- if .truststore.secretName}}
+        - name: graphdb-truststore-properties
+          secret:
+            secretName: {{ .truststore.secretName }}
+        {{- end }}
+        {{- if .privateKey.secretName }}
+        - name: graphdb-private-key-properties
+          secret:
+            secretName: {{ .privateKey.secretName }}
+        {{- end }}
+        {{- if .certificate.secretName }}
+        - name: graphdb-certificate-properties
+          secret:
+            secretName: {{ .certificate.secretName }}
+        {{- end }}
+        {{- if .certificateChain.secretName }}
+        - name: graphdb-certificate-chain-properties
+          secret:
+            secretName: {{ .certificateChain.secretName }}
+        {{- end }}
+        {{- if .rootCerts.secretName }}
+        - name: graphdb-root-certs-properties
+          secret:
+            secretName: {{ .rootCerts.secretName }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
@@ -336,9 +370,35 @@ spec:
             {{- with .Values.extraEnvFrom }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
-          {{- with .Values.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
-          {{- end }}
+          env:
+            {{- with .Values.cluster.config.tls }}
+            {{- if ne .mode "NONE" }}
+            {{- if .keystore.secretName }}
+            - name: graphdb.raft.security.keystorePass
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .keystore.secretName }}
+                  key: {{ .keystore.keystorePasswordKey }}
+            {{- end }}
+            {{- if .truststore.secretName }}
+            - name: graphdb.raft.security.truststorePass
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .truststore.secretName }}
+                  key: {{ .truststore.truststorePasswordKey }}
+            {{- end }}
+            {{- if .privateKey.secretName}}
+            - name: graphdb.raft.security.certificateKeyPassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .privateKey.secretName }}
+                  key: {{ .privateKey.privateKeyPasswordKey }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+             {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
@@ -357,6 +417,40 @@ spec:
             {{- if .Values.import.volumeMount.enabled }}
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
+            {{- end }}
+            {{- with .Values.cluster.config.tls }}
+            {{- if ne .mode "NONE" }}
+            {{- if .keystore.secretName}}
+            - name: graphdb-keystore-properties
+              mountPath: /opt/graphdb/home/conf/keystore.jks
+              subPath: {{ .keystore.keystoreKey }}
+            {{- end }}
+            {{- if .truststore.secretName}}
+            - name: graphdb-truststore-properties
+              mountPath: /opt/graphdb/home/conf/truststore.jks
+              subPath: {{ .truststore.truststoreKey }}
+            {{- end }}
+            {{- if .privateKey.secretName }}
+            - name: graphdb-private-key-properties
+              mountPath: /opt/graphdb/home/conf/private-key.pem
+              subPath: {{ .privateKey.privateKeyKey }}
+            {{- end }}
+            {{- if .certificate.secretName }}
+            - name: graphdb-certificate-properties
+              mountPath: /opt/graphdb/home/conf/certificate.pem
+              subPath: {{ .certificate.certificateKey }}
+            {{- end }}
+            {{- if .certificateChain.secretName }}
+            - name: graphdb-certificate-chain-properties
+              mountPath: /opt/graphdb/home/conf/certificate-chain.pem
+              subPath: {{ .certificateChain.certificateChainKey }}
+            {{- end }}
+            {{- if .rootCerts.secretName }}
+            - name: graphdb-root-certs-properties
+              mountPath: /opt/graphdb/home/conf/root-certs.pem
+              subPath: {{ .rootCerts.rootCertsKey }}
+            {{- end }}
+            {{- end }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
               {{- tpl (toYaml .) $ | nindent 12 }}

@@ -359,37 +359,37 @@ spec:
             {{- with .Values.cluster.tls }}
             {{- if .keystore.secretName}}
             - name: graphdb-keystore
-              mountPath: /opt/graphdb/home/conf/keystore.jks
+              mountPath: /etc/graphdb/keystore.jks
               subPath: {{ .keystore.keystoreKey }}
             {{- end }}
             {{- if .truststore.secretName}}
             - name: graphdb-truststore
-              mountPath: /opt/graphdb/home/conf/truststore.jks
+              mountPath: /etc/graphdb/truststore.jks
               subPath: {{ .truststore.truststoreKey }}
             {{- end }}
             {{- if .privateKey.secretName }}
             - name: graphdb-private-key
-              mountPath: /opt/graphdb/home/conf/private-key.pem
+              mountPath: /etc/graphdb/private-key.pem
               subPath: {{ .privateKey.privateKeyKey }}
             {{- end }}
             {{- if .certificate.secretName }}
             - name: graphdb-certificate
-              mountPath: /opt/graphdb/home/conf/certificate.pem
+              mountPath: /etc/graphdb/certificate.pem
               subPath: {{ .certificate.certificateKey }}
             {{- end }}
             {{- if .certificateChain.secretName }}
             - name: graphdb-certificate-chain
-              mountPath: /opt/graphdb/home/conf/certificate-chain.pem
+              mountPath: /etc/graphdb/certificate-chain.pem
               subPath: {{ .certificateChain.certificateChainKey }}
             {{- end }}
             {{- if .rootCerts.secretName }}
             - name: graphdb-root-certs
-              mountPath: /opt/graphdb/home/conf/root-certs.pem
+              mountPath: /etc/graphdb/root-certs.pem
               subPath: {{ .rootCerts.rootCertsKey }}
             {{- end }}
             {{- if .certificateRevocationList.secretName }}
             - name: graphdb-certificate-revocation-list
-              mountPath: /opt/graphdb/home/conf/certificate-revocation-list.pem
+              mountPath: /etc/graphdb/certificate-revocation-list.pem
               subPath: {{ .certificateRevocationList.certificateRevocationListKey }}
             {{- end }}
             {{- end }}

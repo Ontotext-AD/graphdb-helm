@@ -95,6 +95,43 @@ spec:
           configMap:
             name: {{ tpl .Values.proxy.configuration.logback.existingConfigmap . }}
       {{- end }}
+      {{- with .Values.cluster.tls }}
+      {{- if .keystore.secretName}}
+        - name: graphdb-keystore
+          secret:
+            secretName: {{ .keystore.secretName }}
+      {{- end }}
+      {{- if .truststore.secretName}}
+        - name: graphdb-truststore
+          secret:
+            secretName: {{ .truststore.secretName }}
+      {{- end }}
+      {{- if .privateKey.secretName }}
+        - name: graphdb-private-key
+          secret:
+            secretName: {{ .privateKey.secretName }}
+      {{- end }}
+      {{- if .certificate.secretName }}
+        - name: graphdb-certificate
+          secret:
+            secretName: {{ .certificate.secretName }}
+      {{- end }}
+      {{- if .certificateChain.secretName }}
+        - name: graphdb-certificate-chain
+          secret:
+            secretName: {{ .certificateChain.secretName }}
+      {{- end }}
+      {{- if .rootCerts.secretName }}
+        - name: graphdb-root-certs
+          secret:
+            secretName: {{ .rootCerts.secretName }}
+      {{- end }}
+      {{- if .certificateRevocationList.secretName }}
+        - name: graphdb-certificate-revocation-list
+          secret:
+            secretName: {{ .certificateRevocationList.secretName }}
+      {{- end }}
+      {{- end }}
       {{- with .Values.proxy.extraVolumes }}
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
@@ -276,8 +313,32 @@ spec:
             {{- with .Values.proxy.extraEnvFrom }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
+          env:
+          {{- with .Values.cluster.tls }}
+          {{- if .keystore.secretName }}
+            - name: graphdb.raft.security.keystorePass
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .keystore.secretName }}
+                  key: {{ .keystore.keystorePasswordKey }}
+          {{- end }}
+          {{- if .truststore.secretName }}
+            - name: graphdb.raft.security.truststorePass
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .truststore.secretName }}
+                  key: {{ .truststore.truststorePasswordKey }}
+          {{- end }}
+          {{- if .privateKey.secretName}}
+            - name: graphdb.raft.security.certificateKeyPassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .privateKey.secretName }}
+                  key: {{ .privateKey.privateKeyPasswordKey }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
           ports:
             - name: http
@@ -294,6 +355,43 @@ spec:
             - name: graphdb-proxy-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
               subPath: {{ .Values.proxy.configuration.logback.configmapKey }}
+            {{- end }}
+            {{- with .Values.cluster.tls }}
+            {{- if .keystore.secretName}}
+            - name: graphdb-keystore
+              mountPath: /opt/graphdb/home/conf/keystore.jks
+              subPath: {{ .keystore.keystoreKey }}
+            {{- end }}
+            {{- if .truststore.secretName}}
+            - name: graphdb-truststore
+              mountPath: /opt/graphdb/home/conf/truststore.jks
+              subPath: {{ .truststore.truststoreKey }}
+            {{- end }}
+            {{- if .privateKey.secretName }}
+            - name: graphdb-private-key
+              mountPath: /opt/graphdb/home/conf/private-key.pem
+              subPath: {{ .privateKey.privateKeyKey }}
+            {{- end }}
+            {{- if .certificate.secretName }}
+            - name: graphdb-certificate
+              mountPath: /opt/graphdb/home/conf/certificate.pem
+              subPath: {{ .certificate.certificateKey }}
+            {{- end }}
+            {{- if .certificateChain.secretName }}
+            - name: graphdb-certificate-chain
+              mountPath: /opt/graphdb/home/conf/certificate-chain.pem
+              subPath: {{ .certificateChain.certificateChainKey }}
+            {{- end }}
+            {{- if .rootCerts.secretName }}
+            - name: graphdb-root-certs
+              mountPath: /opt/graphdb/home/conf/root-certs.pem
+              subPath: {{ .rootCerts.rootCertsKey }}
+            {{- end }}
+            {{- if .certificateRevocationList.secretName }}
+            - name: graphdb-certificate-revocation-list
+              mountPath: /opt/graphdb/home/conf/certificate-revocation-list.pem
+              subPath: {{ .certificateRevocationList.certificateRevocationListKey }}
+            {{- end }}
             {{- end }}
             {{- with .Values.proxy.extraVolumeMounts }}
               {{- toYaml . | nindent 12 }}

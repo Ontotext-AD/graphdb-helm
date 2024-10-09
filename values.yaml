@@ -314,6 +314,97 @@ cluster:
   # Timeout for cURL queries used for the cluster creation and update.
   clusterCreationTimeout: 60
 
+  # There are 3 combinations of TLS assets that could be provided in order to set up cluster security:
+  # Using JSSE
+  # Keystore and Truststore and their corresponding properties.
+  # Using OpenSSL
+  # Certificate file, Certificate chain and Private key and their corresponding properties.
+  # Using a certificate without chain path
+  # Certificate file and Private key and their corresponding properties.
+  # If the TLS assets for all scenarios are provided at once it will result in an error!
+  tls:
+    # There are 3 types of security mode configurations
+    # NONE
+    # Unsecured communication will be used for the gRPC client-server communications.
+    # If mode is not specified it will use this configuration by default.
+    # DEFAULT
+    # TLS encryption will be used if the TLS assets for configuring the security communications are found.
+    # TLS
+    # TLS encryption will be enforced for the cluster communication.
+    # TLS assets need to be provided and If not properly configured the server will fail to start!
+    # Most of the possible properties can be seen from the official tomcat connector documentation without
+    # the graphdb.raft.security prefix.
+    # Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
+    # Official GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties
+    mode: DEFAULT
+    privateKey:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the file that contains the server private key.
+      # The format is PEM-encoded.
+      privateKeyKey: ""
+      # The key in the existing Secret that holds the password used to access the private key associated
+      # with the server certificate from the specified file.
+      privateKeyPasswordKey: ""
+    certificate:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the file that contains the server certificate.
+      # The format is PEM-encoded.
+      certificateKey: ""
+    certificateChain:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the file that contains the certificate chain associated with
+      # the server certificate used.
+      # The format is PEM-encoded.
+      certificateChainKey: ""
+    keystore:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the keystore file where you have stored the
+      # server certificate and key to be loaded.
+      keystoreKey: ""
+      # Key in the existing Secret that holds the password to use to access the keystore containing
+      # the server's private key and certificate. If not specified, a default of "changeit" will be used.
+      keystorePasswordKey: ""
+      # The alias used for the server key and certificate in the keystore.
+      keyAlias: ""
+      # The name of the keystore provider to be used for the server certificate.
+      # If it isn't set the list of registered providers is traversed in preference
+      # order and the first provider that supports the keystoreType is used.
+      keystoreProvider: ""
+      # The type of keystore file to be used for the server certificate.
+      # If not set a default value of "JKS" is used.
+      keystoreType: ""
+    truststore:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the trust store file to use to validate client certificates.
+      truststoreKey: ""
+      # Key in the existing Secret that holds the password to access the trust store.
+      truststorePasswordKey: ""
+      # The name of the truststore provider to be used for the server certificate.
+      # If it isn't set the list of registered providers is traversed in preference
+      # order and the first provider that supports the truststoreProvider is used.
+      truststoreProvider: ""
+      # The type of key store used for the trust store.
+      # If not set a default value of "JKS" is used.
+      truststoreType: ""
+    # Specifies the root certificates that the system should trust when establishing security connections.
+    rootCerts:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the root certs file.
+      rootCertsKey: ""
+    # Determines a list of digital certificates that have been revoked by the issuing certificate authority (CA)
+    # before their actual or assigned expiration date.
+    certificateRevocationList:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the certificate revocation list file.
+      certificateRevocationListKey: ""
+
   # Cluster configuration parameters.
   # Changing the parameters would trigger a Job that patches the configuration.
   # Ref: https://graphdb.ontotext.com/documentation/10.7/creating-a-cluster.html#creation-parameters
@@ -340,68 +431,6 @@ cluster:
       transactionLogMaximumSizeGB: 50
       # The amount of time in milliseconds a follower node would wait before attempting to verify the last committed entry when the first verification is unsuccessful.
       verificationTimeout: 1500
-    tls:
-      # There are 3 possible security mode configurations
-      # NONE
-      # Unsecured communication will be used for the gRPC client-server communications.
-      # If mode is not specified it will use this configuration by default.
-      # DEFAULT
-      # TLS encryption will be used if the TLS assets for configuring the security communications are found.
-      # TLS
-      # TLS encryption will be enforced for the cluster communication.
-      # TLS assets need to be provided and If not properly configured the server will fail to start!
-      # Most of the possible properties can be seen from the official tomcat connector documentation without
-      # the graphdb.raft.security prefix.
-      # Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
-      # Official GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties
-      mode: DEFAULT
-      privateKey:
-        # The value is processed as a helm template
-        secretName: ""
-        # Key in the existing Secret that holds the private key value
-        privateKeyKey: ""
-        # Key in the existing Secret that holds the private key password
-        privateKeyPasswordKey: ""
-      certificate:
-        # The value is processed as a helm template
-        secretName: ""
-        # Key in the existing Secret that holds the certificate value
-        certificateKey: ""
-      certificateChain:
-        # The value is processed as a helm template
-        secretName:
-        # Key in the existing Secret that holds the certificate chain value
-        certificateChainKey:
-      keystore:
-        # The value is processed as a helm template
-        secretName: ""
-        # Key in the existing Secret that holds the keystore value
-        keystoreKey: ""
-        # Key in the existing Secret that holds the keystore password value
-        keystorePasswordKey: ""
-        # Alias of the certificate inside the keystore
-        keyAlias: ""
-        # If not explicitly defined, it will be created.
-        keystoreProvider: ""
-        # If not explicitly defined, it will be created.
-        keystoreType: ""
-      truststore:
-        # The value is processed as a helm template
-        secretName: ""
-        # Key in the existing Secret that holds the trust store value
-        truststoreKey: ""
-        # Key in the existing Secret that holds the trust store password value
-        truststorePasswordKey: ""
-        # If not explicitly defined, it will be created.
-        truststoreProvider: ""
-        # If not explicitly defined, it will be created.
-        truststoreType: ""
-      # Specifies the root certificates that the system should trust when establishing security connections.
-      rootCerts:
-        # The value is processed as a helm template
-        secretName: ""
-        # Key in the existing Secret that holds the root certs value
-        rootCertsKey: ""
 
   # Configurations for the cluster automation Jobs.
   # Note that there are common configurations under jobs.<> as well.

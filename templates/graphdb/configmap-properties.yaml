@@ -20,20 +20,19 @@ data:
     {{- if eq (int .Values.replicas) 1}}
     graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}
-    {{- with .Values.cluster.config.tls }}
-    {{- if ne .mode "NONE" }}
-    graphdb.raft.security.mode={{ .mode  }}
+    {{- with .Values.cluster.tls }}
+    graphdb.raft.security.mode={{ .mode }}
     {{- if .privateKey.secretName }}
-    graphdb.raft.security.certificateKeyFile=/opt/graphdb/home/conf/private-key.pem
+    graphdb.raft.security.certificateKeyFile=/etc/graphdb/private-key.pem
     {{- end }}
     {{- if .certificate.secretName }}
-    graphdb.raft.security.certificateFile=/opt/graphdb/home/conf/certificate.pem
+    graphdb.raft.security.certificateFile=/etc/graphdb/certificate.pem
     {{- end }}
     {{- if .certificateChain.secretName }}
-    graphdb.raft.security.certificateChainFile=/opt/graphdb/home/conf/certificate-chain.pem
+    graphdb.raft.security.certificateChainFile=/etc/graphdb/certificate-chain.pem
     {{- end }}
     {{- if .keystore.secretName }}
-    graphdb.raft.security.keystoreFile=/opt/graphdb/home/conf/keystore.jks
+    graphdb.raft.security.keystoreFile=/etc/graphdb/keystore.jks
     graphdb.raft.security.keyAlias={{ .keystore.keyAlias }}
     {{- if .keystore.keystoreProvider }}
     graphdb.raft.security.keystoreProvider={{ .keystore.keystoreProvider }}
@@ -43,7 +42,7 @@ data:
     {{- end }}
     {{- end }}
     {{- if .truststore.secretName }}
-    graphdb.raft.security.truststoreFile=/opt/graphdb/home/conf/truststore.jks
+    graphdb.raft.security.truststoreFile=/etc/graphdb/truststore.jks
     {{- if .truststore.truststoreProvider }}
     graphdb.raft.security.truststoreProvider={{ .truststore.truststoreProvider }}
     {{- end }}
@@ -52,8 +51,10 @@ data:
     {{- end }}
     {{- end }}
     {{- if .rootCerts.secretName }}
-    graphdb.raft.security.rootCerts=/opt/graphdb/home/conf/root-certs.pem
+    graphdb.raft.security.rootCerts=/etc/graphdb/root-certs.pem
     {{- end }}
+    {{- if .certificateRevocationList.secretName }}
+    graphdb.raft.security.certificateRevocationListFile=/etc/graphdb/certificate-revocation-list.pem
     {{- end }}
     {{- end }}
     {{- if .Values.configuration.properties }}

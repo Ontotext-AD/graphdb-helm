@@ -24,4 +24,41 @@ data:
     {{- end }}
     {{- end -}}
     {{- end -}}
+    {{- with .Values.cluster.tls }}
+    graphdb.raft.security.mode={{ .mode }}
+    {{- if .privateKey.secretName }}
+    graphdb.raft.security.certificateKeyFile=/opt/graphdb/home/conf/private-key.pem
+    {{- end }}
+    {{- if .certificate.secretName }}
+    graphdb.raft.security.certificateFile=/opt/graphdb/home/conf/certificate.pem
+    {{- end }}
+    {{- if .certificateChain.secretName }}
+    graphdb.raft.security.certificateChainFile=/opt/graphdb/home/conf/certificate-chain.pem
+    {{- end }}
+    {{- if .keystore.secretName }}
+    graphdb.raft.security.keystoreFile=/opt/graphdb/home/conf/keystore.jks
+    graphdb.raft.security.keyAlias={{ .keystore.keyAlias }}
+    {{- if .keystore.keystoreProvider }}
+    graphdb.raft.security.keystoreProvider={{ .keystore.keystoreProvider }}
+    {{- end }}
+    {{- if .keystore.keystoreType }}
+    graphdb.raft.security.keystoreType={{ .keystore.keystoreType }}
+    {{- end }}
+    {{- end }}
+    {{- if .truststore.secretName }}
+    graphdb.raft.security.truststoreFile=/opt/graphdb/home/conf/truststore.jks
+    {{- if .truststore.truststoreProvider }}
+    graphdb.raft.security.truststoreProvider={{ .truststore.truststoreProvider }}
+    {{- end }}
+    {{- if .truststore.truststoreType }}
+    graphdb.raft.security.truststoreType={{ .truststore.truststoreType }}
+    {{- end }}
+    {{- end }}
+    {{- if .rootCerts.secretName }}
+    graphdb.raft.security.rootCerts=/opt/graphdb/home/conf/root-certs.pem
+    {{- end }}
+    {{- if .certificateRevocationList.secretName }}
+    graphdb.raft.security.certificateRevocationListFile=/opt/graphdb/home/conf/certificate-revocation-list.pem
+    {{- end }}
+    {{- end }}
 {{- end }}

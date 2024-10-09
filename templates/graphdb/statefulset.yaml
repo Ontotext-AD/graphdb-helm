@@ -126,38 +126,41 @@ spec:
           secret:
             secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
-        {{- with .Values.cluster.config.tls }}
-        {{- if ne .mode "NONE" }}
+        {{- with .Values.cluster.tls }}
         {{- if .keystore.secretName}}
-        - name: graphdb-keystore-properties
+        - name: graphdb-keystore
           secret:
             secretName: {{ .keystore.secretName }}
         {{- end }}
         {{- if .truststore.secretName}}
-        - name: graphdb-truststore-properties
+        - name: graphdb-truststore
           secret:
             secretName: {{ .truststore.secretName }}
         {{- end }}
         {{- if .privateKey.secretName }}
-        - name: graphdb-private-key-properties
+        - name: graphdb-private-key
           secret:
             secretName: {{ .privateKey.secretName }}
         {{- end }}
         {{- if .certificate.secretName }}
-        - name: graphdb-certificate-properties
+        - name: graphdb-certificate
           secret:
             secretName: {{ .certificate.secretName }}
         {{- end }}
         {{- if .certificateChain.secretName }}
-        - name: graphdb-certificate-chain-properties
+        - name: graphdb-certificate-chain
           secret:
             secretName: {{ .certificateChain.secretName }}
         {{- end }}
         {{- if .rootCerts.secretName }}
-        - name: graphdb-root-certs-properties
+        - name: graphdb-root-certs
           secret:
             secretName: {{ .rootCerts.secretName }}
         {{- end }}
+        {{- if .certificateRevocationList.secretName }}
+        - name: graphdb-certificate-revocation-list
+          secret:
+            secretName: {{ .certificateRevocationList.secretName }}
         {{- end }}
         {{- end }}
         {{- with .Values.extraVolumes }}
@@ -370,8 +373,7 @@ spec:
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           env:
-            {{- with .Values.cluster.config.tls }}
-            {{- if ne .mode "NONE" }}
+            {{- with .Values.cluster.tls }}
             {{- if .keystore.secretName }}
             - name: graphdb.raft.security.keystorePass
               valueFrom:
@@ -392,7 +394,6 @@ spec:
                 secretKeyRef:
                   name: {{ .privateKey.secretName }}
                   key: {{ .privateKey.privateKeyPasswordKey }}
-            {{- end }}
             {{- end }}
             {{- end }}
             {{- with .Values.extraEnv }}
@@ -417,38 +418,41 @@ spec:
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
-            {{- with .Values.cluster.config.tls }}
-            {{- if ne .mode "NONE" }}
+            {{- with .Values.cluster.tls }}
             {{- if .keystore.secretName}}
-            - name: graphdb-keystore-properties
-              mountPath: /opt/graphdb/home/conf/keystore.jks
+            - name: graphdb-keystore
+              mountPath: /etc/graphdb/keystore.jks
               subPath: {{ .keystore.keystoreKey }}
             {{- end }}
             {{- if .truststore.secretName}}
-            - name: graphdb-truststore-properties
-              mountPath: /opt/graphdb/home/conf/truststore.jks
+            - name: graphdb-truststore
+              mountPath: /etc/graphdb/truststore.jks
               subPath: {{ .truststore.truststoreKey }}
             {{- end }}
             {{- if .privateKey.secretName }}
-            - name: graphdb-private-key-properties
-              mountPath: /opt/graphdb/home/conf/private-key.pem
+            - name: graphdb-private-key
+              mountPath: /etc/graphdb/private-key.pem
               subPath: {{ .privateKey.privateKeyKey }}
             {{- end }}
             {{- if .certificate.secretName }}
-            - name: graphdb-certificate-properties
-              mountPath: /opt/graphdb/home/conf/certificate.pem
+            - name: graphdb-certificate
+              mountPath: /etc/graphdb/certificate.pem
               subPath: {{ .certificate.certificateKey }}
             {{- end }}
             {{- if .certificateChain.secretName }}
-            - name: graphdb-certificate-chain-properties
-              mountPath: /opt/graphdb/home/conf/certificate-chain.pem
+            - name: graphdb-certificate-chain
+              mountPath: /etc/graphdb/certificate-chain.pem
               subPath: {{ .certificateChain.certificateChainKey }}
             {{- end }}
             {{- if .rootCerts.secretName }}
-            - name: graphdb-root-certs-properties
-              mountPath: /opt/graphdb/home/conf/root-certs.pem
+            - name: graphdb-root-certs
+              mountPath: /etc/graphdb/root-certs.pem
               subPath: {{ .rootCerts.rootCertsKey }}
             {{- end }}
+            {{- if .certificateRevocationList.secretName }}
+            - name: graphdb-certificate-revocation-list
+              mountPath: /etc/graphdb/certificate-revocation-list.pem
+              subPath: {{ .certificateRevocationList.certificateRevocationListKey }}
             {{- end }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}

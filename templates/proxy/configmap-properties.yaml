@@ -16,14 +16,6 @@ data:
     # See https://graphdb.ontotext.com/documentation/ for supported properties
     graphdb.connector.port={{ .Values.proxy.containerPorts.http }}
     graphdb.proxy.hosts={{ include "graphdb-proxy.cluster.nodes" . }}
-    {{- if .Values.proxy.configuration.properties }}
-    ##### Overrides from values.yaml #####
-    {{- range $key, $val := .Values.proxy.configuration.properties -}}
-    {{- if ne $val nil }}
-    {{ $key }}={{ tpl ($val | toString) $ | quote }}
-    {{- end }}
-    {{- end -}}
-    {{- end -}}
     {{- with .Values.cluster.tls }}
     graphdb.raft.security.mode={{ .mode }}
     {{- if .privateKey.secretName }}
@@ -61,4 +53,12 @@ data:
     graphdb.raft.security.certificateRevocationListFile=/etc/graphdb/certificate-revocation-list.pem
     {{- end }}
     {{- end }}
+    {{- if .Values.proxy.configuration.properties }}
+    ##### Overrides from values.yaml #####
+    {{- range $key, $val := .Values.proxy.configuration.properties -}}
+    {{- if ne $val nil }}
+    {{ $key }}={{ tpl ($val | toString) $ | quote }}
+    {{- end }}
+    {{- end -}}
+    {{- end -}}
 {{- end }}

@@ -142,7 +142,7 @@ data:
         </logger>
 
         <root>
-            <level value="${graphdb.logger.root.level:-TRACE}"/> <!-- Change root level to TRACE -->
+            <level value="TRACE"/> <!-- Root logger changed to TRACE -->
             <appender-ref ref="MainLog"/>
             <appender-ref ref="ErrorLog"/>
             <if condition='!p("graphdb.foreground").isEmpty()'>
@@ -152,14 +152,13 @@ data:
             </if>
         </root>
 
-        <logger name="org.springframework" level="WARN"/>
-        <logger name="org.apache" level="WARN"/>
-        <logger name="com.github.ziplet" level="WARN"/>
-        <logger name="springfox.documentation" level="WARN"/>
-        <logger name="org.eclipse.rdf4j.query.algebra.evaluation" level="ERROR"/>
-
-        <logger name="hsqldb.*" level="WARN"/>
-        <logger name="org.geotoolkit.*" level="WARN"/>
-        <logger name="pitt.search.semanticvectors.DocVectors" level="WARN"/>
+        <logger name="org.springframework" level="TRACE"/>
+        <logger name="org.apache" level="TRACE"/>
+        <logger name="com.github.ziplet" level="TRACE"/>
+        <logger name="springfox.documentation" level="TRACE"/>
+        <logger name="org.eclipse.rdf4j.query.algebra.evaluation" level="TRACE"/>
+        <logger name="hsqldb.*" level="TRACE"/>
+        <logger name="org.geotoolkit.*" level="TRACE"/>
+        <logger name="pitt.search.semanticvectors.DocVectors" level="TRACE"/>
     </configuration>
 

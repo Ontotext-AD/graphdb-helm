@@ -20,6 +20,37 @@ data:
     {{- if eq (int .Values.replicas) 1}}
     graphdb.external-url={{ include "graphdb.external-url" . }}
     {{- end }}
+    {{- with .Values.configuration.tls }}
+    {{- if .enabled }}
+    graphdb.connector.SSLEnabled = true
+    graphdb.connector.scheme = https
+    graphdb.connector.secure = true
+    {{- end }}
+    {{- if .keystore.secretName }}
+    graphdb.connector.keystoreFile=/etc/graphdb/connector-keystore.jks
+    {{- end }}
+    {{- if .keystore.keyAlias }}
+    graphdb.connector.keyAlias={{ .keystore.keyAlias }}
+    {{- end }}
+    {{- if .keystore.keystoreProvider }}
+    graphdb.connector.keystoreProvider={{ .keystore.keystoreProvider }}
+    {{- end }}
+    {{- if .keystore.keystoreType }}
+    graphdb.connector.keystoreType={{ .keystore.keystoreType }}
+    {{- end }}
+    {{- if .truststore.secretName }}
+    graphdb.connector.truststoreFile=/etc/graphdb/connector-truststore.jks
+    {{- end }}
+    {{- if .truststore.truststoreProvider }}
+    graphdb.connector.truststoreProvider={{ .truststore.truststoreProvider }}
+    {{- end }}
+    {{- if .truststore.truststoreType }}
+    graphdb.connector.truststoreType={{ .truststore.truststoreType }}
+    {{- end }}
+    {{- if .certificateRevocationList.secretName }}
+    graphdb.connector.certificateRevocationListFile=/etc/graphdb/connector-certificate-revocation-list.pem
+    {{- end }}
+    {{- end }}
     {{- with .Values.cluster.tls }}
     graphdb.raft.security.mode={{ .mode }}
     {{- if .privateKey.secretName }}
@@ -33,22 +64,24 @@ data:
     {{- end }}
     {{- if .keystore.secretName }}
     graphdb.raft.security.keystoreFile=/etc/graphdb/keystore.jks
+    {{- end }}
+    {{- if .keystore.keyAlias }}
     graphdb.raft.security.keyAlias={{ .keystore.keyAlias }}
+    {{- end }}
     {{- if .keystore.keystoreProvider }}
     graphdb.raft.security.keystoreProvider={{ .keystore.keystoreProvider }}
     {{- end }}
     {{- if .keystore.keystoreType }}
     graphdb.raft.security.keystoreType={{ .keystore.keystoreType }}
     {{- end }}
-    {{- end }}
     {{- if .truststore.secretName }}
     graphdb.raft.security.truststoreFile=/etc/graphdb/truststore.jks
+    {{- end }}
     {{- if .truststore.truststoreProvider }}
     graphdb.raft.security.truststoreProvider={{ .truststore.truststoreProvider }}
     {{- end }}
     {{- if .truststore.truststoreType }}
     graphdb.raft.security.truststoreType={{ .truststore.truststoreType }}
-    {{- end }}
     {{- end }}
     {{- if .rootCerts.secretName }}
     graphdb.raft.security.rootCerts=/etc/graphdb/root-certs.pem

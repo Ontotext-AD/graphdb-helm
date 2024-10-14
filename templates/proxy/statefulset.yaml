@@ -95,6 +95,23 @@ spec:
           configMap:
             name: {{ tpl .Values.proxy.configuration.logback.existingConfigmap . }}
       {{- end }}
+      {{- with .Values.configuration.tls }}
+      {{- if .keystore.secretName}}
+        - name: graphdb-connector-keystore
+          secret:
+            secretName: {{ .keystore.secretName }}
+      {{- end }}
+      {{- if .truststore.secretName}}
+        - name: graphdb-connector-truststore
+          secret:
+            secretName: {{ .truststore.secretName }}
+      {{- end }}
+      {{- if .certificateRevocationList.secretName }}
+        - name: graphdb-connector-certificate-revocation-list
+          secret:
+            secretName: {{ .certificateRevocationList.secretName }}
+      {{- end }}
+      {{- end }}
       {{- with .Values.cluster.tls }}
       {{- if .keystore.secretName}}
         - name: graphdb-keystore
@@ -314,6 +331,22 @@ spec:
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
           env:
+          {{- with .Values.configuration.tls }}
+          {{- if .keystore.secretName }}
+            - name: graphdb.connector.keystorePass
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .keystore.secretName }}
+                  key: {{ .keystore.keystorePasswordKey }}
+          {{- end }}
+          {{- if .truststore.secretName }}
+            - name: graphdb.connector.truststorePass
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .truststore.secretName }}
+                  key: {{ .truststore.truststorePasswordKey }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.cluster.tls }}
           {{- if .keystore.secretName }}
             - name: graphdb.raft.security.keystorePass
@@ -355,6 +388,23 @@ spec:
             - name: graphdb-proxy-logback-config
               mountPath: /opt/graphdb/home/conf/logback.xml
               subPath: {{ .Values.proxy.configuration.logback.configmapKey }}
+            {{- end }}
+            {{- with .Values.configuration.tls }}
+            {{- if .keystore.secretName}}
+            - name: graphdb-connector-keystore
+              mountPath: /etc/graphdb/connector-keystore.jks
+              subPath: {{ .keystore.keystoreKey }}
+            {{- end }}
+            {{- if .truststore.secretName}}
+            - name: graphdb-connector-truststore
+              mountPath: /etc/graphdb/connector-truststore.jks
+              subPath: {{ .truststore.truststoreKey }}
+            {{- end }}
+            {{- if .certificateRevocationList.secretName }}
+            - name: graphdb-connector-certificate-revocation-list
+              mountPath: /etc/graphdb/connector-certificate-revocation-list.pem
+              subPath: {{ .certificateRevocationList.certificateRevocationListKey }}
+            {{- end }}
             {{- end }}
             {{- with .Values.cluster.tls }}
             {{- if .keystore.secretName}}

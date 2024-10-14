@@ -197,6 +197,58 @@ configuration:
   # The value is processed as a Helm template.
   javaArguments: ""
 
+  # Configuring the GraphDB embedded Tomcat server security properties.
+  # GraphDB uses the Java implementation of SSL, which requires a configured key in the Java keystore.
+  # There are 2 ways to configure the security of the GraphDB instance:
+  # By providing a keystore and its corresponding properties.
+  # Providing keystore and truststore and their corresponding properties - used to configure mTLS.
+  # NOTE
+  # If the GraphDB instance is configured with SSL, the cluster security properties will
+  # default to the values defined in the connector unless explicitly specified otherwise.
+  # Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Connector_-_NIO_and_NIO2_(deprecated)
+  # Official GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/encryption.html#configuring-graphdb-instance-with-ssl
+  tls:
+    # if set to true enables connector security by setting the following GraphDB properties:
+    # graphdb.connector.SSLEnabled = true
+    # graphdb.connector.scheme = https
+    # graphdb.connector.secure = true
+    enabled: false
+    keystore:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the keystore file where you have stored the
+      # server certificate and key to be loaded.
+      keystoreKey: ""
+      # Key in the existing Secret that holds the password to use to access the keystore containing
+      # the server's private key and certificate. If not specified, a default of "changeit" will be used.
+      keystorePasswordKey: ""
+      # The alias used for the server key and certificate in the keystore.
+      keyAlias: ""
+      # The name of the keystore provider to be used for the server certificate.
+      # If not explicitly defined, it will be created.
+      keystoreProvider: ""
+      # The type of keystore file to be used for the server certificate.
+      # If not explicitly defined, it will be created.
+      keystoreType: ""
+    truststore:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the trust store file to use to validate client certificates.
+      truststoreKey: ""
+      # Key in the existing Secret that holds the password to access the trust store.
+      truststorePasswordKey: ""
+      # The name of the truststore provider to be used for the server certificate.
+      # If not explicitly defined, it will be created.
+      truststoreProvider: ""
+      # The type of key store used for the trust store.
+      # If not explicitly defined, it will be created.
+      truststoreType: ""
+    certificateRevocationList:
+      # The value is processed as a helm template
+      secretName: ""
+      # Key in the existing Secret that holds the certificate revocation list file.
+      certificateRevocationListKey: ""
+
   # Configurations for GraphDB's Logback
   # Ref: https://graphdb.ontotext.com/documentation/10.7/diagnosing-and-reporting-critical-errors.html#logs
   #

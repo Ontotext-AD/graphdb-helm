@@ -21,12 +21,12 @@ function createCluster {
 
   echo "Creating cluster"
   response=$(mktemp)
-  curl -o "$response" -isSL -m "${timeout}" -X POST \
+  curl -k -o "$response" -isSL -m "${timeout}" -X POST \
        -d @"$configLocation" \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: */*' \
-       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
+       "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
 
   if grep -q 'HTTP/1.1 201' "$response"; then
     echo "Cluster creation successful!"
@@ -47,7 +47,7 @@ function waitService {
   local max_attempts=100
 
   echo "Waiting for ${address}"
-  until curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1
@@ -65,7 +65,7 @@ function waitAllNodes {
   for (( c=node_count; c>0; c ))
   do
     c=$((c-1))
-    waitService "http://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+    waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
   done
 }
 
@@ -83,11 +83,11 @@ function createRepositoryFromFile {
 
     echo "Provisioning repository ${repositoryName}"
     response=$(
-      curl -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
+      curl -k -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
            -F config=@"${filename}" \
            -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
            -H 'Content-Type: multipart/form-data' \
-           "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+           "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
     )
 
     if [ -z "$response" ]; then

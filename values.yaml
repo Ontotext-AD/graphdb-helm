@@ -203,8 +203,14 @@ configuration:
   # By providing a keystore and its corresponding properties.
   # Providing keystore and truststore and their corresponding properties - used to configure mTLS.
   # NOTE
+  # Since the GraphDB container and proxy container probes also have to use https
+  # they need to be manually configured e.g.:
+  # startupProbe:
+  #   httpGet:
+  #     scheme: HTTPS # Add scheme
+  # Add configurations for the liveness and readiness probes as well.
   # If the GraphDB instance is configured with SSL, the cluster security properties will
-  # default to the values defined in the connector unless explicitly specified otherwise.
+  # default to the values defined in the connector unless explicitly specified otherwise!
   # Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Connector_-_NIO_and_NIO2_(deprecated)
   # Official GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/encryption.html#configuring-graphdb-instance-with-ssl
   tls:

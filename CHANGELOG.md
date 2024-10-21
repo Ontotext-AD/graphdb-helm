@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 11.3.0
+
+### Updated
+
+- Removed any pre-install, pre-upgrade, pre-rollback Helm hooks annotations to allow seamless ArgoCD deployments.
+
 ## Version 11.2.2
 
 ### New

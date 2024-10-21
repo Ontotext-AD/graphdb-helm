@@ -115,6 +115,7 @@ spec:
         - name: graphdb-license
           secret:
             secretName: {{ tpl .Values.license.existingSecret . }}
+            optional: {{ .Values.license.optional }}
         {{- end }}
         {{- if or .Values.security.enabled .Values.configuration.initialSettings.existingConfigmap }}
         - name: graphdb-initial-settings-config
@@ -346,8 +347,8 @@ spec:
               mountPath: /tmp
             {{- if .Values.license.existingSecret }}
             - name: graphdb-license
-              mountPath: /opt/graphdb/home/conf/graphdb.license
-              subPath: {{ .Values.license.licenseFilename }}
+              mountPath: {{ .Values.license.mountPath }}
+              readOnly: {{ .Values.license.readOnly }}
             {{- end }}
             {{- if .Values.configuration.logback.existingConfigmap }}
             - name: graphdb-logback-config

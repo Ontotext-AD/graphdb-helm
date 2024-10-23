@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-install, pre-upgrade, pre-rollback, post-install, post-upgrade, post-rollback
+    "helm.sh/hook": post-install, post-upgrade, post-rollback
     {{- if .Values.backup.enabled }}
     "helm.sh/hook-delete-policy": before-hook-creation
     {{- else }}

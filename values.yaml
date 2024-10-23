@@ -129,6 +129,17 @@ license:
   # File name of the GraphDB license file in the existing license secret.
   # The default is graphdb.license, but it can be changed to map to a different secret key.
   licenseFilename: graphdb.license
+  # Directory where the license file will be mounted.
+  # Can be used to place the license outside the persistence directory if needed.
+  # Note: We use the license/ sub-folder instead of subPath volume mount so kubelet can replace the mounted license at runtime when the
+  # Secret is updated with a new GraphDB license. This avoids having to restart the GraphDB pods.
+  mountPath: /opt/graphdb/home/conf/license/
+  # Defines the secret volume as optional or not.
+  # Note: Useful if the GraphDB license has not yet been provisioned but will be, for example by an external system or an operator such as
+  # External Secret Operator.
+  optional: false
+  # Marks the secret mount as read-only to prevent any modifications to the license file.
+  readOnly: true
 
 # GraphDB runtime configuration settings.
 # For reference, see https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html

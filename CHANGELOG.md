@@ -2,9 +2,19 @@
 
 ## Version 11.3.0
 
+### New
+
+- Added new configuration properties for the license
+  - Added `license.mountPath` to configure where the license volume is mounted
+  - Added `license.optional` to configure the license volume as optional if needed
+  - Added `license.readOnly` to configure the read/write mode of the license volume mount
+
 ### Updated
 
 - Removed any pre-install, pre-upgrade, pre-rollback Helm hooks annotations to allow seamless ArgoCD deployments.
+- Changed the license directory to `/opt/graphdb/home/conf/license/` with `license.mountPath` in order to avoid using a `subPath` volume
+  mount. This allows kubelet to update the license when the Secret has been updated.
+- Changed the license volume mount as read-only by default with `license.readOnly`
 
 ## Version 11.2.2
 

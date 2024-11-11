@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "graphdb.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-upgrade, pre-rollback
+    "helm.sh/hook": post-upgrade, post-rollback
     "helm.sh/hook-delete-policy": before-hook-creation, hook-succeeded, hook-failed
     {{- with .Values.annotations }}
       {{- tpl (toYaml .) $ | nindent 4 }}

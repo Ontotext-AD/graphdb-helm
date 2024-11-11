@@ -15,7 +15,9 @@ data:
     # See https://graphdb.ontotext.com/documentation/ for supported properties
     graphdb.connector.port={{ .Values.containerPorts.http }}
     graphdb.append.request.id.headers=true
+    {{- if .Values.license.existingSecret }}
     graphdb.license.file={{ .Values.license.mountPath | trimSuffix "/" }}/{{ .Values.license.licenseFilename }}
+    {{- end }}
     graphdb.workbench.importDirectory=/opt/graphdb/home/graphdb-import
     graphdb.ontop.jdbc.path=/opt/graphdb/home/jdbc-driver
     graphdb.extra.plugins=/opt/graphdb/home/extra-plugins

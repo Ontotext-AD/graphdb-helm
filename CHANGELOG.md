@@ -9,6 +9,8 @@
   - Added `license.optional` to configure the license volume as optional if needed
   - Added `license.readOnly` to configure the read/write mode of the license volume mount
 
+- Updated to GraphDB [10.8.0](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-10-8-0)
+
 ### Updated
 
 - Removed any pre-install, pre-upgrade, pre-rollback Helm hooks annotations to allow seamless ArgoCD deployments.

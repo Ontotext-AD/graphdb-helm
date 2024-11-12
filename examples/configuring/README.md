@@ -1,22 +1,22 @@
 Configuring GraphDB
 ===
 
-This document provides detailed instructions on how to configure GraphDB, 
-including setting properties, secret properties, and additional configurations. 
+This document provides detailed instructions on how to configure GraphDB,
+including setting properties, secret properties, and additional configurations.
 
-It covers various methods to manage configuration options, such as using 
-ConfigMaps and Secrets, and highlights some good practices to ensure secure 
-and efficient setup. Additionally, it explains how to set Java arguments 
+It covers various methods to manage configuration options, such as using
+ConfigMaps and Secrets, and highlights some good practices to ensure secure
+and efficient setup. Additionally, it explains how to set Java arguments
 and environment variables for GraphDB.
 
-All GraphDB configuration options can be found 
-[here](https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#general-properties).
+All GraphDB configuration options can be found
+[here](https://graphdb.ontotext.com/documentation/10.8/directories-and-config-properties.html#general-properties).
 
 ## Properties
 
-This section is used to set GraphDB properties in the default ConfigMap for 
+This section is used to set GraphDB properties in the default ConfigMap for
 graphdb.properties directly from the `values.yaml` file.
-The configurations, typically including non-sensitive information such as product settings, 
+The configurations, typically including non-sensitive information such as product settings,
 will be merged with the properties in the default ConfigMap.
 
 ```yaml
@@ -30,7 +30,7 @@ configuration:
 ## Secret Properties
 
 This section is used to set default Secret properties directly from the `values.yaml` file.
-The configurations, typically including sensitive information such as secret tokens (eg. OpenAI API tokens), 
+The configurations, typically including sensitive information such as secret tokens (eg. OpenAI API tokens),
 will be merged with the properties in the default Secret.
 
 ```yaml
@@ -39,7 +39,7 @@ configuration:
     graphdb.connector.keystorePass: "xxxx"
 ```
 
-**Warning: This method of configuring GraphDB is strongly discouraged, as it may 
+**Warning: This method of configuring GraphDB is strongly discouraged, as it may
 lead to secrets being exposed or stored insecurely!**
 
 ## Extra Properties
@@ -75,8 +75,8 @@ configuration:
 ## Java Arguments
 
 This section explains how to set Java arguments for GraphDB using
-the `values.yaml` file. The `configuration.javaArguments` field allows you to specify 
-Java Virtual Machine (JVM) options, such as memory settings, to optimize 
+the `values.yaml` file. The `configuration.javaArguments` field allows you to specify
+Java Virtual Machine (JVM) options, such as memory settings, to optimize
 the performance and resource usage of the GraphDB instance.
 
 It also supports GraphDB properties in the form of `-Dproperty=value`
@@ -89,9 +89,9 @@ configuration:
 ## Extra Environment Variables from a source
 
 This section explains how to configure GraphDB with environment variables
-using an existing Kubernetes ConfigMap or an existing Secrets. This approach 
-ensures that additional configurations are injected alongside existing 
-ones without mixing different contexts. 
+using an existing Kubernetes ConfigMap or an existing Secrets. This approach
+ensures that additional configurations are injected alongside existing
+ones without mixing different contexts.
 
 The resources referenced in this section can be found in the [resources.yaml](./resources.yaml) file.
 

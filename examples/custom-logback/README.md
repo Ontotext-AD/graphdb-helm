@@ -10,7 +10,7 @@ This example shows how to use a custom Logback XML configuration with GraphDB's 
 1. Customize [configmap-logback.yaml](configmap-logback.yaml) according to your needs and apply:
 
    ```bash
-   kubecttl apply -f configmap-logback.yaml
+   kubectl apply -f configmap-logback.yaml
    ```
 
 2. Configure the Helm chart to use the custom ConfigMap in [values.yaml](values.yaml)

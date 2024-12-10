@@ -71,6 +71,8 @@ spec:
               value: {{ include "graphdb.fullname.service.headless" . }}
             - name: GRAPHDB_SERVICE_PORT
               value: {{ .Values.headlessService.ports.http | quote }}
+            - name: GRAPHDB_PROTOCOL
+              value: {{ include "graphdb.tomcat.protocol" . }}
             - name: GRAPHDB_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:

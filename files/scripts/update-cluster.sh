@@ -9,16 +9,16 @@ function patchCluster {
   local timeout=$2
   local response
 
-  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
+  waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
 
   echo "Patching cluster"
   response=$(mktemp)
-  curl -o "$response" -isSL -m "$timeout" -X PATCH \
+  curl -k -o "$response" -isSL -m "$timeout" -X PATCH \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        -d @"$configLocation" \
-       "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config"
+       "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config"
 
   if grep -q 'HTTP/1.1 200' "$response"; then
     echo "Patch successful"
@@ -65,16 +65,16 @@ function removeNodes {
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
 
-  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
+  waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
 
   echo "Scaling the cluster down"
   response=$(mktemp)
-  curl -o "$response" -isSL -m 15 -X DELETE \
+  curl -k -o "$response" -isSL -m 15 -X DELETE \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        -d "${nodes}" \
-       "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
+       "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
   if grep -q 'HTTP/1.1 200' "$response"; then
     echo "Scaling down successful."
@@ -113,16 +113,16 @@ function addNodes {
   done
   nodes=\{\"nodes\":\[${nodes}\]\}
 
-  waitService "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
+  waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
 
   echo "Scaling the cluster up"
   response=$(mktemp)
-  curl -o "$response" -isSL -m "${timeout}" -X POST \
+  curl -k -o "$response" -isSL -m "${timeout}" -X POST \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        -d "${nodes}" \
-       "http://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
+       "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
   if grep -q 'HTTP/1.1 200' "$response"; then
     echo "Scaling successful."
@@ -141,14 +141,14 @@ function addNodes {
 }
 
 function deleteCluster {
-  waitService "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+  waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
 
   local response
   response=$(mktemp)
-  curl -o "$response" -isSL -m 15 -X DELETE \
+  curl -k -o "$response" -isSL -m 15 -X DELETE \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Accept: */*' \
-       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config?force=false"
+       "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config?force=false"
 
   if grep -q 'HTTP/1.1 200' "$response"; then
     echo "Cluster deletion successful!"
@@ -163,13 +163,13 @@ function deleteCluster {
 }
 
 function getNodeCountInCurrentCluster {
-  local node_address="http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}"
+  local node_address="${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}"
 
   waitService "${node_address}/rest/repositories"
 
   local response
   response=$(mktemp)
-  curl -o "$response" -isSL -m 15 -X GET \
+  curl -k -o "$response" -isSL -m 15 -X GET \
        --header 'Content-Type: application/json' \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Accept: */*' \
@@ -183,7 +183,7 @@ function waitService {
   local attempt_counter=0
   local max_attempts=100
 
-  until curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]]; then
       echo "Max attempts reached"
       exit 1

@@ -1,0 +1,6 @@
+configuration:
+  tls:
+    truststore:
+      existingSecret: my-truststore-secret
+      truststoreKey: truststore.jks
+      truststorePasswordKey: truststore_password

@@ -1,0 +1,14 @@
+cluster:
+  tls:
+    mode: TLS
+    keystore:
+      existingSecret: my-keystore-secret
+      keystoreKey: keystore.jks
+      keystorePasswordKey: pass
+      keyAlias: myCertificateAlias
+    truststore:
+      existingSecret: my-truststore-secret
+      truststoreKey: truststore.jks
+      truststorePasswordKey: truststore_password
+    # The path where the TLS files will be mounted inside the container.
+    mountPath: /etc/graphdb/tls/grpc/

@@ -88,6 +88,8 @@ spec:
                 - name: GRAPHDB_SERVICE_PORT
                   value: {{ .Values.service.ports.http | quote }}
                 {{- end }}
+                - name: GRAPHDB_PROTOCOL
+                  value: {{ include "graphdb.tomcat.protocol" . }}
                 - name: GRAPHDB_AUTH_TOKEN
                   valueFrom:
                     secretKeyRef:

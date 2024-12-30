@@ -155,6 +155,44 @@ function cloudBackup {
   log "Backup ${BACKUP_NAME} completed successfully!"
 }
 
+function createIndicesFromFiles() {
+  local node_count=$1
+  local indicesConfigsLocation=$2
+  local success=true
+  local response
+  local repository
+
+  set -v
+
+  waitAllNodes "$node_count"
+
+  for filename in "${indicesConfigsLocation}"/*; do
+    repository="$(basename "$filename")"
+    response=$(
+      curl --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
+        -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+        -H 'Accept: application/json' \
+        -H 'Content-Type: application/sparql-update' \
+        --data-binary @"${filename}" \
+        "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/repositories/${repository}/statements"
+    )
+
+    if [ -z "$response" ]; then
+      log "Successfully created index for ${filename}"
+    else
+      log "Could not create index for ${filename}, response:"
+      log "$response"
+      if ! grep -q "already exists." <<<$response; then
+        success=false
+      fi
+    fi
+  done
+
+  if [ $success != true ]; then
+    exit 1
+  fi
+}
+
 function localBackup() {
   BACKUP_TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
   BACKUP_NAME="graphdb-backup-${BACKUP_TIMESTAMP}.tar"

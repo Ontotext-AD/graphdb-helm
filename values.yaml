@@ -1141,6 +1141,16 @@ repositories:
   # Each key in the existing configmap will be treated as the config.ttl of a repository.
   existingConfigmap: ""
 
+################################
+# Custom Lucene Configurations #
+################################
+
+indices:
+  # Optional configmap containing indices configuration .ttl file(s).
+  # GraphDB will automatically create indices with the provided repositories configuration files.
+  # Each key in the existing configmap will be treated as the config.ttl of a repository.
+  existingConfigmap: ""
+
 ################################################
 # Persistent Volume Permissions Configurations #
 ################################################

@@ -1146,9 +1146,8 @@ repositories:
 ################################
 
 indices:
-  # Optional configmap containing indices configuration .ttl file(s).
-  # GraphDB will automatically create indices with the provided repositories configuration files.
-  # Each key in the existing configmap will be treated as the config.ttl of a repository.
+  # Optional configmap containing indices SPARQL queries (ttl format) for one or more repositories.
+  # The keys in the configmap are the repository names, the value must be the query for creating the indices.
   existingConfigmap: ""
 
 ################################################

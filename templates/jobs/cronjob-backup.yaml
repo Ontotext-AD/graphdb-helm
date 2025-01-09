@@ -22,7 +22,8 @@ spec:
       template:
         spec:
           restartPolicy: Never
-          automountServiceAccountToken: false
+          serviceAccountName: {{ include "graphdb.serviceAccountName" . }}
+          automountServiceAccountToken: true
           {{- if .Values.jobs.schedulerName }}
           schedulerName: {{ .Values.jobs.schedulerName }}
           {{- end }}

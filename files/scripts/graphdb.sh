@@ -162,8 +162,6 @@ function createIndicesFromFiles() {
   local response
   local repository
 
-  set -v
-
   waitAllNodes "$node_count"
 
   for filename in "${indicesConfigsLocation}"/*; do

@@ -30,6 +30,10 @@ Helper functions for labels related to Job and provisioning resources
   {{- printf "%s-%s" (include "graphdb.fullname" .) "provision-repositories" -}}
 {{- end -}}
 
+{{- define "graphdb.fullname.job.provision-indices" -}}
+  {{- printf "%s-%s" (include "graphdb.fullname" .) "provision-indices" -}}
+{{- end -}}
+
 {{- define "graphdb.fullname.job.scale-down-cluster" -}}
   {{- printf "%s-%s" (include "graphdb.fullname" .) "scale-down-cluster" -}}
 {{- end -}}

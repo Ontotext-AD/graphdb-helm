@@ -1141,6 +1141,15 @@ repositories:
   # Each key in the existing configmap will be treated as the config.ttl of a repository.
   existingConfigmap: ""
 
+################################
+# Custom Lucene Configurations #
+################################
+
+indices:
+  # Optional configmap containing indices SPARQL queries (ttl format) for one or more repositories.
+  # The keys in the configmap are the repository names, the value must be the query for creating the indices.
+  existingConfigmap: ""
+
 ################################################
 # Persistent Volume Permissions Configurations #
 ################################################

@@ -29,17 +29,14 @@ data:
     {{- end }}
     {{- if .Values.configuration.tls.truststore.existingSecret }}
     # Tomcat truststore configurations
-    graphdb.connector.truststoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{
-    .Values.configuration.tls.truststore.truststoreKey }}
+    graphdb.connector.truststoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.configuration.tls.truststore.truststoreKey }}
     graphdb.connector.truststoreProvider={{ .Values.configuration.tls.truststore.truststoreProvider }}
     graphdb.connector.truststoreType={{ .Values.configuration.tls.truststore.truststoreType }}
-    graphdb.connector.truststorePass@file={{ .Values.configuration.tls.mountPath | trimSuffix "/"
-    }}/truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
+    graphdb.connector.truststorePass@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
     {{- end }}
     {{- if .Values.configuration.tls.certificateRevocationList.existingSecret}}
     # Tomcat truststore CRL
-    graphdb.connector.certificateRevocationListFile={{ .Values.configuration.tls.mountPath | trimSuffix "/"
-    }}/crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
+    graphdb.connector.certificateRevocationListFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
     {{- end }}
     graphdb.raft.security.mode={{ .Values.cluster.tls.mode }}
     {{- if .Values.cluster.tls.keystore.existingSecret }}
@@ -58,27 +55,20 @@ data:
     graphdb.raft.security.truststorePass@file={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.cluster.tls.truststore.truststorePasswordKey }}
     {{- end }}
     {{- if .Values.cluster.tls.certificateKey.existingSecret }}
-    graphdb.raft.security.certificateKeyFile={{ .Values.cluster.tls.mountPath | trimSuffix "/"
-    }}/certificateKey/{{ .Values.cluster.tls.certificateKey.privateKeyKey }}
-    graphdb.raft.security.certificateKeyPassword@file={{ .Values.cluster.tls.mountPath | trimSuffix "/"
-    }}/certificateKey/{{
-    .Values.cluster.tls.certificateKey.privateKeyPasswordKey }}
+    graphdb.raft.security.certificateKeyFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificateKey/{{ .Values.cluster.tls.certificateKey.privateKeyKey }}
+    graphdb.raft.security.certificateKeyPassword@file={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificateKey/{{ .Values.cluster.tls.certificateKey.privateKeyPasswordKey }}
     {{- end }}
     {{- if .Values.cluster.tls.certificate.existingSecret }}
-    graphdb.raft.security.certificateFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificate/{{
-    .Values.cluster.tls.certificate.certificateKey }}
+    graphdb.raft.security.certificateFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificate/{{ .Values.cluster.tls.certificate.certificateKey }}
     {{- end }}
     {{- if .Values.cluster.tls.certificateChain.existingSecret }}
-    graphdb.raft.security.certificateChainFile={{ .Values.cluster.tls.mountPath | trimSuffix "/"
-    }}/certificateChain/{{ .Values.cluster.tls.certificateChain.certificateChainKey }}
+    graphdb.raft.security.certificateChainFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/certificateChain/{{ .Values.cluster.tls.certificateChain.certificateChainKey }}
     {{- end }}
     {{- if .Values.cluster.tls.rootCerts.existingSecret }}
-    graphdb.raft.security.rootCerts={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/rootCertificates/{{
-    .Values.cluster.tls.rootCerts.rootCertsKey }}
+    graphdb.raft.security.rootCerts={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/rootCertificates/{{ .Values.cluster.tls.rootCerts.rootCertsKey }}
     {{- end }}
     {{- if .Values.cluster.tls.certificateRevocationList.existingSecret }}
-    graphdb.raft.security.certificateRevocationListFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/crl/{{
-    .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
+    graphdb.raft.security.certificateRevocationListFile={{ .Values.cluster.tls.mountPath | trimSuffix "/" }}/crl/{{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
     {{- end }}
     {{- if .Values.proxy.configuration.properties }}
     ##### Overrides from values.yaml #####

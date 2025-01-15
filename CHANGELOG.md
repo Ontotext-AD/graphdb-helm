@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 11.3.3
+
+### Fixed
+
+- Removed `| quote` from rendering `configuration.properties` in properties ConfigMaps in order to allow configuring GraphDB with
+  non-string properties.
+
 ## Version 11.3.2
 
 ### New

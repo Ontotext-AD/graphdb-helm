@@ -19,6 +19,7 @@
   - Added `cluster.tls.certificateRevocationList` to configure a certificate revocation list
 - Updated jobs and scripts to use `https` or `http` depending on whether the Tomcat connector security is configured
 - Added `indices` configuration enabling a job for initial preloading of indices and other SPARQL updates
+- Added `backup.timezone` configuration for overriding the default timezone with a specific one
 
 ## Version 11.3.3
 

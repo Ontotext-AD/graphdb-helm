@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 11.3.5
+
+### New
+
+- Updated to GraphDB [10.8.4](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-10-8-4)
+
 ## Version 11.3.4
 
 ### New

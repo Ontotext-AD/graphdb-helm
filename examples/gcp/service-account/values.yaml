@@ -1,0 +1,4 @@
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: <IAM_SA_NAME>@<IAM_SA_PROJECT_ID>.iam.gserviceaccount.com

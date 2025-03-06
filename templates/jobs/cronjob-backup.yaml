@@ -12,6 +12,9 @@ metadata:
   {{- end }}
 spec:
   schedule: {{ .Values.backup.schedule | quote }}
+  {{- if and .Values.backup.timezone (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) }}
+  timeZone: {{ .Values.backup.timezone }}
+  {{- end }}
   successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit }}
   failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit }}
   concurrencyPolicy: Forbid
@@ -88,6 +91,8 @@ spec:
                 - name: GRAPHDB_SERVICE_PORT
                   value: {{ .Values.service.ports.http | quote }}
                 {{- end }}
+                - name: GRAPHDB_PROTOCOL
+                  value: {{ include "graphdb.tomcat.protocol" . }}
                 - name: GRAPHDB_AUTH_TOKEN
                   valueFrom:
                     secretKeyRef:

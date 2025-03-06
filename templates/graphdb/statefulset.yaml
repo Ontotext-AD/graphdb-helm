@@ -127,6 +127,93 @@ spec:
           secret:
             secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
+        - name: graphdb-tomcat-tls
+          projected:
+            defaultMode: 0400
+            sources:
+              {{- if .Values.configuration.tls.keystore.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.configuration.tls.keystore.existingSecret . }}
+                  items:
+                    - key: {{ .Values.configuration.tls.keystore.keystoreKey }}
+                      path: keystore/{{ .Values.configuration.tls.keystore.keystoreKey }}
+                    - key: {{ .Values.configuration.tls.keystore.keystorePasswordKey }}
+                      path: keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
+              {{- end }}
+              {{- if .Values.configuration.tls.truststore.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.configuration.tls.truststore.existingSecret . }}
+                  items:
+                    - key: {{ .Values.configuration.tls.truststore.truststoreKey }}
+                      path: truststore/{{ .Values.configuration.tls.truststore.truststoreKey }}
+                    - key: {{ .Values.configuration.tls.truststore.truststorePasswordKey }}
+                      path: truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
+              {{- end }}
+              {{- if .Values.configuration.tls.certificateRevocationList.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.configuration.tls.certificateRevocationList.existingSecret . }}
+                  items:
+                    - key: {{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
+                      path: crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
+              {{- end }}
+        - name: graphdb-grpc-tls
+          projected:
+            sources:
+              {{- if .Values.cluster.tls.keystore.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.keystore.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.keystore.keystoreKey }}
+                      path: keystore/{{ .Values.cluster.tls.keystore.keystoreKey }}
+                    - key: {{ .Values.cluster.tls.keystore.keystorePasswordKey }}
+                      path: keystore/{{ .Values.cluster.tls.keystore.keystorePasswordKey }}
+              {{- end }}
+              {{- if .Values.cluster.tls.truststore.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.truststore.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.truststore.truststoreKey }}
+                      path: truststore/{{ .Values.cluster.tls.truststore.truststoreKey }}
+                    - key: {{ .Values.cluster.tls.truststore.truststorePasswordKey }}
+                      path: truststore/{{ .Values.cluster.tls.truststore.truststorePasswordKey }}
+              {{- end }}
+              {{- if .Values.cluster.tls.certificateKey.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.certificateKey.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.certificateKey.privateKeyKey }}
+                      path: certificateKey/{{ .Values.cluster.tls.certificateKey.privateKeyKey }}
+                    - key: {{ .Values.cluster.tls.certificateKey.privateKeyPasswordKey }}
+                      path: certificateKey/{{ .Values.cluster.tls.certificateKey.privateKeyPasswordKey }}
+              {{- end }}
+              {{- if .Values.cluster.tls.certificate.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.certificate.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.certificate.certificateKey }}
+                      path: certificate/{{ .Values.cluster.tls.certificate.certificateKey }}
+              {{- end }}
+              {{- if .Values.cluster.tls.certificateChain.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.certificateChain.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.certificateChain.certificateChainKey }}
+                      path: certificateChain/{{ .Values.cluster.tls.certificateChain.certificateChainKey }}
+              {{- end }}
+              {{- if .Values.cluster.tls.rootCerts.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.rootCerts.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.rootCerts.rootCertsKey }}
+                      path: rootCertificates/{{ .Values.cluster.tls.rootCerts.rootCertsKey }}
+              {{- end }}
+              {{- if .Values.cluster.tls.certificateRevocationList.existingSecret }}
+              - secret:
+                  name: {{ tpl .Values.cluster.tls.certificateRevocationList.existingSecret . }}
+                  items:
+                    - key: {{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
+                      path: crl/{{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
+              {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
@@ -359,6 +446,10 @@ spec:
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
+            - name: graphdb-tomcat-tls
+              mountPath: {{ .Values.configuration.tls.mountPath }}
+            - name: graphdb-grpc-tls
+              mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- with .Values.extraVolumeMounts }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}

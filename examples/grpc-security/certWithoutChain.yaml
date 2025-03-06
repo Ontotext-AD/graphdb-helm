@@ -1,0 +1,16 @@
+cluster:
+  tls:
+    mode: TLS
+    certificate:
+      existingSecret: my-certificate-secret
+      certificateKey: certificate.pem
+    certificateKey:
+      existingSecret: my-privatekey-secret
+      privateKeyKey: privatekey.pem
+      privateKeyPasswordKey: privatekey_password
+    truststore:
+      existingSecret: my-truststore-secret
+      truststoreKey: truststore.jks
+      truststorePasswordKey: truststore_password
+      truststoreProvider: SUN
+      truststoreType: JKS

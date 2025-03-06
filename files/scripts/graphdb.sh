@@ -21,12 +21,12 @@ function createCluster {
 
   echo "Creating cluster"
   response=$(mktemp)
-  curl -o "$response" -isSL -m "${timeout}" -X POST \
+  curl -k -o "$response" -isSL -m "${timeout}" -X POST \
        -d @"$configLocation" \
        --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: */*' \
-       "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
+       "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
 
   if grep -q 'HTTP/1.1 201' "$response"; then
     echo "Cluster creation successful!"
@@ -47,7 +47,7 @@ function waitService {
   local max_attempts=100
 
   echo "Waiting for ${address}"
-  until curl --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1
@@ -65,7 +65,7 @@ function waitAllNodes {
   for (( c=node_count; c>0; c ))
   do
     c=$((c-1))
-    waitService "http://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+    waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-$c.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
   done
 }
 
@@ -83,11 +83,11 @@ function createRepositoryFromFile {
 
     echo "Provisioning repository ${repositoryName}"
     response=$(
-      curl -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
+      curl -k -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
            -F config=@"${filename}" \
            -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
            -H 'Content-Type: multipart/form-data' \
-           "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
+           "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
     )
 
     if [ -z "$response" ]; then
@@ -135,7 +135,7 @@ function cloudBackup {
   local response=
   local response_status
   response=$(mktemp)
-  response_status=$(curl -X POST \
+  response_status=$(curl -k -X POST \
     -isSL \
     -o "${response}" \
     -w "Status=%{response_code}" \
@@ -143,7 +143,7 @@ function cloudBackup {
     --header 'Content-Type: application/json' \
     --header 'Accept: application/json' \
     --data-binary "${backup_options}" \
-    --url "http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/cloud-backup")
+    --url "${GRAPHDB_PROTOCOL}://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/cloud-backup")
 
   if ! echo "${response_status}" | grep -q 'Status=200' ; then
     log "ERROR: Backup ${BACKUP_NAME} creation failed, response: ${response_status}"
@@ -153,6 +153,42 @@ function cloudBackup {
   fi
 
   log "Backup ${BACKUP_NAME} completed successfully!"
+}
+
+function createIndicesFromFiles() {
+  local node_count=$1
+  local indicesConfigsLocation=$2
+  local success=true
+  local response
+  local repository
+
+  waitAllNodes "$node_count"
+
+  for filename in "${indicesConfigsLocation}"/*; do
+    repository="$(basename "$filename")"
+    response=$(
+      curl --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
+        -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+        -H 'Accept: application/json' \
+        -H 'Content-Type: application/sparql-update' \
+        --data-binary @"${filename}" \
+        "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/repositories/${repository}/statements"
+    )
+
+    if [ -z "$response" ]; then
+      log "Successfully created index for ${filename}"
+    else
+      log "Could not create index for ${filename}, response:"
+      log "$response"
+      if ! grep -q "already exists." <<<$response; then
+        success=false
+      fi
+    fi
+  done
+
+  if [ $success != true ]; then
+    exit 1
+  fi
 }
 
 function localBackup() {
@@ -168,7 +204,7 @@ function localBackup() {
   log "Creating local backup ${backup_path}"
 
   local response
-  response=$(curl -X POST \
+  response=$(curl -k -X POST \
     -sSL \
     -o "${backup_path}" \
     -w "Status=%{response_code}" \
@@ -176,7 +212,7 @@ function localBackup() {
     --header 'Content-Type: application/json' \
     --header 'Accept: application/json' \
     --data-binary "${backup_options}" \
-    --url "http://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/backup")
+    --url "${GRAPHDB_PROTOCOL}://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/backup")
 
   if ! echo "${response}" | grep -q 'Status=200' ; then
     log "ERROR: Backup ${BACKUP_NAME} creation failed, response: ${response}"

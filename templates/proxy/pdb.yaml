@@ -1,4 +1,4 @@
-{{- if .Values.proxy.podDisruptionBudget.enabled }}
+{{- if and (gt (int .Values.replicas) 1) .Values.proxy.podDisruptionBudget.enabled }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

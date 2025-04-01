@@ -1,5 +1,15 @@
 # GraphDB Helm chart release notes
 
+## Version 11.4.1
+
+### New
+
+- Updated to GraphDB [10.8.5](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-10-8-5)
+
+### Fixed
+
+- Fixed the PodDisruptionBudged of the proxy to be deployed only when the proxy is deployed
+
 ## Version 11.4.0
 
 ### New

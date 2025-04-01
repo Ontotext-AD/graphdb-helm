@@ -34,3 +34,5 @@ values_*.yaml
 .helmignore
 *.md.gotmpl
 *.tgz
+.editorconfig
+.gitattributes

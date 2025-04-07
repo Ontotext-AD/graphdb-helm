@@ -6,6 +6,11 @@
 
 - Updated to GraphDB [11.0.0](https://graphdb.ontotext.com/documentation/11.0/release-notes.html#graphdb-11-0-0)
 
+### Updated
+
+- Tuned the startup and readiness probes to expose the GraphDB service as soon as possible
+- Tuned the startup probe to allow slower GraphDB starts
+
 ## Version 11.4.1
 
 ### New

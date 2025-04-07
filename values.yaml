@@ -1013,9 +1013,9 @@ startupProbe:
   httpGet:
     path: /protocol
     port: http
-  failureThreshold: 30
-  timeoutSeconds: 5
-  periodSeconds: 10
+  failureThreshold: 300
+  timeoutSeconds: 1
+  periodSeconds: 3
 
 # Configurations for the GraphDB container readiness probe.
 # Note: A misconfigured probe can lead to a failing GraphDB cluster!
@@ -1023,7 +1023,6 @@ readinessProbe:
   httpGet:
     path: /protocol
     port: http
-  initialDelaySeconds: 5
   timeoutSeconds: 5
   periodSeconds: 10
 
@@ -1626,9 +1625,9 @@ proxy:
     httpGet:
       path: /proxy/ready
       port: http
-    failureThreshold: 60
-    timeoutSeconds: 3
-    periodSeconds: 5
+    failureThreshold: 120
+    timeoutSeconds: 1
+    periodSeconds: 3
 
   # Configurations for the GraphDB proxy container readiness probe.
   # Note: A misconfigured probe can lead to a failing GraphDB cluster!
@@ -1645,7 +1644,7 @@ proxy:
     httpGet:
       path: /proxy/health
       port: http
-    initialDelaySeconds: 120
+    initialDelaySeconds: 60
     timeoutSeconds: 5
     periodSeconds: 10
 

@@ -348,7 +348,8 @@ security:
     tokenKey: GRAPHDB_AUTH_TOKEN
 
   # Initial users to provision to GraphDB before starting for the first time.
-  # Note: If the security has already been enabled and is not the initial provisioning, this won't be applied.
+  # Note: If the security has already been enabled and is not the initial provisioning, this won't be applied unless
+  # .Values.security.overrideUsers is enabled.
   #
   # There are three cases to be aware of:
   # - By default, no users.js configuration is provisioned initially, so GraphDB will initialize its default one.
@@ -372,6 +373,11 @@ security:
     existingSecret: ""
     # Key in the Secret object mapping to users.js
     secretKey: users.js
+
+  # If enabled, the init container that provisions the initial users will always provision them from the Secret before GraphDB starts.
+  # This means any users that were created through the REST API or the Workbench will be lost.
+  # Use this only if you want the users Secret to be your source of truth.
+  overrideUsers: false
 
 ##################################
 # GraphDB Cluster Configurations #

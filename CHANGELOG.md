@@ -5,6 +5,7 @@
 ### New
 
 - Updated to GraphDB [11.0.0](https://graphdb.ontotext.com/documentation/11.0/release-notes.html#graphdb-11-0-0)
+- Added `security.overrideUsers` that will provision the users on each GraphDB pod startup. Disabled by default.
 
 ### Updated
 

@@ -297,6 +297,8 @@ spec:
               value: {{ .Values.containerPorts.http | quote }}
             - name: GRAPHDB_RPC_PORT
               value: {{ .Values.containerPorts.rpc | quote }}
+            - name: OVERRIDE_USERS
+              value: {{ .Values.security.overrideUsers | quote }}
             {{- if .Values.cluster.token.existingSecret }}
             - name: GRAPHDB_CLUSTER_SECRET
               valueFrom:
@@ -385,6 +387,9 @@ spec:
 
               if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
                 echo "Provisioning users with users.js file..."
+                cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
+              elif [[ -f /tmp/graphdb/users.js && "${OVERRIDE_USERS}" == "true" ]]; then
+                echo "Overriding users with users.js file..."
                 cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
               fi
 

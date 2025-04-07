@@ -1,7 +1,7 @@
 # GCP Cloud Backup Examples
 
 The examples here show different ways of configuring the cloud backup CronJob to send backups
-in [GCP Cloud Storage](https://cloud.google.com/storage/docs)  
+in [GCP Cloud Storage](https://cloud.google.com/storage/docs)
 and how to authenticate in GCP:
 
 * Using [ADC with Service Account's JSON key file](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment#local-key).
@@ -59,12 +59,12 @@ Where:
 - `<mount-path>` is the path where you will mount your volume inside the GraphDB pod.
 - `<json-key-reference>` is the reference to the mount path of the JSON key.
 
-The GraphDB pod automatically detects the GOOGLE_APPLICATION_CREDENTIALS environment variable, which must specify   
+The GraphDB pod automatically detects the GOOGLE_APPLICATION_CREDENTIALS environment variable, which must specify
 the file path of the JSON credential file (rather than the file's contents directly), and uses that file to authenticate with the GCP service.
 
 ## IAM service account impersonation
 
-Instead of hardcoding credentials in arbitrary Kubernetes Secrets, the best solution is to link a Kubernetes 
+Instead of hardcoding credentials in arbitrary Kubernetes Secrets, the best solution is to link a Kubernetes
 Service Account to an IAM Service Account. This way your workloads in Kubernetes can
 authenticate to Google Cloud APIs and authentication happens securely via IAM Workload Identity, reducing the risk of
 exposing credentials.
@@ -124,4 +124,4 @@ backup:
     existingSecret: graphdb-custom-backup-options
 ```
 
-See https://graphdb.ontotext.com/documentation/10.8/backup-and-restore.html#backup-options for supported options.
+See https://graphdb.ontotext.com/documentation/11.0/backup-and-restore.html#backup-options for supported options.

@@ -1,7 +1,7 @@
 # GraphDB Virtualization Examples
 
 This folder contains examples of how to configure GraphDB's virtualization features by providing JDBC drivers to GraphDB's classpath.
-See https://graphdb.ontotext.com/documentation/10.8/virtualization.html for more information and [Ontop](https://ontop-vkg.org/guide/)
+See https://graphdb.ontotext.com/documentation/11.0/virtualization.html for more information and [Ontop](https://ontop-vkg.org/guide/)
 configuration examples.
 
 ## Using GraphDB Persistence

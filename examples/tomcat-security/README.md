@@ -23,7 +23,7 @@ ingress:
 ```
 
 ### See more about Tomcat TLS/SSL set up:
-- GraphDB official documentation: https://graphdb.ontotext.com/documentation/10.8/encryption.html#configuring-graphdb-instance-with-ssl
+- GraphDB official documentation: https://graphdb.ontotext.com/documentation/11.0/encryption.html#configuring-graphdb-instance-with-ssl
 - Tomcat documentation: https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
 - Troubleshooting: https://tomcat.apache.org/tomcat-7.0-doc/ssl-howto.html#Troubleshooting
 

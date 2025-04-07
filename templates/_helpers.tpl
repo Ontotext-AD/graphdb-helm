@@ -87,6 +87,9 @@ Checks for potential issues and prints warning messages.
   {{- if and (gt (int .Values.replicas) 1) (eq (mod (int .Values.replicas) 2) 0) -}}
     {{- $warnings = append $warnings "WARNING: You are deploying a GraphDB cluster with an even amount of replicas! You should be using an odd amount of replicas." -}}
   {{- end -}}
+  {{- if not .Values.license.existingSecret -}}
+    {{- $warnings = append $warnings "WARNING: You are deploying GraphDB without a license! You should obtain one before using GraphDB." -}}
+  {{- end -}}
   {{- if gt (len $warnings) 0 }}
     {{- print "\n" }}
     {{- range $warning, $index := $warnings }}

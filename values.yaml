@@ -1719,5 +1719,6 @@ proxy:
 #################################
 
 # Additional objects to insert along with the release.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates with tpl function.
+# Ref: https://helm.sh/docs/howto/charts_tips_and_tricks/#using-the-tpl-function
 extraObjects: []

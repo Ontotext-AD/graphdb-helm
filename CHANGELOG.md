@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 12.1.0
+
+### New
+
+- Updated the `extraObjects` template processing to additionally support rendering string Helm templates.
+
 ## Version 12.0.0
 
 ### New

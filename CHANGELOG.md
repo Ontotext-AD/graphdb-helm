@@ -2,7 +2,7 @@
 
 ## Version 12.1.0
 
-## New
+### New
 
 - Updated the `extraObjects` template processing to additionally support rendering string Helm templates.
 

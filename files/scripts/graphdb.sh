@@ -172,7 +172,7 @@ function createIndicesFromFiles() {
         -H 'Accept: application/json' \
         -H 'Content-Type: application/sparql-update' \
         --data-binary @"${filename}" \
-        "http://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/repositories/${repository}/statements"
+        "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/repositories/${repository}/statements"
     )
 
     if [ -z "$response" ]; then

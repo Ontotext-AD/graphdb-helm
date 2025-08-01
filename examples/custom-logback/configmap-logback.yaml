@@ -5,7 +5,6 @@ metadata:
 data:
   logback.xml: |-
     <configuration debug="false" scan="true" scanPeriod="30 seconds">
-        <jmxConfigurator/>
 
         <!-- Try to guess the logs destination based on the application server or fallback to a default logs directory(embedded mode)
         NOTE: We are using a really old version of logback so we have to use p().isEmpty instead of isDefined -->
@@ -170,13 +169,15 @@ data:
             <level value="${graphdb.logger.root.level:-DEBUG}"/>
             <appender-ref ref="MainLog"/>
             <appender-ref ref="ErrorLog"/>
-            <if condition='!p("graphdb.foreground").isEmpty()'>
-                <then>
-                    <appender-ref ref="STDOUT"/>
-                </then>
-            </if>
-
         </root>
+
+        <if condition='!p("graphdb.foreground").isEmpty()'>
+          <root>
+            <then>
+              <appender-ref ref="STDOUT"/>
+            </then>
+          <root>
+        </if>
 
         <!-- Make some of the more verbose loggers less chatty -->
         <logger name="org.springframework" level="WARN"/>

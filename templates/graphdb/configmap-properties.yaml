@@ -26,25 +26,23 @@ data:
     {{- end }}
     {{- if .Values.configuration.tls.keystore.existingSecret }}
     # Tomcat keystore configurations
-    graphdb.connector.SSLEnabled=true
-    graphdb.connector.scheme=https
-    graphdb.connector.secure=true
-    graphdb.connector.keystoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystoreKey }}
-    graphdb.connector.keyAlias={{ .Values.configuration.tls.keystore.keyAlias }}
-    graphdb.connector.keystoreProvider={{ .Values.configuration.tls.keystore.keystoreProvider }}
-    graphdb.connector.keystoreType={{ .Values.configuration.tls.keystore.keystoreType }}
-    graphdb.connector.keystorePass@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
+    graphdb.connector.ssl.enabled=true
+    graphdb.connector.ssl.certificateKeystoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystoreKey }}
+    graphdb.connector.ssl.certificateKeyAlias={{ .Values.configuration.tls.keystore.keyAlias }}
+    graphdb.connector.ssl.certificateKeystoreProvider={{ .Values.configuration.tls.keystore.keystoreProvider }}
+    graphdb.connector.ssl.certificateKeystoreType={{ .Values.configuration.tls.keystore.keystoreType }}
+    graphdb.connector.ssl.certificateKeystorePassword@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
     {{- end }}
     {{- if .Values.configuration.tls.truststore.existingSecret }}
     # Tomcat truststore configurations
-    graphdb.connector.truststoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.configuration.tls.truststore.truststoreKey }}
-    graphdb.connector.truststoreProvider={{ .Values.configuration.tls.truststore.truststoreProvider }}
-    graphdb.connector.truststoreType={{ .Values.configuration.tls.truststore.truststoreType }}
-    graphdb.connector.truststorePass@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
+    graphdb.connector.ssl.truststoreFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.configuration.tls.truststore.truststoreKey }}
+    graphdb.connector.ssl.truststoreProvider={{ .Values.configuration.tls.truststore.truststoreProvider }}
+    graphdb.connector.ssl.truststoreType={{ .Values.configuration.tls.truststore.truststoreType }}
+    graphdb.connector.ssl.truststorePassword@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
     {{- end }}
     {{- if .Values.configuration.tls.certificateRevocationList.existingSecret}}
     # Tomcat truststore CRL
-    graphdb.connector.certificateRevocationListFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
+    graphdb.connector.ssl.certificateRevocationListFile={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
     {{- end }}
     graphdb.raft.security.mode={{ .Values.cluster.tls.mode }}
     {{- if .Values.cluster.tls.keystore.existingSecret }}

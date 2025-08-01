@@ -15,8 +15,7 @@ configure it:
    (or intermediate certificates, if applicable) should be present in the truststore.
 ### See more about TLS/SSL set up:
  - GraphDB configuration properties : https://graphdb.ontotext.com/documentation/11.0/directories-and-config-properties.html#cluster-properties
- - Tomcat documentation: https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
- - Troubleshooting: https://tomcat.apache.org/tomcat-7.0-doc/ssl-howto.html#Troubleshooting
+ - Tomcat documentation: https://tomcat.apache.org/tomcat-11.0-doc/config/http.html#SSL_Support
 
 ## Warning
 

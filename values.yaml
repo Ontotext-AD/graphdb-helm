@@ -172,7 +172,7 @@ configuration:
   #
   # Example:
   # secretProperties:
-  #   graphdb.connector.keystorePass: "xxxx"
+  #   graphdb.connector.ssl.certificateKeystorePassword: "xxxx"
   secretProperties: {}
 
   # Additional GraphDB configurations that will be appended to graphdb.properties, effectively overriding anything configured
@@ -228,13 +228,11 @@ configuration:
   # default to the values defined in the connector unless explicitly specified otherwise with .Values.cluster.tls
   #
   # References
-  # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Connector_-_NIO_and_NIO2_(deprecated)
-  # - GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/encryption.html#configuring-graphdb-instance-with-ssl
+  # - Tomcat docs: https://tomcat.apache.org/tomcat-11.0-doc/config/http.html#SSL_Support
+  # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.0/encryption.html#configuring-a-graphdb-instance-with-ssl
   tls:
-    # If keystore secret is provided, it enables connector security by setting the following GraphDB properties:
-    # graphdb.connector.SSLEnabled = true
-    # graphdb.connector.scheme = https
-    # graphdb.connector.secure = true
+    # If keystore secret is provided, it enables connector security by setting the following GraphDB property:
+    # graphdb.connector.ssl.enabled = true
     keystore:
       # Reference to an existing Secret resource containing the keystore for configuring GraphDB's Tomcat connector.
       # The value is processed as a Helm template.
@@ -420,8 +418,8 @@ cluster:
     # - TLS: TLS encryption will be enforced for the cluster communication. TLS assets need to be provided and If not properly configured the server will fail to start!
     #
     # Most of the possible properties can be seen from the official tomcat connector documentation without the graphdb.raft.security prefix.
-    # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
-    # - GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties
+    # - Tomcat docs: https://tomcat.apache.org/tomcat-11.0-doc/config/http.html#SSL_Support
+    # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.0/directories-and-config-properties.html#cluster-properties
     mode: DEFAULT
 
     keystore:

@@ -6,6 +6,7 @@
 
 - Updated to GraphDB [11.1.0](https://graphdb.ontotext.com/documentation/11.1/release-notes.html#graphdb-11-1-0)
 - Updated the `extraObjects` template processing to additionally support rendering string Helm templates.
+- Updated backup CronJob to use form data and removed deprecated backup-options json field.
 
 ## Version 12.0.3
 

@@ -165,18 +165,22 @@ data:
             <appender-ref ref="SlowQueryLog"/>
         </logger>
 
-        <root>
+        <if condition='!p("graphdb.foreground").isEmpty()'>
+          <then>
+            <root>
             <level value="${graphdb.logger.root.level:-DEBUG}"/>
             <appender-ref ref="MainLog"/>
             <appender-ref ref="ErrorLog"/>
-        </root>
-
-        <if condition='!p("graphdb.foreground").isEmpty()'>
-          <root>
-            <then>
-              <appender-ref ref="STDOUT"/>
-            </then>
-          <root>
+            <appender-ref ref="STDOUT"/>
+            </root>
+          </then>
+          <else>
+            <root>
+              <level value="${graphdb.logger.root.level:-DEBUG}"/>
+              <appender-ref ref="MainLog"/>
+              <appender-ref ref="ErrorLog"/>
+            </root>
+          </else>
         </if>
 
         <!-- Make some of the more verbose loggers less chatty -->

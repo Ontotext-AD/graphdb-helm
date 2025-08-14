@@ -127,6 +127,7 @@ spec:
           secret:
             secretName: {{ (tpl .Values.security.initialUsers.existingSecret .) | default (include "graphdb.fullname.secret.initial-users" .) }}
         {{- end }}
+        {{- if or .Values.configuration.tls.keystore.existingSecret .Values.configuration.tls.truststore.existingSecret .Values.configuration.tls.certificateRevocationList.existingSecret }}
         - name: graphdb-tomcat-tls
           projected:
             defaultMode: 0400
@@ -156,6 +157,8 @@ spec:
                     - key: {{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
                       path: crl/{{ .Values.configuration.tls.certificateRevocationList.certificateRevocationListKey }}
               {{- end }}
+        {{- end }}
+        {{- if or .Values.cluster.tls.keystore.existingSecret .Values.cluster.tls.truststore.existingSecret .Values.cluster.tls.certificateKey.existingSecret .Values.cluster.tls.certificate.existingSecret .Values.cluster.tls.certificateChain.existingSecret .Values.cluster.tls.rootCerts.existingSecret .Values.cluster.tls.certificateRevocationList.existingSecret }}
         - name: graphdb-grpc-tls
           projected:
             sources:
@@ -214,6 +217,7 @@ spec:
                     - key: {{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
                       path: crl/{{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
               {{- end }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
           {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
@@ -451,10 +455,14 @@ spec:
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home/graphdb-import
             {{- end }}
+            {{- if or .Values.configuration.tls.keystore.existingSecret .Values.configuration.tls.truststore.existingSecret .Values.configuration.tls.certificateRevocationList.existingSecret }}
             - name: graphdb-tomcat-tls
               mountPath: {{ .Values.configuration.tls.mountPath }}
+            {{- end }}
+            {{- if or .Values.cluster.tls.keystore.existingSecret .Values.cluster.tls.truststore.existingSecret .Values.cluster.tls.certificateKey.existingSecret .Values.cluster.tls.certificate.existingSecret .Values.cluster.tls.certificateChain.existingSecret .Values.cluster.tls.rootCerts.existingSecret .Values.cluster.tls.certificateRevocationList.existingSecret }}
             - name: graphdb-grpc-tls
               mountPath: {{ .Values.cluster.tls.mountPath }}
+            {{- end }}
             {{- with .Values.extraVolumeMounts }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}

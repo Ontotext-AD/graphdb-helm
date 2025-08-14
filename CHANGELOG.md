@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 12.0.3
+
+### Fixed
+
+- Fixed startup failure if no TLS variables are defined, due to misconfiguration of container volumes
+
 ## Version 12.0.2
 
 ### New

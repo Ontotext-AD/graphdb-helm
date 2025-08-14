@@ -5,13 +5,13 @@
 ### Fixed
 
 - Fixed startup failure if no TLS variables are defined, due to misconfiguration of container volumes
+- Replaced raw http usage with `$GRAPHDB_PROTOCOL` in the indices creation job
 
 ## Version 12.0.2
 
 ### New
 
 - Updated to GraphDB [11.0.2](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-11-0-2)
-
 
 ## Version 12.0.1
 

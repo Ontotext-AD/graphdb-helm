@@ -10,7 +10,7 @@ and efficient setup. Additionally, it explains how to set Java arguments
 and environment variables for GraphDB.
 
 All GraphDB configuration options can be found
-[here](https://graphdb.ontotext.com/documentation/11.0/directories-and-config-properties.html#general-properties).
+[here](https://graphdb.ontotext.com/documentation/11.1/directories-and-config-properties.html#general-properties).
 
 ## Properties
 

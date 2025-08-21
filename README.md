@@ -1,8 +1,8 @@
 # Helm Chart for GraphDB
 
 [![CI](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml/badge.svg)](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml)
-![Version: 12.0.3](https://img.shields.io/badge/Version-12.0.3-informational?style=flat-square)
-![AppVersion: 11.0.2](https://img.shields.io/badge/AppVersion-11.0.2-informational?style=flat-square)
+![Version: 12.1.0](https://img.shields.io/badge/Version-12.1.0-informational?style=flat-square)
+![AppVersion: 11.1.0](https://img.shields.io/badge/AppVersion-11.1.0-informational?style=flat-square)
 
 <!--
 TODO: Add ArtifactHub badge when ready
@@ -197,7 +197,7 @@ Note: If `1` is selected as node count, the launched node will be standalone and
 
 - The section `cluster.config` can be used to configure a GraphDB cluster.
 
-See more about the cluster here: https://graphdb.ontotext.com/documentation/11.0/cluster-basics.html
+See more about the cluster here: https://graphdb.ontotext.com/documentation/11.1/cluster-basics.html
 
 ### Deploying GraphDB with security
 
@@ -212,7 +212,7 @@ Note that the `provisioning` user is required when security is turned on!
 By default, if the security is turned on, GraphDB's basic security method is used. More complicated security configurations
 can be configured using additional configurations in `graphdb.properties`.
 
-See https://graphdb.ontotext.com/documentation/11.0/access-control.html
+See https://graphdb.ontotext.com/documentation/11.1/access-control.html
 
 Prior to GraphDB 10.0.0 the users and their settings were saved in the `settings.js` file.
 
@@ -231,9 +231,9 @@ Note the `settings.js` must contain `security.enabled" : true` property when sec
 GraphDB uses Logback to configure logging using the `logback.xml` file.
 The file can be provisioned before GraphDB's startup with the `configuration.logback.existingConfigmap` configuration.
 
-See https://graphdb.ontotext.com/documentation/11.0/directories-and-config-properties.html#configuration-properties
+See https://graphdb.ontotext.com/documentation/11.1/directories-and-config-properties.html#configuration-properties
 
-See https://graphdb.ontotext.com/documentation/11.0/access-control.html
+See https://graphdb.ontotext.com/documentation/11.1/access-control.html
 
 ### Importing data from existing persistent volume
 

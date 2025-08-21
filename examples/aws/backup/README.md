@@ -126,4 +126,4 @@ backup:
     existingSecret: graphdb-custom-backup-options
 ```
 
-See https://graphdb.ontotext.com/documentation/11.0/backup-and-restore.html#backup-options for supported options.
+See https://graphdb.ontotext.com/documentation/11.1/backup-and-restore.html#backup-options for supported options.

@@ -229,7 +229,7 @@ configuration:
   #
   # References
   # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Connector_-_NIO_and_NIO2_(deprecated)
-  # - GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/encryption.html#configuring-graphdb-instance-with-ssl
+  # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.1/encryption.html#configuring-a-graphdb-instance-with-ssl
   tls:
     # If keystore secret is provided, it enables connector security by setting the following GraphDB properties:
     # graphdb.connector.SSLEnabled = true
@@ -421,7 +421,7 @@ cluster:
     #
     # Most of the possible properties can be seen from the official tomcat connector documentation without the graphdb.raft.security prefix.
     # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
-    # - GraphDB docs: https://graphdb.ontotext.com/documentation/10.7/directories-and-config-properties.html#cluster-properties
+    # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.1/directories-and-config-properties.html#cluster-properties
     mode: DEFAULT
 
     keystore:

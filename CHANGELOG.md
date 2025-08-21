@@ -4,6 +4,7 @@
 
 ### New
 
+- Updated to GraphDB [11.1.0](https://graphdb.ontotext.com/documentation/11.1/release-notes.html#graphdb-11-1-0)
 - Updated the `extraObjects` template processing to additionally support rendering string Helm templates.
 
 ## Version 12.0.3

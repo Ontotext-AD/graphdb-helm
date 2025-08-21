@@ -14,7 +14,7 @@ configure it:
    However, if certificates are signed by a Certificate Authority (CA), the CA's root certificate
    (or intermediate certificates, if applicable) should be present in the truststore.
 ### See more about TLS/SSL set up:
- - GraphDB configuration properties : https://graphdb.ontotext.com/documentation/11.0/directories-and-config-properties.html#cluster-properties
+ - GraphDB configuration properties : https://graphdb.ontotext.com/documentation/11.1/directories-and-config-properties.html#cluster-properties
  - Tomcat documentation: https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
  - Troubleshooting: https://tomcat.apache.org/tomcat-7.0-doc/ssl-howto.html#Troubleshooting
 

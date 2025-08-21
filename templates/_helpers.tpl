@@ -115,3 +115,23 @@ Calculate provisoner's bcrypt-hashed password
 {{- define "graphdb.security.provisioner.passwordHash" -}}
   {{- printf "%s" ( htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username)) -}}
 {{- end -}}
+
+{{/*
+Render string and yaml templates
+*/}}
+{{- define "render.list.singleMaps" -}}
+{{- $ctx := .ctx -}}
+{{- $items := .items | default (list) -}}
+{{- range $raw := $items }}
+  {{- if kindIs "string" $raw -}}
+      {{- $val := fromYamlArray (tpl $raw $ctx) -}}
+      {{- if $val }}
+      {{- toYaml $val | nindent 0 }}
+      {{- end }}
+  {{- else -}}
+  {{- $m := fromYaml (tpl (toYaml $raw) $ctx ) -}}
+  {{- $list := list $m -}}
+  {{- toYaml $list | nindent 0  }}
+  {{- end -}}
+{{ end }}
+{{- end -}}

@@ -48,7 +48,7 @@ spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- with .Values.extraVolumeClaimTemplates }}
-      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 4 }}
     {{- end }}
   {{- end }}
   template:
@@ -219,7 +219,7 @@ spec:
               {{- end }}
         {{- end }}
         {{- with .Values.extraVolumes }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
@@ -404,7 +404,7 @@ spec:
 
               echo 'Done'
         {{- with .Values.extraInitContainers }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 8 }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -425,16 +425,17 @@ spec:
               containerPort: {{ .Values.containerPorts.rpc }}
             {{- end }}
             {{- with .Values.extraContainerPorts }}
-              {{- toYaml . | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb.fullname.configmap.environment" . }}
             {{- with .Values.extraEnvFrom }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           {{- with .Values.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
+          env:
+          {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
           {{- end }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
@@ -464,7 +465,7 @@ spec:
               mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -482,5 +483,5 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- with .Values.extraContainers }}
-          {{ tpl (toYaml .) $ | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 8 }}
         {{- end }}

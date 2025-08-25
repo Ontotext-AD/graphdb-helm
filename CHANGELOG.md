@@ -2,6 +2,10 @@
 
 ## Version 12.2.0
 
+### New
+
+- Added example for deploying GraphDB on AWS EKS Auto Mode.
+
 ### Updated
 
 - Updated backup CronJob to use form data and removed deprecated backup-options json field.

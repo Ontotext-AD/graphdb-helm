@@ -48,8 +48,7 @@ spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- with .Values.extraVolumeClaimTemplates }}
-    {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-    {{- tpl $value $ | nindent 4 }}
+    {{ include "render.list.singleMaps" (dict "ctx" $ "items" .) | nindent 4 }}
     {{- end }}
   {{- end }}
   template:
@@ -220,8 +219,7 @@ spec:
               {{- end }}
         {{- end }}
         {{- with .Values.extraVolumes }}
-        {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-        {{- tpl $value $ | nindent 8 }}
+        {{ include "render.list.singleMaps" (dict "ctx" $ "items" .) | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
@@ -406,8 +404,7 @@ spec:
 
               echo 'Done'
         {{- with .Values.extraInitContainers }}
-        {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-        {{- tpl $value $ | nindent 8 }}
+        {{ include "render.list.singleMaps" (dict "ctx" $ "items" .) | nindent 8 }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -428,20 +425,17 @@ spec:
               containerPort: {{ .Values.containerPorts.rpc }}
             {{- end }}
             {{- with .Values.extraContainerPorts }}
-            {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-            {{- tpl $value $ | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | nindent 12 -}}
             {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "graphdb.fullname.configmap.environment" . }}
             {{- with .Values.extraEnvFrom }}
-            {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-            {{- tpl $value $ | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           {{- with .Values.extraEnv }}
           env:
-            {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-            {{- tpl $value $ | nindent 12 }}
+          {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
           {{- end }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
@@ -471,8 +465,7 @@ spec:
               mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
-            {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-            {{- tpl $value $ | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | nindent 12 -}}
             {{- end }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -490,6 +483,5 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- with .Values.extraContainers }}
-        {{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-        {{- tpl $value $ | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | nindent 8 -}}
         {{- end }}

@@ -37,7 +37,7 @@ spec:
         {{- toYaml .Values.proxy.persistence.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- with .Values.proxy.extraVolumeClaimTemplates }}
-      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 4 }}
     {{- end }}
   {{- end }}
   template:
@@ -187,7 +187,7 @@ spec:
               {{- end }}
         {{- end }}
         {{- with .Values.proxy.extraVolumes }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 8 }}
         {{- end }}
       {{- with .Values.proxy.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
@@ -347,7 +347,7 @@ spec:
 
               echo 'Done'
         {{- with .Values.proxy.extraInitContainers }}
-          {{- toYaml . | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 8 }}
         {{- end }}
       containers:
         - name: {{ include "graphdb-proxy.chartName" . }}
@@ -366,10 +366,11 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb-proxy.fullname.configmap.environment" . }}
             {{- with .Values.proxy.extraEnvFrom }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
+          env:
+          {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
           {{- end }}
           ports:
             - name: http
@@ -377,7 +378,7 @@ spec:
             - name: rpc
               containerPort: {{ .Values.proxy.containerPorts.rpc }}
             {{- with .Values.proxy.extraContainerPorts }}
-              {{- toYaml . | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           volumeMounts:
             - name: {{ .Values.proxy.persistence.volumeClaimTemplate.name }}
@@ -396,7 +397,7 @@ spec:
               mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- end }}
             {{- with .Values.proxy.extraVolumeMounts }}
-              {{- toYaml . | nindent 12 }}
+            {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 12 }}
             {{- end }}
           {{- with .Values.proxy.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -414,6 +415,6 @@ spec:
           livenessProbe: {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- with .Values.proxy.extraContainers }}
-          {{ tpl (toYaml .) $ | nindent 8 }}
+        {{- include "render.list.singleMaps" (dict "ctx" $ "items" .) | indent 8 }}
         {{- end }}
 {{- end }}

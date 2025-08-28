@@ -43,3 +43,17 @@ extraObjects:
       resources:
         requests:
           storage: 5Gi
+
+extraEnv:
+  - name: JVM_OPTS
+    value: "-Xms512m -Xmx1024m"
+  - name: GDB_REPLICA_ID
+    value: "{{ $.Release.Name }}"
+  - |
+    - name: CLUSTER_NAME
+      value: "{{ $.Release.Name }}"
+  - |
+    {{- if and .Values.randomCM.enabled (eq .Values.randomCM.values.key1 "value1") }}
+    - name: NODE_ID
+      value: test
+    {{- end }}

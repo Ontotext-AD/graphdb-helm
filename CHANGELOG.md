@@ -1,5 +1,19 @@
 # GraphDB Helm chart release notes
 
+## Version 12.2.0
+
+### New
+
+- Added support for string template rendering in the following properties:
+  - `extraEnvFrom`
+  - `extraEnv`
+  - `extraVolumes`
+  - `extraVolumeMounts`
+  - `extraVolumeClaimTemplates`
+  - `extraInitContainers`
+  - `extraContainerPorts`
+  - `extraContainers`
+
 ## Version 12.1.0
 
 ### New

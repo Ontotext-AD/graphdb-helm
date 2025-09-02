@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 12.2.0
+
+### Updated
+
+- Updated backup CronJob to use form data and removed deprecated backup-options json field.
+
 ## Version 12.1.0
 
 ### New

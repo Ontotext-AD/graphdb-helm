@@ -115,3 +115,15 @@ Calculate provisoner's bcrypt-hashed password
 {{- define "graphdb.security.provisioner.passwordHash" -}}
   {{- printf "%s" ( htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username)) -}}
 {{- end -}}
+
+{{/*
+Renders the backup options as json
+*/}}
+{{- define "graphdb.backup.options.json" -}}
+  {{- $out := dict -}}
+  {{- $out = merge $out .Values.backup.options -}}
+  {{- if eq .Values.backup.type "cloud" -}}
+    {{- $_ := set $out "bucketUri" (required "backup.cloud.bucketUri is required" .Values.backup.cloud.bucketUri) -}}
+  {{- end -}}
+  {{- $out | toPrettyJson -}}
+{{- end -}}

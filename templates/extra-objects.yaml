@@ -1,5 +1,7 @@
-{{ range .Values.extraObjects }}
+{{- if .Values.extraObjects -}}
+  {{- $objs := include "render.list.singleMaps" (dict "ctx" $ "items" .Values.extraObjects) | fromYamlArray -}}
+  {{- range $obj := $objs }}
 ---
-{{- $value := typeIs "string" . | ternary . (. | toYaml) }}
-{{ tpl $value $ }}
-{{ end }}
+{{ toYaml $obj | nindent 0 }}
+  {{- end -}}
+  {{- end -}}

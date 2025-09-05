@@ -117,21 +117,22 @@ Calculate provisoner's bcrypt-hashed password
 {{- end -}}
 
 {{/*
-Render string and yaml templates
+Render a mixed list (strings or maps) into a normalized YAML list.
+Useful when values may contain templated strings or raw YAML objects.
 */}}
-{{- define "render.list.singleMaps" -}}
+{{- define "render.mixedList.toYaml" -}}
 {{- $ctx := .ctx -}}
 {{- $items := .items | default (list) -}}
 {{- range $raw := $items }}
   {{- if kindIs "string" $raw -}}
       {{- $val := fromYamlArray (tpl $raw $ctx) -}}
       {{- if $val }}
-      {{- toYaml $val | nindent 0 }}
+      {{- toYaml $val | nindent 0 -}}
       {{- end }}
   {{- else -}}
   {{- $m := fromYaml (tpl (toYaml $raw) $ctx ) -}}
   {{- $list := list $m -}}
-  {{- toYaml $list | nindent 0  }}
+  {{- toYaml $list | nindent 0  -}}
   {{- end -}}
 {{ end }}
 {{- end -}}

@@ -1,7 +1,7 @@
 # GraphDB External Plugins Examples
 
 This folder contains examples of how to configure GraphDB with external plugins by providing them to the classpath.
-See https://graphdb.ontotext.com/documentation/11.1/plug-in-api.html#adding-external-plugins-to-graphdb for more information and
+See https://graphdb.ontotext.com/documentation/11.2/plug-in-api.html#adding-external-plugins-to-graphdb for more information and
 configuration examples.
 
 ## Using GraphDB Persistence

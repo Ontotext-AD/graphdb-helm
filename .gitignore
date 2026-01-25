@@ -1,0 +1,19 @@
+# Idea
+.idea
+*.iml
+
+# Eclipse
+.metadata
+.classpath
+.project
+.settings
+
+# Helm
+values_overrides.yaml
+template_output.yaml
+*.tgz
+
+# Sensitive files
+*.license
+*.gpg
+*.pgp

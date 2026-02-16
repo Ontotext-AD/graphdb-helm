@@ -201,7 +201,7 @@ configuration:
   # GraphDB configuration properties can also be passed here in the format -Dproperty=value
   # Takes precedence over any configurations provided in graphdb.properties
   # The value is processed as a Helm template.
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/directories-and-config-properties.html#configuration
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/directories-and-config-properties.html#configuration
   defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops -Ddefault.min.distinct.threshold=100m
 
   # Java arguments to append after .Values.configuration.defaultJavaArguments
@@ -229,7 +229,7 @@ configuration:
   #
   # References
   # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Connector_-_NIO_and_NIO2_(deprecated)
-  # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.2/encryption.html#configuring-a-graphdb-instance-with-ssl
+  # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.3/encryption.html#configuring-a-graphdb-instance-with-ssl
   tls:
     # If keystore secret is provided, it enables connector security by setting the following GraphDB properties:
     # graphdb.connector.SSLEnabled = true
@@ -277,7 +277,7 @@ configuration:
     mountPath: /etc/graphdb/tls/tomcat/
 
   # Configurations for GraphDB's Logback
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/diagnosing-and-reporting-critical-errors.html#logs
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/diagnosing-and-reporting-critical-errors.html#logs
   #
   # Example:
   # logback:
@@ -317,7 +317,7 @@ security:
   # This setting controls the initial setup of the security and the provisioning of the default initial users.js and settings.js files from this chart.
   # If the security has been enabled after the initial start, changing this flag won't provision anything in order to protect from overriding changes.
   # This setting also controls the authentication in the cluster provisioning jobs.
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/enabling-security.html
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/enabling-security.html
   enabled: false
 
   # Administrator user with ROLE_ADMIN authority.
@@ -384,11 +384,11 @@ security:
 ##################################
 
 # Configurations for creating and configuring the GraphDB cluster.
-# Ref: https://graphdb.ontotext.com/documentation/11.2/creating-a-cluster.html
+# Ref: https://graphdb.ontotext.com/documentation/11.3/creating-a-cluster.html
 cluster:
   # Configurations for shared token authentication in the cluster.
   # The secret token is used to encrypt and decrypt the communication between GraphDB nodes in the cluster.
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/creating-a-cluster.html#prerequisites
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/creating-a-cluster.html#prerequisites
   token:
     # Defines the secret token as plaintext.
     # Note: Consider providing an existing Secret object with the token via .Values.cluster.token.existingSecret
@@ -421,7 +421,7 @@ cluster:
     #
     # Most of the possible properties can be seen from the official tomcat connector documentation without the graphdb.raft.security prefix.
     # - Tomcat docs: https://tomcat.apache.org/tomcat-9.0-doc/config/http.html#SSL_Support_-_Certificate
-    # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.2/directories-and-config-properties.html#cluster-properties
+    # - GraphDB docs: https://graphdb.ontotext.com/documentation/11.3/directories-and-config-properties.html#cluster-properties
     mode: DEFAULT
 
     keystore:
@@ -510,7 +510,7 @@ cluster:
 
   # Cluster configuration parameters.
   # Changing the parameters would trigger a Job that patches the configuration.
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/creating-a-cluster.html#creation-parameters
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/creating-a-cluster.html#creation-parameters
   config:
     # Reference to a ConfigMap with a custom JSON configuration to use when creating the cluster.
     # This setting overrides any other values specified under .Values.cluster.config.params
@@ -744,7 +744,7 @@ tempVolume:
 # Note that the CronJob will use the provisioner credentials from .Values.security.provisioner
 # Note that the CronJob configurations are affected from the common settings in .Values.jobs
 #
-# Ref: https://graphdb.ontotext.com/documentation/11.2/backup-and-restore.html#creating-a-cloud-backup
+# Ref: https://graphdb.ontotext.com/documentation/11.3/backup-and-restore.html#creating-a-cloud-backup
 backup:
 
   # Toggles the creation of the CronJob for scheduled GraphDB backups.
@@ -771,7 +771,7 @@ backup:
   # Backup options that will be injected as JSON in the default backup options Secret. \
   # These configurations define the backup behaviour such as including or excluding repositories or system data.
   #
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/backup-and-restore.html#backup-options
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/backup-and-restore.html#backup-options
   options:
     backupSystemData: true
 
@@ -779,7 +779,7 @@ backup:
   # These options are not bound to the type of the backup (local or cloud).
   # These will be projected in the default backup options Secret object as JSON.
   #
-  # Ref: https://graphdb.ontotext.com/documentation/11.2/backup-and-restore.html#backup-options
+  # Ref: https://graphdb.ontotext.com/documentation/11.3/backup-and-restore.html#backup-options
   optionsSecret:
     # Reference to an existing Secret that contains the backup options.
     # This overrides any value defined under .Values.backup.options
@@ -811,7 +811,7 @@ backup:
     #
     # Note: This won't be used if an existing secret has been provided with .Values.backup.optionsSecret.existingSecret
     #
-    # Ref: https://graphdb.ontotext.com/documentation/11.2/backup-and-restore.html#creating-and-restoring-cloud-backups
+    # Ref: https://graphdb.ontotext.com/documentation/11.3/backup-and-restore.html#creating-and-restoring-cloud-backups
     bucketUri: ""
 
   # Configurations for a local GraphDB backup.
@@ -991,7 +991,7 @@ topologySpreadConstraints: []
 ##########################
 
 # Resource configurations for the GraphDB containers.
-# For resizing to your needs, refer to the GraphDB documentation https://graphdb.ontotext.com/documentation/11.2/requirements.html
+# For resizing to your needs, refer to the GraphDB documentation https://graphdb.ontotext.com/documentation/11.3/requirements.html
 # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
 resources:
   limits:
@@ -1121,7 +1121,7 @@ serviceAccount:
 # Settings for importing data into GraphDB
 import:
   # Attach additional PV which will be used as an import directory
-  # See https://graphdb.ontotext.com/documentation/11.2/loading-data-using-the-workbench.html#importing-server-files
+  # See https://graphdb.ontotext.com/documentation/11.3/loading-data-using-the-workbench.html#importing-server-files
   volumeMount:
     # Toggles the attachment of the additional PV via StatefulSet's PVC templates.
     enabled: false
@@ -1271,7 +1271,7 @@ jobs:
 
 # The GraphDB Cluster Proxy is a separate StatefulSet that is enabled when the main GraphDB StatefulSet is deployed in cluster mode, i.e. replicas > 1.
 # The proxy takes care of always routing traffic to the GraphDB leader node, reducing needless network hops by the internal proxy mechanism in GraphDB.
-# See https://graphdb.ontotext.com/documentation/11.2/creating-a-cluster.html#configure-external-cluster-proxy
+# See https://graphdb.ontotext.com/documentation/11.3/creating-a-cluster.html#configure-external-cluster-proxy
 proxy:
   # Overrides the name of the GraphDB proxy component.
   nameOverride: ""
@@ -1295,7 +1295,7 @@ proxy:
   ################################
 
   # GraphDB proxy runtime configuration settings.
-  # For reference, see https://graphdb.ontotext.com/documentation/11.2/directories-and-config-properties.html
+  # For reference, see https://graphdb.ontotext.com/documentation/11.3/directories-and-config-properties.html
   configuration:
     # GraphDB proxy properties to insert in the default graphdb.properties ConfigMap for the proxy.
     # Values are processed as Helm templates.
@@ -1326,7 +1326,7 @@ proxy:
     # GraphDB configuration properties can also be passed here in the format -Dprop=value
     # Takes precedence over any configurations in graphdb.properties
     # The value is processed as a Helm template.
-    # Ref: https://graphdb.ontotext.com/documentation/11.2/directories-and-config-properties.html#configuration
+    # Ref: https://graphdb.ontotext.com/documentation/11.3/directories-and-config-properties.html#configuration
     defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70
 
     # Java arguments to append after .Values.proxy.configuration.defaultJavaArguments
@@ -1335,7 +1335,7 @@ proxy:
     javaArguments: ""
 
     # Configurations for GraphDB's Logback
-    # Ref: https://graphdb.ontotext.com/documentation/11.2/diagnosing-and-reporting-critical-errors.html#logs
+    # Ref: https://graphdb.ontotext.com/documentation/11.3/diagnosing-and-reporting-critical-errors.html#logs
     logback:
       # Reference to an existing ConfigMap containing a Logback XML configuration.
       # The value is processed as a Helm template.
@@ -1603,7 +1603,7 @@ proxy:
   ##########################
 
   # Resource configurations for the GraphDB proxy containers.
-  # For resizing to your needs, refer to the GraphDB documentation https://graphdb.ontotext.com/documentation/11.2/requirements.html
+  # For resizing to your needs, refer to the GraphDB documentation https://graphdb.ontotext.com/documentation/11.3/requirements.html
   # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
   resources:
     limits:

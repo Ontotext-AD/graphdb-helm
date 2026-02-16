@@ -1,16 +1,22 @@
 # GraphDB Helm chart release notes
 
+## Version 12.3.0
+
+### New
+
+- Updated to GraphDB [11.3.0](https://graphdb.ontotext.com/documentation/11.3/release-notes.html#graphdb-11-3-0)
+
 ## Version 12.2.1
 
 ### New
 
-- Updated to GraphDB [11.2.1](https://graphdb.ontotext.com/documentation/11.1/release-notes.html#graphdb-11-2-1)
+- Updated to GraphDB [11.2.1](https://graphdb.ontotext.com/documentation/11.2/release-notes.html#graphdb-11-2-1)
 
 ## Version 12.2.0
 
 ### New
 
-- Updated to GraphDB [11.2.0](https://graphdb.ontotext.com/documentation/11.1/release-notes.html#graphdb-11-2-0)
+- Updated to GraphDB [11.2.0](https://graphdb.ontotext.com/documentation/11.2/release-notes.html#graphdb-11-2-0)
 
 ## Version 12.1.3
 
@@ -48,13 +54,13 @@
 
 ### New
 
-- Updated to GraphDB [11.0.2](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-11-0-2)
+- Updated to GraphDB [11.0.2](https://graphdb.ontotext.com/documentation/11.0/release-notes.html#graphdb-11-0-2)
 
 ## Version 12.0.1
 
 ### New
 
-- Updated to GraphDB [11.0.1](https://graphdb.ontotext.com/documentation/10.8/release-notes.html#graphdb-11-0-1)
+- Updated to GraphDB [11.0.1](https://graphdb.ontotext.com/documentation/11.0/release-notes.html#graphdb-11-0-1)
 
 ## Version 12.0.0
 

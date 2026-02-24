@@ -439,8 +439,10 @@ spec:
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
+            {{- if .Values.tempVolume.enabled }}
             - name: temp-dir
               mountPath: /tmp
+            {{- end }}
             {{- if .Values.license.existingSecret }}
             - name: graphdb-license
               mountPath: {{ .Values.license.mountPath }}

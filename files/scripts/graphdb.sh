@@ -140,9 +140,8 @@ function cloudBackup {
     -o "${response}" \
     -w "Status=%{response_code}" \
     --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
-    --header 'Content-Type: application/json' \
     --header 'Accept: application/json' \
-    --data-binary "${backup_options}" \
+    --form-string "params=${backup_options}" \
     --url "${GRAPHDB_PROTOCOL}://${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/recovery/cloud-backup")
 
   if ! echo "${response_status}" | grep -q 'Status=200' ; then

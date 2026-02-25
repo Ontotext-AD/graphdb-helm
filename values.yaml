@@ -768,8 +768,8 @@ backup:
   # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
   timezone: ""
 
-  # Backup options that will be injected as JSON in the default backup options Secret. \
-  # These configurations define the backup behaviour such as including or excluding repositories or system data.
+  # Backup options that will be injected as JSON in the default backup options Secret.
+  # These configurations define the backup behavior such as including or excluding repositories or system data.
   #
   # Ref: https://graphdb.ontotext.com/documentation/11.3/backup-and-restore.html#backup-options
   options:

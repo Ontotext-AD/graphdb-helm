@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 12.3.3
+
+### Fixed
+
+- Updated all TLS related configurations to use the correct GraphDB v11 properties, see configmap-properties.yaml
+- Updated probes to use the correct HTTPS scheme when TLS is enabled
+
 ## Version 12.3.2
 
 ### New

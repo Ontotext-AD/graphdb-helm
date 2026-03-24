@@ -106,6 +106,9 @@ spec:
                   items:
                     - key: {{ .Values.configuration.tls.keystore.keystoreKey }}
                       path: keystore/{{ .Values.configuration.tls.keystore.keystoreKey }}
+              - secret:
+                  name: {{ coalesce (tpl .Values.configuration.tls.keystore.keystorePasswordSecret .) (tpl .Values.configuration.tls.keystore.existingSecret .) }}
+                  items:
                     - key: {{ .Values.configuration.tls.keystore.keystorePasswordKey }}
                       path: keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
               {{- end }}
@@ -115,6 +118,9 @@ spec:
                   items:
                     - key: {{ .Values.configuration.tls.truststore.truststoreKey }}
                       path: truststore/{{ .Values.configuration.tls.truststore.truststoreKey }}
+              - secret:
+                  name: {{ coalesce (tpl .Values.configuration.tls.truststore.truststorePasswordSecret .) (tpl .Values.configuration.tls.truststore.existingSecret .) }}
+                  items:
                     - key: {{ .Values.configuration.tls.truststore.truststorePasswordKey }}
                       path: truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
               {{- end }}
@@ -404,14 +410,14 @@ spec:
           {{- with .Values.proxy.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.proxy.startupProbe }}
-          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- if .Values.proxy.startupProbe }}
+          startupProbe: {{- include "graphdb-proxy.probes.startup" . | nindent 12 }}
           {{- end }}
-          {{- with .Values.proxy.readinessProbe }}
-          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- if .Values.proxy.readinessProbe }}
+          readinessProbe: {{- include "graphdb-proxy.probes.readiness" . | nindent 12 }}
           {{- end }}
-          {{- with .Values.proxy.livenessProbe }}
-          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- if .Values.proxy.livenessProbe }}
+          livenessProbe: {{- include "graphdb-proxy.probes.liveness" . | nindent 12 }}
           {{- end }}
         {{- with .Values.proxy.extraContainers }}
           {{ tpl (toYaml .) $ | nindent 8 }}

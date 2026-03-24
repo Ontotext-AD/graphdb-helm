@@ -138,6 +138,9 @@ spec:
                   items:
                     - key: {{ .Values.configuration.tls.keystore.keystoreKey }}
                       path: keystore/{{ .Values.configuration.tls.keystore.keystoreKey }}
+              - secret:
+                  name: {{ coalesce (tpl .Values.configuration.tls.keystore.keystorePasswordSecret .) (tpl .Values.configuration.tls.keystore.existingSecret .) }}
+                  items:
                     - key: {{ .Values.configuration.tls.keystore.keystorePasswordKey }}
                       path: keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
               {{- end }}
@@ -147,6 +150,9 @@ spec:
                   items:
                     - key: {{ .Values.configuration.tls.truststore.truststoreKey }}
                       path: truststore/{{ .Values.configuration.tls.truststore.truststoreKey }}
+              - secret:
+                  name: {{ coalesce (tpl .Values.configuration.tls.truststore.truststorePasswordSecret .) (tpl .Values.configuration.tls.truststore.existingSecret .) }}
+                  items:
                     - key: {{ .Values.configuration.tls.truststore.truststorePasswordKey }}
                       path: truststore/{{ .Values.configuration.tls.truststore.truststorePasswordKey }}
               {{- end }}
@@ -474,14 +480,14 @@ spec:
           {{- with .Values.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.startupProbe }}
-          startupProbe: {{- toYaml . | nindent 12 }}
+          {{- if .Values.startupProbe }}
+          startupProbe: {{- include "graphdb.probes.startup" . | nindent 12 }}
           {{- end }}
-          {{- with .Values.readinessProbe }}
-          readinessProbe: {{- toYaml . | nindent 12 }}
+          {{- if .Values.readinessProbe }}
+          readinessProbe: {{- include "graphdb.probes.readiness" . | nindent 12 }}
           {{- end }}
-          {{- with .Values.livenessProbe }}
-          livenessProbe: {{- toYaml . | nindent 12 }}
+          {{- if .Values.livenessProbe }}
+          livenessProbe: {{- include "graphdb.probes.liveness" . | nindent 12 }}
           {{- end }}
         {{- with .Values.extraContainers }}
           {{ tpl (toYaml .) $ | nindent 8 }}

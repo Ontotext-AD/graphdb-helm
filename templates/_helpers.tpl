@@ -115,3 +115,40 @@ Calculate provisoner's bcrypt-hashed password
 {{- define "graphdb.security.provisioner.passwordHash" -}}
   {{- printf "%s" ( htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username)) -}}
 {{- end -}}
+
+{{/*
+Calculates the correct probe scheme based on TLS settings.
+*/}}
+{{- define "graphdb.renderProbe" -}}
+  {{- $root := index . 0 -}}
+  {{- $probe := deepCopy (index . 1) -}}
+  {{- $keystore := $root.Values.configuration.tls.keystore.existingSecret -}}
+  {{- if and $keystore $probe.httpGet (not (hasKey $probe.httpGet "scheme")) -}}
+    {{- $_ := set $probe.httpGet "scheme" "HTTPS" -}}
+  {{- end -}}
+  {{- toYaml $probe -}}
+{{- end -}}
+
+{{- define "graphdb.probes.startup" -}}
+  {{- include "graphdb.renderProbe" (list $ .Values.startupProbe) -}}
+{{- end -}}
+
+{{- define "graphdb.probes.readiness" -}}
+  {{- include "graphdb.renderProbe" (list $ .Values.readinessProbe) -}}
+{{- end -}}
+
+{{- define "graphdb.probes.liveness" -}}
+  {{- include "graphdb.renderProbe" (list $ .Values.livenessProbe) -}}
+{{- end -}}
+
+{{- define "graphdb-proxy.probes.startup" -}}
+  {{- include "graphdb.renderProbe" (list $ .Values.proxy.startupProbe) -}}
+{{- end -}}
+
+{{- define "graphdb-proxy.probes.readiness" -}}
+  {{- include "graphdb.renderProbe" (list $ .Values.proxy.readinessProbe) -}}
+{{- end -}}
+
+{{- define "graphdb-proxy.probes.liveness" -}}
+  {{- include "graphdb.renderProbe" (list $ .Values.proxy.livenessProbe) -}}
+{{- end -}}

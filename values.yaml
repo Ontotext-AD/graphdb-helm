@@ -241,6 +241,9 @@ configuration:
       existingSecret: ""
       # Key in the existing Secret that holds the keystore file where you have stored the server certificate and key to be loaded.
       keystoreKey: keystore.jks
+      # Reference to an existing Secret resource containing the keystore password.
+      # If not provided, the chart defaults to keystore.existingSecret
+      keystorePasswordSecret: ""
       # Key in the existing Secret that holds the password to use to access the keystore containing
       # the server's private key and certificate.
       keystorePasswordKey: keystore_password
@@ -257,6 +260,9 @@ configuration:
       existingSecret: ""
       # Key in the existing Secret that holds the trust store file to use to validate client certificates.
       truststoreKey: truststore.jks
+      # Reference to an existing Secret resource containing the truststore password.
+      # If not provided, the chart defaults to truststore.existingSecret
+      truststorePasswordSecret: ""
       # Key in the existing Secret that holds the password to access the trust store.
       truststorePasswordKey: truststore_password
       # The name of the truststore provider to be used for the server certificate.

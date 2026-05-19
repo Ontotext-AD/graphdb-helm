@@ -1,0 +1,10 @@
+configuration:
+  encryption:
+    type: pkcs12
+    file: /opt/graphdb/home/data/master.p12
+    masterKeyExistingSecret: graphdb-masterkeystore
+    masterKeySecretKey: masterKeyStore
+    keystorePasswordExistingSecret: graphdb-masterkeystorePassword
+    keystorePasswordSecretKey: masterkeystorePassword
+    alias: masterkey
+

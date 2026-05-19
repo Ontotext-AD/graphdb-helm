@@ -15,3 +15,10 @@ data:
     -Dhttp.socket.keepalive=true
     {{ tpl .Values.configuration.defaultJavaArguments . }}
     {{ tpl .Values.configuration.javaArguments . }}
+  {{- if .Values.configuration.encryption.type }}
+  GRAPHDB_DATA_ENCRYPTION_TYPE: {{ .Values.configuration.encryption.type }}
+  GRAPHDB_DATA_ENCRYPTION_FILE: {{ required "configuration.encryption.file is required" .Values.configuration.encryption.file }}
+  {{- if eq .Values.configuration.encryption.type "pkcs12" }}
+  GRAPHDB_DATA_ENCRYPTION_KEYSTORE_ALIAS: {{ required "configuration.encryption.alias is required " .Values.configuration.encryption.alias }}
+  {{- end }}
+  {{- end }}

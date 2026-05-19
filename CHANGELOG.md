@@ -4,9 +4,11 @@
 
 ## New
 
-Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the
+- Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the
 `graphdb.auth.security.enabled` property, which prevents users from disabling security via the
 Workbench or REST API.
+- Added encryption at rest configuration
+
 
 ## Version 12.4.0
 

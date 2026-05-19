@@ -96,6 +96,11 @@ spec:
         - name: graphdb-secret-properties
           secret:
             secretName: {{ include "graphdb.fullname.secret.properties" . }}
+        {{- if .Values.configuration.encryption.type }}
+        - name: graphdb-encryption-master-key
+          secret:
+            secretName: {{ .Values.configuration.encryption.masterKeyExistingSecret }}
+        {{- end }}
         {{- if .Values.configuration.extraProperties.existingConfigmap }}
         - name: graphdb-extra-properties
           configMap:
@@ -316,6 +321,9 @@ spec:
                   name: {{ .Values.cluster.token.existingSecret }}
                   key: {{ .Values.cluster.token.secretKey }}
             {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "graphdb.fullname.configmap.environment" . }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
               mountPath: /opt/graphdb/home
@@ -344,6 +352,11 @@ spec:
             - name: graphdb-initial-users-config
               mountPath: /tmp/graphdb/users.js
               subPath: {{ .Values.security.initialUsers.secretKey }}
+            {{- end }}
+            {{- if or (eq .Values.configuration.encryption.type "file" ) (eq .Values.configuration.encryption.type "pkcs12") }}
+            - name: graphdb-encryption-master-key
+              mountPath: /tmp/master.key
+              subPath: {{ .Values.configuration.encryption.masterKeySecretKey }}
             {{- end }}
           {{- with .Values.initContainerSecurityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
@@ -407,7 +420,20 @@ spec:
                 echo "Provisioning settings with settings.js file..."
                 cp /tmp/graphdb/settings.js /opt/graphdb/home/data/settings.js
               fi
-
+              ENC_TYPE=${GRAPHDB_DATA_ENCRYPTION_TYPE:-""}
+              if [[ $ENC_TYPE == @(file|pkcs12)  && -f /tmp/master.key ]]; then
+                echo "Configuring up encryption at rest"
+                FILE=${GRAPHDB_DATA_ENCRYPTION_FILE:-"/opt/graphdb/home/data/master.key"}
+                if [[ -f ${FILE} ]]; then
+                  echo "Master key already exists"
+                else
+                  echo "Copying master key to ${FILE}"
+                  mkdir -p $(dirname $FILE)
+                  cp /tmp/master.key ${FILE}
+                  chmod o-rwx ${FILE}
+                fi
+                echo "Encryption at rest configured"
+              fi
               echo 'Done'
         {{- with .Values.extraInitContainers }}
           {{- tpl (toYaml .) $ | nindent 8 }}
@@ -439,8 +465,18 @@ spec:
             {{- with .Values.extraEnvFrom }}
               {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
-          {{- with .Values.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- if or (eq .Values.configuration.encryption.type "pkcs12") (.Values.extraEnv) }}
+          env:
+            {{- if eq .Values.configuration.encryption.type "pkcs12" }}
+            - name: GRAPHDB_DATA_ENCRYPTION_KEYSTORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "configuration.encryption.keystorePasswordExistingSecret is required" .Values.configuration.encryption.keystorePasswordExistingSecret }}
+                  key: {{ required "configuration.encryption.keystorePasswordSecretKey is required" .Values.configuration.encryption.keystorePasswordSecretKey }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+              {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- end }}
           {{- end }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}

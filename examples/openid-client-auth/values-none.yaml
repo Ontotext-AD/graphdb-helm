@@ -1,0 +1,12 @@
+# none — No client authentication at the token endpoint (default behaviour).
+#
+# Use this when the identity provider does not require GraphDB to authenticate
+# itself when calling the token endpoint.
+
+configuration:
+  properties:
+    graphdb.auth.openid.proxy: "true"
+    graphdb.auth.openid.client.auth.type: "none"
+
+security:
+  enabled: true

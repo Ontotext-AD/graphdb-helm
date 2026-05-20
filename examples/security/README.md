@@ -33,7 +33,7 @@ security:
   enabled: true
   provisioner:
     username: graphdb-provisioner
-    passwordHash: "{bcrypt}$2a$12$ne8KIDfRmlPUbflsDpPjceDkA9nV2a5Xa.ArIRJ.9zR8iLbV1SYHK" # provisionerpass123
+    passwordHash: "$2a$12$ne8KIDfRmlPUbflsDpPjceDkA9nV2a5Xa.ArIRJ.9zR8iLbV1SYHK" # provisionerpass123
 ```
 
 **Note: The password for the admin user is created by appending the bcrypt-hashed version

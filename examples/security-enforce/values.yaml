@@ -1,0 +1,22 @@
+# Enforces GraphDB security so it cannot be disabled via the Workbench.
+#
+# graphdb.auth.security.enabled locks the security state permanently.
+# Once set, any attempt to toggle security through the Workbench or REST API
+# will be rejected. The older security.enabled property still works, but
+# graphdb.auth.security.enabled takes precedence when both are present.
+#
+# In a cluster, all nodes must carry the same value. Mismatching nodes
+# will prevent cluster creation or node addition.
+
+configuration:
+  properties:
+    graphdb.auth.security.enabled: "true"
+
+security:
+  enabled: true
+  admin:
+    # Important: must be a bcrypt hash in the format "{bcrypt}<hash>"
+    initialPassword: "{bcrypt}$2a$12$VDd8PrAndaJfoMJFlHFot.osSxZWQjMQZKgrEJgVZKFj6WFPvkbnS" # admin123
+  provisioner:
+    username: provisioner
+    passwordHash: "$2b$12$kCFzg6FJGFRulAxbkR6VPO1URlDiiY3hE4X6NGv/4FCipHg2hxzfG" # iHaveSuperpowers

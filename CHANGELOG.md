@@ -6,6 +6,8 @@
 
 - Added example for OpenID Connect client authentication (`examples/openid-client-auth`) demonstrating
   all supported methods
+- Added example for enabling audit logs (`examples/audit-logs`) demonstrating the
+  `graphdb.audit.role` and `graphdb.audit.repository` configuration properties
 
 ## Version 12.3.5
 

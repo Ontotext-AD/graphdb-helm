@@ -1,0 +1,23 @@
+# Enables GraphDB audit logging to track user activity and detect unauthorized access.
+#
+# graphdb.audit.role controls which role level triggers audit logging.
+# Role hierarchy (each level also includes all levels below it):
+#   ANY          - all authenticated requests
+#   USER         - user-level resource access
+#   REPO_MANAGER - repository management operations
+#   ADMIN        - administration resource access + login form (always logged)
+#
+# graphdb.audit.repository controls which repository operations are logged:
+#   READ  - read and write operations
+#   WRITE - write operations only
+#
+# Note: audit logs can be space-intensive at higher verbosity levels.
+
+configuration:
+  properties:
+    graphdb.audit.role: "USER"
+    graphdb.audit.repository: "WRITE"
+    # Log specific HTTP headers alongside each audit entry (comma-separated).
+    # graphdb.audit.headers: "Referer,User-Agent"
+    # Maximum bytes from the request body included in each log entry (default: 1024).
+    # graphdb.audit.request.max.length: "1024"

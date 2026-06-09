@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 12.3.6
+
+### New
+
+- Added example for OpenID Connect client authentication (`examples/openid-client-auth`) demonstrating
+  all supported methods
+
 ## Version 12.3.5
 
 ### New

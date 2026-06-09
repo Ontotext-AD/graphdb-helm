@@ -1,0 +1,34 @@
+# private_key_jwt — OpenID Connect client authentication using a PKCS12 keystore.
+#
+# Prerequisites:
+#   A PKCS12 keystore containing the private key as the first entry.
+#
+# Create the keystore Secret before deploying:
+#   kubectl create secret generic graphdb-oidc-keystore \
+#     --from-file=keystore.p12=/path/to/your/keystore.p12
+#
+# The public key or certificate must be registered with the identity provider
+# for the corresponding client.
+
+extraVolumes:
+  - name: oidc-keystore
+    secret:
+      secretName: graphdb-oidc-keystore
+
+extraVolumeMounts:
+  - name: oidc-keystore
+    mountPath: /opt/graphdb/home/oidc-keystore
+    readOnly: true
+
+configuration:
+  properties:
+    graphdb.auth.openid.proxy: "true"
+    graphdb.auth.openid.client.auth.type: "private_key_jwt"
+    graphdb.auth.openid.client.auth.keystore: "/opt/graphdb/home/oidc-keystore/keystore.p12"
+    # graphdb.auth.openid.client.auth.signature_alg: "RS256"  # default RS256
+  secretProperties:
+    graphdb.auth.openid.client.auth.keystore_password: "changeit"
+    # graphdb.auth.openid.client.auth.private_key_password: "changeit"  # defaults to keystore_password
+
+security:
+  enabled: true

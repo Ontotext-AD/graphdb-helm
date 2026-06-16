@@ -1,9 +1,10 @@
 # GraphDB Helm chart release notes
 
-## Version 12.3.6
+## Version 12.4.0
 
 ### New
 
+- Updated to GraphDB [11.4.0](https://graphdb.ontotext.com/documentation/11.4/release-notes.html#graphdb-11-4-0)
 - Added example for OpenID Connect client authentication (`examples/openid-client-auth`) demonstrating
   all supported methods
 - Added example for enabling audit logs (`examples/audit-logs`) demonstrating the

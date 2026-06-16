@@ -9,7 +9,7 @@ Audit logging enables accountability for user actions. Common use cases:
 - Trace configuration changes
 - Prevent inappropriate actions through accountability
 
-See the [GraphDB Security Auditing documentation](https://graphdb.ontotext.com/documentation/11.3/security-auditing.html)
+See the [GraphDB Security Auditing documentation](https://graphdb.ontotext.com/documentation/11.4/security-auditing.html)
 for the full reference.
 
 ## Configuration

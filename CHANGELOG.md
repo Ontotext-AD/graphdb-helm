@@ -1,5 +1,13 @@
 # GraphDB Helm chart release notes
 
+## Version 12.5.0
+
+## New
+
+Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the
+`graphdb.auth.security.enabled` property, which prevents users from disabling security via the
+Workbench or REST API.
+
 ## Version 12.4.0
 
 ### New

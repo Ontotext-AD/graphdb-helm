@@ -1,0 +1,6 @@
+configuration:
+  encryption:
+    type: file
+    file: /opt/graphdb/home/data/master.key
+    masterKeyExistingSecret: graphdb-masterkey
+    masterKeySecretKey: masterkey

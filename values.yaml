@@ -282,6 +282,32 @@ configuration:
     # The path where the keystore/truststore will be mounted inside the container.
     mountPath: /etc/graphdb/tls/tomcat/
 
+
+  # Encryption at rest configuration
+  #
+  # GraphDB implements encryption at rest by using a master key, either written to file on disk, or stored in a custom provided keystore.
+  # There are 3 scenarios for using this configuration
+  # - By leaving the `type` empty, thus disabling encryption at rest
+  # - By setting the `type` to `file` and providing the encryption file location
+  # - By setting the `type` to `pkcs12` and providing the keystore file location, the keystore password and the master key alias.
+  #
+  # - GraphDB docs: https://docs.google.com/document/d/1auDa-yHF0hh9SDe5Bvv71mRMw2a8ykd1K3Oxc2CT9b0/edit?pli=1&tab=t.0
+  encryption:
+    # Encryption type. Cna be one of `pkcs12`, `file` or empty string. Default = "" (disabled)
+    type: ""
+    # The file that contains the master key. Can be either a simple file, or keystore
+    file: ""
+    # The secret name for the master key value
+    masterKeyExistingSecret: "graphdb-masterkey"
+    # The key corresponding to the master key secret value
+    masterKeySecretKey: "masterKey"
+    # The secret name for the keystore password, if `pkcs12` encryption key is configured
+    keystorePasswordExistingSecret: ""
+    # The key corresponding to the keystore password secret value. Default keystorePassword
+    keystorePasswordSecretKey: "keystorePassword"
+    # Master key alias, as stored in the keystore (for `type` = `pkcs12`)
+    alias: "graphdb-master-key"
+
   # Configurations for GraphDB's Logback
   # Ref: https://graphdb.ontotext.com/documentation/11.4/diagnosing-and-reporting-critical-errors.html#logs
   #

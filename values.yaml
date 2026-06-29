@@ -679,6 +679,8 @@ service:
   externalIPs: []
   # Additional ports to expose with the Service.
   extraPorts: []
+  # Indicates that DNS records are created for not-ready Pods.
+  publishNotReadyAddresses: false
 
 # Configurations for GraphDB headless Service.
 # This Service is deployed regardless of the amount of .Values.replicas, so it exists for both single node and for cluster mode.
@@ -701,6 +703,9 @@ headlessService:
     rpc: 7300
   # Additional ports to expose with the Service.
   extraPorts: []
+  # Indicates that DNS records are created for not-ready Pods.
+  # Enabled so cluster nodes can communicate before readiness probes pass, allowing proper startup sequencing during rolling upgrades.
+  publishNotReadyAddresses: true
 
 ##############################
 # Persistence Configurations #
@@ -1418,6 +1423,8 @@ proxy:
     externalIPs: []
     # Additional proxy ports to expose with the Service.
     extraPorts: []
+    # Indicates that DNS records are created for not-ready Pods.
+    publishNotReadyAddresses: false
 
   # GraphDB cluster proxy headless Service configurations.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
@@ -1439,6 +1446,10 @@ proxy:
       rpc: 7300
     # Additional proxy ports to expose with the Service.
     extraPorts: []
+    # Indicates that DNS records are created for not-ready Pods.
+    # Enabled so cluster nodes can communicate before readiness probes pass, allowing proper startup sequencing during rolling upgrades.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishnotreadyaddresses
+    publishNotReadyAddresses: true
 
   ##############################
   # Persistence Configurations #

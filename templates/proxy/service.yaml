@@ -15,6 +15,7 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.proxy.service.type }}
+  publishNotReadyAddresses: {{ .Values.proxy.service.publishNotReadyAddresses }}
   selector:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   {{- if .Values.proxy.service.externalTrafficPolicy }}

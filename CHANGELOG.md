@@ -11,6 +11,11 @@ Workbench or REST API.
 - Added `publishNotReadyAddresses` to `service`, `headlessService`, `proxy.service` and `proxy.headlessService`.
   Headless services default to `true` to allow cluster nodes to communicate before readiness probes pass,
   enabling proper startup sequencing during rolling upgrades.
+- Added `topologySpreadConstraintsPreset` for GraphDB and proxy StatefulSets. When enabled, automatically
+  configures two topology spread constraints that spread pods across availability zones
+  (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
+  AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
+  when set.
 
 
 ## Version 12.4.0

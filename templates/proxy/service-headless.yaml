@@ -15,6 +15,7 @@ metadata:
   {{- end }}
 spec:
   clusterIP: None
+  publishNotReadyAddresses: {{ .Values.proxy.headlessService.publishNotReadyAddresses }}
   selector:
     {{- include "graphdb-proxy.selectorLabels" . | nindent 4 }}
   ports:

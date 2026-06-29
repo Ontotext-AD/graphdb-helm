@@ -250,45 +250,6 @@ The Ingress can be disabled by switching `ingress.enabled` to false.
 
 Some cloud Kubernetes clusters have some specifics that should be noted. Here are some useful tips on some cloud K8s clusters:
 
-#### Topology Spread Constraints
-
-For cloud deployments on AWS (EKS), Azure (AKS), or GCP (GKE) with multiple availability zones, enable the
-topology spread constraints preset to automatically spread GraphDB pods across zones and nodes:
-
-```yaml
-topologySpreadConstraintsPreset:
-  enabled: true
-
-# For the proxy StatefulSet (when using GraphDB cluster):
-proxy:
-  topologySpreadConstraintsPreset:
-    enabled: true
-```
-
-This generates two `ScheduleAnyway` (soft) constraints — one per availability zone, one per node — ensuring
-pods are distributed evenly without blocking scheduling when perfect spread is not possible.
-
-To enforce strict spreading (pods won't schedule if spread can't be satisfied), use `DoNotSchedule`:
-
-```yaml
-topologySpreadConstraintsPreset:
-  enabled: true
-  whenUnsatisfiable: DoNotSchedule
-```
-
-For full control over the constraints, use `topologySpreadConstraints` directly — it takes precedence over
-the preset when set:
-
-```yaml
-topologySpreadConstraints:
-  - topologyKey: topology.kubernetes.io/zone
-    maxSkew: 1
-    whenUnsatisfiable: ScheduleAnyway
-    labelSelector:
-      matchLabels:
-        app.kubernetes.io/name: graphdb
-```
-
 ##### Microsoft Azure
 
 We recommend not to use the Microsoft Azure storage of type `azurefile`. The write speeds of this storage type when used in a Kubernetes cluster is

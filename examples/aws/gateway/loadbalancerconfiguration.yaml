@@ -1,0 +1,11 @@
+#
+# Referenced by values.yaml / values_https.yaml via gatewayApi.gateway.infrastructure.parametersRef.
+# Apply this before installing the chart (kubectl apply -f loadbalancerconfiguration.yaml -n <namespace>).
+# Ref: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/gateway/loadbalancerconfig/
+#
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: graphdb-lb-config
+spec:
+  scheme: internet-facing

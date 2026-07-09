@@ -1,0 +1,31 @@
+#
+# This example shows how to deploy a GraphDB cluster and expose its gRPC inter-node port externally
+# via the NGINX Gateway Fabric, using a GRPCRoute.
+#
+# Prerequisites:
+#   A GraphDB Enterprise Edition license, provided as a Kubernetes Secret:
+#     kubectl create secret generic graphdb-license --from-file=graphdb.license=/path/to/graphdb.license
+#
+
+replicas: 3
+
+license:
+  existingSecret: graphdb-license
+
+configuration:
+  externalUrl: http://graphdb.127.0.0.1.nip.io/
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: nginx
+    listeners:
+      grpc:
+        enabled: true
+  httpRoute:
+    enabled: true
+  grpcRoute:
+    enabled: true

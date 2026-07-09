@@ -1,0 +1,21 @@
+{{- if and .Values.gatewayApi.enabled .Values.gatewayApi.gateway.listeners.https.enabled .Values.gatewayApi.gateway.listeners.https.tls.referenceGrant.enabled }}
+{{- if not .Values.gatewayApi.gateway.listeners.https.tls.certificateRefs }}
+{{- fail "gatewayApi.gateway.listeners.https.tls.certificateRefs must contain at least one entry when referenceGrant.enabled is true!" }}
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ include "graphdb.fullname" . }}-tls
+  namespace: {{ required "gatewayApi.gateway.listeners.https.tls.referenceGrant.secretNamespace is required when referenceGrant.enabled is true!" .Values.gatewayApi.gateway.listeners.https.tls.referenceGrant.secretNamespace }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: {{ include "graphdb.namespace" . }}
+  to:
+    - group: ""
+      kind: Secret
+      name: {{ (first .Values.gatewayApi.gateway.listeners.https.tls.certificateRefs).name }}
+{{- end }}

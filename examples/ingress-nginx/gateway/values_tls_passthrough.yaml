@@ -1,0 +1,40 @@
+#
+# This example shows how to deploy GraphDB with TLS passthrough using the NGINX Gateway Fabric.
+# The Gateway forwards the raw TLS connection to GraphDB unterminated (by SNI); GraphDB terminates
+# TLS itself using its own keystore (.Values.configuration.tls.keystore).
+# See https://docs.nginx.com/nginx-gateway-fabric/
+#
+# Prerequisites:
+#   Install the Gateway API CRDs, v1.4.0+ (TLSRoute was promoted to the standard/v1 channel in v1.4.0 -
+#   earlier versions only have it at v1alpha2 in the experimental channel):
+#     kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.0/standard-install.yaml
+#   Install NGINX Gateway Fabric: https://docs.nginx.com/nginx-gateway-fabric/install/helm/
+#     NOTE: NGINX Gateway Fabric only checks for the TLSRoute CRD once at startup - if it's installed
+#     after the controller starts, restart it (kubectl rollout restart deployment/ngf-nginx-gateway-fabric
+#     -n nginx-gateway) or TLSRoute support stays permanently disabled for that process.
+#   A Secret containing GraphDB's own TLS keystore, referenced below via configuration.tls.keystore.
+#
+
+configuration:
+  externalUrl: https://graphdb.127.0.0.1.nip.io/
+  tls:
+    keystore:
+      existingSecret: graphdb-keystore
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: nginx
+    listeners:
+      # Disable the plain HTTP/HTTPS listeners - this example only exposes the TLS passthrough listener.
+      http:
+        enabled: false
+      tls:
+        enabled: true
+  httpRoute:
+    enabled: false
+  tlsRoute:
+    enabled: true

@@ -1,0 +1,31 @@
+{{- if and .Values.gatewayApi.enabled .Values.gatewayApi.grpcRoute.enabled .Values.gatewayApi.gateway.listeners.grpc.enabled (gt (int .Values.replicas) 1) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GRPCRoute
+metadata:
+  name: {{ include "graphdb.fullname" . }}-grpc
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.grpcRoute.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.grpcRoute.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    - name: {{ include "graphdb.fullname" . }}
+      namespace: {{ include "graphdb.namespace" . }}
+      sectionName: grpc
+  {{- with .Values.gatewayApi.grpcRoute.hostnames }}
+  hostnames:
+    {{- range . }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ include "graphdb.fullname.service.headless" . }}
+          port: {{ .Values.headlessService.ports.rpc }}
+{{- end }}

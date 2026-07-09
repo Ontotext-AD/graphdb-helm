@@ -1,0 +1,22 @@
+#
+# This example shows how to deploy GraphDB behind the context path "/graphdb" using the NGINX Gateway Fabric.
+# The URLRewrite filter is automatically configured when a non-root context path is detected in externalUrl.
+# See https://docs.nginx.com/nginx-gateway-fabric/
+#
+# Prerequisites:
+#   Install NGINX Gateway Fabric: https://docs.nginx.com/nginx-gateway-fabric/installation/
+#
+
+configuration:
+  # Note the hostname and the context path
+  externalUrl: http://127.0.0.1.nip.io/graphdb
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: nginx
+  httpRoute:
+    enabled: true

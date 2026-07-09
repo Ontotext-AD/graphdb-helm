@@ -1,0 +1,20 @@
+#
+# Referenced by values_https.yaml via gatewayApi.gateway.infrastructure.parametersRef.
+# Apply this before installing the chart (kubectl apply -f loadbalancerconfiguration_https.yaml -n <namespace>).
+# Ref: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/gateway/loadbalancerconfig/
+#
+# IMPORTANT: AWS ALB's Gateway API implementation does NOT read the Gateway's
+# spec.listeners[].tls.certificateRefs (a Kubernetes Secret) — that field is ignored for the alb
+# GatewayClass. The certificate must be an ACM certificate ARN, configured below, same as the
+# alb.ingress.kubernetes.io/certificate-arn annotation works for classic Ingress.
+#
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: graphdb-lb-config-https
+spec:
+  scheme: internet-facing
+  listenerConfigurations:
+    - protocolPort: HTTPS:443
+      # Replace with a real ACM certificate ARN (issued or imported) covering your externalUrl's host.
+      defaultCertificate: arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID

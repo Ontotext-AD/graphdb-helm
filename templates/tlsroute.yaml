@@ -1,0 +1,36 @@
+{{- if and .Values.gatewayApi.enabled .Values.gatewayApi.tlsRoute.enabled .Values.gatewayApi.gateway.listeners.tls.enabled }}
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: {{ include "graphdb.fullname" . }}-tls
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.tlsRoute.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.tlsRoute.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    - name: {{ include "graphdb.fullname" . }}
+      namespace: {{ include "graphdb.namespace" . }}
+      sectionName: tls
+  {{- with .Values.gatewayApi.tlsRoute.hostnames }}
+  hostnames:
+    {{- range . }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - backendRefs:
+        {{- if gt (int .Values.replicas) 1 }}
+        - name: {{ include "graphdb-proxy.fullname" . }}
+          port: {{ .Values.proxy.service.ports.http }}
+        {{- else }}
+        - name: {{ include "graphdb.fullname" . }}
+          port: {{ .Values.service.ports.http }}
+        {{- end }}
+{{- end }}

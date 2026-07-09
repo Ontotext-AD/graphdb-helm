@@ -1,0 +1,80 @@
+{{- if .Values.gatewayApi.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.gateway.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.gateway.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ required "gatewayApi.gateway.className is required when gatewayApi.enabled is true!" .Values.gatewayApi.gateway.className }}
+  {{- $infra := .Values.gatewayApi.gateway.infrastructure }}
+  {{- if or $infra.labels $infra.annotations $infra.parametersRef }}
+  infrastructure:
+    {{- with $infra.labels }}
+    labels:
+      {{- tpl (toYaml .) $ | nindent 6 }}
+    {{- end }}
+    {{- with $infra.annotations }}
+    annotations:
+      {{- tpl (toYaml .) $ | nindent 6 }}
+    {{- end }}
+    {{- with $infra.parametersRef }}
+    parametersRef:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  listeners:
+    {{- if .Values.gatewayApi.gateway.listeners.http.enabled }}
+    - name: http
+      protocol: HTTP
+      port: {{ .Values.gatewayApi.gateway.listeners.http.port }}
+    {{- end }}
+    {{- if .Values.gatewayApi.gateway.listeners.https.enabled }}
+    - name: https
+      protocol: HTTPS
+      port: {{ .Values.gatewayApi.gateway.listeners.https.port }}
+      tls:
+        mode: {{ .Values.gatewayApi.gateway.listeners.https.tls.mode }}
+        {{- with .Values.gatewayApi.gateway.listeners.https.tls.certificateRefs }}
+        certificateRefs:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+    {{- end }}
+    {{- if and .Values.gatewayApi.gateway.listeners.grpc.enabled (gt (int .Values.replicas) 1) }}
+    - name: grpc
+      protocol: {{ ternary "HTTPS" "HTTP" .Values.gatewayApi.gateway.listeners.grpc.tls.enabled }}
+      port: {{ .Values.gatewayApi.gateway.listeners.grpc.port }}
+      {{- if .Values.gatewayApi.gateway.listeners.grpc.tls.enabled }}
+      tls:
+        mode: {{ .Values.gatewayApi.gateway.listeners.grpc.tls.mode }}
+        {{- with .Values.gatewayApi.gateway.listeners.grpc.tls.certificateRefs }}
+        certificateRefs:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      allowedRoutes:
+        kinds:
+          - kind: GRPCRoute
+    {{- end }}
+    {{- if .Values.gatewayApi.gateway.listeners.tls.enabled }}
+    - name: tls
+      protocol: TLS
+      port: {{ .Values.gatewayApi.gateway.listeners.tls.port }}
+      tls:
+        mode: Passthrough
+      allowedRoutes:
+        kinds:
+          - kind: TLSRoute
+    {{- end }}
+    {{- with .Values.gatewayApi.gateway.extraListeners }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+{{- end }}

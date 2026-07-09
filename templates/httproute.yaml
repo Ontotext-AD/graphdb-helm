@@ -1,0 +1,94 @@
+{{- if and .Values.gatewayApi.enabled .Values.gatewayApi.httpRoute.enabled }}
+{{- $external_url := urlParse (include "graphdb.external-url" .) -}}
+{{- $host := coalesce .Values.gatewayApi.httpRoute.host $external_url.host -}}
+{{- $path := coalesce .Values.gatewayApi.httpRoute.path $external_url.path "/" -}}
+{{- $redirect := and .Values.gatewayApi.httpRoute.httpsRedirect .Values.gatewayApi.gateway.listeners.http.enabled .Values.gatewayApi.gateway.listeners.https.enabled -}}
+{{- if $redirect }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "graphdb.fullname" . }}-http-redirect
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.httpRoute.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.httpRoute.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    - name: {{ include "graphdb.fullname" . }}
+      namespace: {{ include "graphdb.namespace" . }}
+      sectionName: http
+  hostnames:
+    - {{ $host }}
+    {{- range .Values.gatewayApi.httpRoute.extraHostnames }}
+    - {{ . }}
+    {{- end }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+---
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.httpRoute.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.httpRoute.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- if and .Values.gatewayApi.gateway.listeners.http.enabled (not $redirect) }}
+    - name: {{ include "graphdb.fullname" . }}
+      namespace: {{ include "graphdb.namespace" . }}
+      sectionName: http
+    {{- end }}
+    {{- if .Values.gatewayApi.gateway.listeners.https.enabled }}
+    - name: {{ include "graphdb.fullname" . }}
+      namespace: {{ include "graphdb.namespace" . }}
+      sectionName: https
+    {{- end }}
+  hostnames:
+    - {{ $host }}
+    {{- range .Values.gatewayApi.httpRoute.extraHostnames }}
+    - {{ . }}
+    {{- end }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ $path }}
+      {{- if and (ne $path "/") (ne $path "") }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      {{- end }}
+      backendRefs:
+        {{- if gt (int .Values.replicas) 1 }}
+        - name: {{ include "graphdb-proxy.fullname" . }}
+          port: {{ .Values.proxy.service.ports.http }}
+        {{- else }}
+        - name: {{ include "graphdb.fullname" . }}
+          port: {{ .Values.service.ports.http }}
+        {{- end }}
+    {{- with .Values.gatewayApi.httpRoute.extraRules }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+{{- end }}

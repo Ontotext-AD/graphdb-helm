@@ -633,6 +633,185 @@ ingress:
   # Values are processed as Helm templates.
   extraTLS: []
 
+# Kubernetes Gateway API configuration.
+# Gateway API is the successor to Ingress, providing more expressive, role-oriented and extensible traffic routing.
+# Requires Gateway API CRDs to be installed: https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api
+# Ref: https://gateway-api.sigs.k8s.io/
+gatewayApi:
+  # Toggles the deployment of all Gateway API resources.
+  enabled: false
+
+  # Configurations for the Gateway resource.
+  # The Gateway defines the load balancer and its listeners.
+  # Ref: https://gateway-api.sigs.k8s.io/api-types/gateway/
+  gateway:
+    # GatewayClass name — specifies the controller that manages this Gateway.
+    # Depends on the Gateway controller installed in the cluster.
+    # Common values: nginx, cilium, istio, kong, traefik
+    # AWS EKS: eks, GKE: gke-l7-global-external-managed, Azure: azure-application-lb
+    # This field is required when gatewayApi.enabled is true.
+    className: ""
+    # Additional labels for the Gateway resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the Gateway resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # Infrastructure-level configuration for the Gateway resource (Gateway API v1 GA field).
+    # Gateway controllers that need implementation-specific configuration (e.g. the AWS Load Balancer
+    # Controller's LoadBalancerConfiguration CRD for ALB scheme/subnets/IP address type) read it from here
+    # instead of Gateway annotations — annotations on the Gateway resource itself are NOT read by most
+    # Gateway API implementations (e.g. the AWS ALB Gateway controller ignores alb.ingress.kubernetes.io/*
+    # annotations entirely; those only apply to the Ingress resource).
+    # Ref: https://gateway-api.sigs.k8s.io/api-types/gateway/#gateway-infrastructure
+    infrastructure:
+      # Labels propagated to the underlying infrastructure (e.g. the cloud load balancer), where supported.
+      labels: {}
+      # Annotations propagated to the underlying infrastructure, where supported.
+      annotations: {}
+      # Reference to an implementation-specific parameters resource.
+      # Example for AWS ALB (requires the referenced LoadBalancerConfiguration to exist):
+      # parametersRef:
+      #   group: gateway.k8s.aws
+      #   kind: LoadBalancerConfiguration
+      #   name: graphdb-lb-config
+      parametersRef: {}
+    listeners:
+      # HTTP listener configuration.
+      http:
+        enabled: true
+        port: 80
+      # HTTPS listener configuration with TLS termination at the Gateway.
+      # Ref: https://gateway-api.sigs.k8s.io/guides/tls/
+      https:
+        enabled: false
+        port: 443
+        tls:
+          # TLS termination mode.
+          # - Terminate: Gateway terminates TLS, forwards plain HTTP to the backend.
+          # - Passthrough: Gateway forwards TLS traffic as-is, backend terminates TLS.
+          mode: Terminate
+          # References to Kubernetes Secret objects containing TLS certificates.
+          # Each entry requires a name. Specify namespace only when the Secret is in a different namespace
+          # (requires a ReferenceGrant in the Secret's namespace).
+          #
+          # Example:
+          # certificateRefs:
+          #   - name: graphdb-tls-secret
+          #     namespace: ""
+          certificateRefs: []
+          # When the TLS Secret is in a different namespace than the Gateway, a ReferenceGrant
+          # must exist in the Secret's namespace to allow cross-namespace reference.
+          # Ref: https://gateway-api.sigs.k8s.io/api-types/referencegrant/
+          referenceGrant:
+            # Toggles creation of a ReferenceGrant in the Secret's namespace.
+            enabled: false
+            # Namespace where the TLS Secret lives. Required when referenceGrant.enabled is true.
+            secretNamespace: ""
+      # gRPC listener for GraphDB cluster inter-node communication.
+      # Only applicable when .Values.replicas > 1.
+      # Ref: https://gateway-api.sigs.k8s.io/api-types/grpcroute/
+      grpc:
+        enabled: false
+        port: 7300
+        # TLS termination for the gRPC listener (protocol becomes HTTPS instead of HTTP).
+        # Required on AWS: its Gateway API implementation only sets the target group's protocolVersion
+        # to GRPC (needed for correct health checks against a real gRPC backend) when the listener uses
+        # HTTPS - a plain HTTP listener always gets protocolVersion HTTP1, which fails health checks.
+        # Not required on Azure/NGINX Gateway Fabric.
+        tls:
+          enabled: false
+          mode: Terminate
+          certificateRefs: []
+      # TLS passthrough listener. The Gateway forwards the raw TLS connection to GraphDB unterminated,
+      # using SNI for routing; GraphDB terminates TLS itself using .Values.configuration.tls.keystore.
+      # Requires the Gateway API experimental channel (TLSRoute is not yet part of the standard channel).
+      # Ref: https://gateway-api.sigs.k8s.io/api-types/tlsroute/
+      tls:
+        enabled: false
+        port: 8443
+    # Additional listeners to append to the Gateway.
+    # Values are processed as Helm templates.
+    extraListeners: []
+
+  # Configurations for the HTTPRoute resource.
+  # Routes HTTP/HTTPS traffic to the GraphDB backend.
+  # Ref: https://gateway-api.sigs.k8s.io/api-types/httproute/
+  httpRoute:
+    enabled: true
+    # Additional labels for the HTTPRoute resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the HTTPRoute resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # If set, overrides the host derived from .Values.configuration.externalUrl.
+    host: ""
+    # If set, overrides the context path derived from .Values.configuration.externalUrl.
+    # When non-root (e.g. /graphdb), a URLRewrite filter is automatically added to strip the prefix.
+    path: ""
+    # Additional hostnames to include in the HTTPRoute.
+    extraHostnames: []
+    # Additional rules to append to the HTTPRoute.
+    # Values are processed as Helm templates.
+    extraRules: []
+    # When true, redirects all HTTP traffic to HTTPS with a 301 redirect.
+    # Requires both gatewayApi.gateway.listeners.http.enabled and
+    # gatewayApi.gateway.listeners.https.enabled to be true.
+    httpsRedirect: false
+
+  # Configurations for the GRPCRoute resource.
+  # Routes gRPC traffic to GraphDB cluster nodes for inter-node communication.
+  # Only applicable when .Values.replicas > 1 and gatewayApi.gateway.listeners.grpc.enabled is true.
+  # Ref: https://gateway-api.sigs.k8s.io/api-types/grpcroute/
+  grpcRoute:
+    enabled: false
+    # Additional labels for the GRPCRoute resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the GRPCRoute resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # Hostnames for gRPC routing. If empty, matches all hostnames on the gRPC listener.
+    hostnames: []
+
+  # Configurations for the TLSRoute resource.
+  # Routes passthrough TLS traffic (by SNI) to the GraphDB backend, which terminates TLS itself.
+  # Only applicable when gatewayApi.gateway.listeners.tls.enabled is true.
+  # Requires the Gateway API experimental channel to be installed (TLSRoute is not yet part of the
+  # standard channel): https://github.com/kubernetes-sigs/gateway-api/releases - experimental-install.yaml
+  # Ref: https://gateway-api.sigs.k8s.io/api-types/tlsroute/
+  tlsRoute:
+    enabled: false
+    # Additional labels for the TLSRoute resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the TLSRoute resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # Hostnames (SNI) for TLS routing. If empty, matches all hostnames on the TLS listener.
+    hostnames: []
+
+  # Configurations for the AWS Load Balancer Controller's TargetGroupConfiguration resource.
+  # Required when gatewayApi.gateway.className targets the AWS ALB Gateway controller (gateway.k8s.aws/alb):
+  # its Gateway API implementation ignores Ingress-style alb.ingress.kubernetes.io/* annotations and instead
+  # reads target group settings (e.g. targetType) from this CRD. Without it, target-type defaults to
+  # "instance", which requires a NodePort/LoadBalancer Service and fails against this chart's ClusterIP Service.
+  # Ref: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/gateway/targetgroupconfig/
+  targetGroupConfiguration:
+    enabled: false
+    # Additional labels for the TargetGroupConfiguration resource.
+    labels: {}
+    # Additional annotations for the TargetGroupConfiguration resource.
+    annotations: {}
+    # spec.defaultConfiguration passthrough. Values are processed as Helm templates.
+    # Example:
+    # defaultConfiguration:
+    #   targetType: ip
+    #   healthCheckConfig:
+    #     healthCheckPath: /
+    defaultConfiguration: {}
+
 ##########################
 # Service Configurations #
 ##########################

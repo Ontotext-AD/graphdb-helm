@@ -1,0 +1,20 @@
+#
+# This example shows how to deploy and expose GraphDB using the NGINX Gateway Fabric.
+# See https://docs.nginx.com/nginx-gateway-fabric/
+#
+# Prerequisites:
+#   Install NGINX Gateway Fabric: https://docs.nginx.com/nginx-gateway-fabric/installation/
+#
+
+configuration:
+  externalUrl: http://graphdb.127.0.0.1.nip.io/
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: nginx
+  httpRoute:
+    enabled: true

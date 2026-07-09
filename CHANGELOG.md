@@ -4,6 +4,10 @@
 
 ## New
 
+- Added Kubernetes Gateway API support as an alternative to Ingress. Controlled via
+  the new `gatewayApi.*` values block. Supports HTTP, HTTPS with TLS termination, TLS passthrough,
+  context path URL rewriting, and gRPC cluster communication. Added cloud-specific examples for
+  NGINX Gateway Fabric, AWS, and Azure.
 - Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the
 `graphdb.auth.security.enabled` property, which prevents users from disabling security via the
 Workbench or REST API.

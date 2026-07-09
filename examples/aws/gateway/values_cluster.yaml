@@ -1,0 +1,57 @@
+#
+# This example shows how to deploy a GraphDB cluster and expose its gRPC inter-node port externally
+# via the AWS Load Balancer Controller Gateway API support.
+#
+# Prerequisites:
+#   AWS Load Balancer Controller v2.13+ installed with Gateway API support enabled.
+#   A GraphDB Enterprise Edition license, provided as a Kubernetes Secret:
+#     kubectl create secret generic graphdb-license --from-file=graphdb.license=/path/to/graphdb.license
+#   A TLS Secret for the gRPC listener (see note below):
+#     kubectl create secret tls graphdb-tls --cert=path/to/cert.pem --key=path/to/key.pem
+#
+# NOTE: AWS's Gateway API implementation only sets the target group's protocolVersion to GRPC (required
+# for correct health checks against a real gRPC backend) when the listener uses HTTPS - a plain HTTP
+# listener always gets protocolVersion HTTP1, which fails health checks against gRPC. This is why the
+# grpc listener below terminates TLS, unlike the Azure/NGINX cluster examples. Port must be 7300 or any
+# port of your choice; AWS (unlike Azure) does not restrict Gateway listener ports.
+#
+
+replicas: 3
+
+license:
+  existingSecret: graphdb-license
+
+configuration:
+  externalUrl: http://ip.address.nip.io/
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: alb
+    infrastructure:
+      parametersRef:
+        group: gateway.k8s.aws
+        kind: LoadBalancerConfiguration
+        name: graphdb-lb-config-cluster
+    listeners:
+      grpc:
+        enabled: true
+        tls:
+          enabled: true
+          # certificateRefs is required by the Gateway API schema, but AWS ALB ignores it — the actual
+          # certificate is the ACM ARN configured in loadbalancerconfiguration_cluster.yaml. This name
+          # doesn't need to resolve to a real Secret for AWS.
+          certificateRefs:
+            - name: graphdb-tls
+  httpRoute:
+    enabled: true
+  grpcRoute:
+    enabled: true
+
+  targetGroupConfiguration:
+    enabled: true
+    defaultConfiguration:
+      targetType: ip

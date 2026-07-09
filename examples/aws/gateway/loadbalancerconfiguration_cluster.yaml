@@ -1,0 +1,18 @@
+#
+# Referenced by values_cluster.yaml via gatewayApi.gateway.infrastructure.parametersRef.
+# Apply this before installing the chart (kubectl apply -f loadbalancerconfiguration_cluster.yaml -n <namespace>).
+# Ref: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/gateway/loadbalancerconfig/
+#
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: graphdb-lb-config-cluster
+spec:
+  scheme: internet-facing
+  listenerConfigurations:
+    - protocolPort: HTTPS:7300
+      # Replace with a real ACM certificate ARN (issued or imported). Required for the gRPC listener,
+      # which must terminate TLS on AWS - the target group only gets the correct protocolVersion (GRPC)
+      # when its listener is HTTPS; a plain HTTP grpc listener always gets protocolVersion HTTP1 and
+      # fails health checks against a real gRPC backend.
+      defaultCertificate: arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID

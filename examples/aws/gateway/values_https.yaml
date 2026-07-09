@@ -1,0 +1,51 @@
+#
+# This example shows how to deploy and expose GraphDB with the AWS Load Balancer Controller Gateway API support (HTTPS).
+# TLS is terminated at the Gateway using an AWS ACM certificate. AWS ALB's Gateway API implementation
+# does NOT support Kubernetes-Secret-based certificates (spec.listeners[].tls.certificateRefs is ignored) —
+# the certificate must be configured as an ACM ARN via loadbalancerconfiguration_https.yaml.
+# See https://kubernetes-sigs.github.io/aws-load-balancer-controller/
+#
+# Prerequisites:
+#   AWS Load Balancer Controller v2.13+ installed with Gateway API support enabled.
+#   An ACM certificate provisioned or imported, with its ARN set in loadbalancerconfiguration_https.yaml.
+#   Apply loadbalancerconfiguration_https.yaml from this folder before installing this example.
+#
+
+configuration:
+  externalUrl: https://your-domain.example.com/
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: alb
+    # ALB's Gateway API implementation does NOT read alb.ingress.kubernetes.io/* annotations (those only
+    # apply to the Ingress resource). Scheme and the ACM certificate are set via a LoadBalancerConfiguration
+    # CRD referenced here. Apply loadbalancerconfiguration_https.yaml from this folder before installing.
+    infrastructure:
+      parametersRef:
+        group: gateway.k8s.aws
+        kind: LoadBalancerConfiguration
+        name: graphdb-lb-config-https
+    listeners:
+      http:
+        enabled: false
+      https:
+        enabled: true
+        tls:
+          # certificateRefs is required by the Gateway API schema, but AWS ALB ignores it — the actual
+          # certificate is the ACM ARN configured in loadbalancerconfiguration_https.yaml. This name
+          # doesn't need to resolve to a real Secret for AWS.
+          certificateRefs:
+            - name: graphdb-tls
+  httpRoute:
+    enabled: true
+
+  # Required for ALB: without it, target-type defaults to "instance", which needs a NodePort/LoadBalancer
+  # Service and fails against this chart's ClusterIP Service.
+  targetGroupConfiguration:
+    enabled: true
+    defaultConfiguration:
+      targetType: ip

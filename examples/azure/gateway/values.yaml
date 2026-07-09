@@ -1,0 +1,31 @@
+#
+# This example shows how to deploy and expose GraphDB using Azure Application Gateway for Containers (HTTP).
+# See https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/overview
+#
+# Prerequisites:
+#   Azure Application Gateway for Containers provisioned and the ALB Controller installed.
+#   Ref: https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller
+#
+
+configuration:
+  # Change this to your Azure DNS domain name or use nip.io after deployment by mapping
+  # the public IP of the Application Gateway for Containers.
+  externalUrl: http://ip.address.nip.io/
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    # "azure-alb-external" if using the AKS-managed ALB Controller add-on (recommended, requires this
+    # exact name - the controller rejects any other GatewayClass name). If you installed the ALB
+    # Controller yourself via Helm (BYO), use whatever name you chose for your own GatewayClass instead.
+    className: azure-alb-external
+    annotations:
+      # Reference to the ApplicationLoadBalancer resource managing this Gateway.
+      # Required for both the AKS-managed add-on and a self-managed (BYO) ALB Controller installation.
+      alb.networking.azure.io/alb-namespace: azure-alb-system
+      alb.networking.azure.io/alb-name: graphdb-alb
+  httpRoute:
+    enabled: true

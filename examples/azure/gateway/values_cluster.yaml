@@ -1,0 +1,39 @@
+#
+# This example shows how to deploy a GraphDB cluster and expose its gRPC inter-node port externally
+# via Application Gateway for Containers, using a GRPCRoute.
+#
+# Prerequisites:
+#   A GraphDB Enterprise Edition license, provided as a Kubernetes Secret:
+#     kubectl create secret generic graphdb-license --from-file=graphdb.license=/path/to/graphdb.license
+#
+# Note: Azure's ALB Controller only allows listener ports 80 or 443 (see gatewayApi.gateway.listeners.grpc.port
+# below) - the chart's own default of 7300 (matching the cluster's internal RPC port) is rejected by Azure.
+#
+
+replicas: 3
+
+license:
+  existingSecret: graphdb-license
+
+configuration:
+  externalUrl: http://ip.address.nip.io/
+
+ingress:
+  enabled: false
+
+gatewayApi:
+  enabled: true
+  gateway:
+    className: azure-alb-external
+    annotations:
+      alb.networking.azure.io/alb-namespace: azure-alb-system
+      alb.networking.azure.io/alb-name: graphdb-alb
+    listeners:
+      grpc:
+        enabled: true
+        # Azure only allows 80 or 443 on a Gateway listener - not the cluster's actual RPC port (7300).
+        port: 443
+  httpRoute:
+    enabled: true
+  grpcRoute:
+    enabled: true

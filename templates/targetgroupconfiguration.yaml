@@ -1,0 +1,54 @@
+{{- if and .Values.gatewayApi.enabled .Values.gatewayApi.targetGroupConfiguration.enabled }}
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.targetGroupConfiguration.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.targetGroupConfiguration.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  targetReference:
+    {{- if gt (int .Values.replicas) 1 }}
+    name: {{ include "graphdb-proxy.fullname" . }}
+    {{- else }}
+    name: {{ include "graphdb.fullname" . }}
+    {{- end }}
+  {{- with .Values.gatewayApi.targetGroupConfiguration.defaultConfiguration }}
+  defaultConfiguration:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+{{- if and .Values.gatewayApi.grpcRoute.enabled .Values.gatewayApi.gateway.listeners.grpc.enabled (gt (int .Values.replicas) 1) }}
+---
+# The GRPCRoute backs onto the headless Service (for cluster inter-node gRPC), which is a separate
+# Service from the one covered above - it needs its own TargetGroupConfiguration for the same reason.
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ include "graphdb.fullname" . }}-grpc
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gatewayApi.targetGroupConfiguration.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gatewayApi.targetGroupConfiguration.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  targetReference:
+    name: {{ include "graphdb.fullname.service.headless" . }}
+  {{- $grpcDefaults := dict "protocolVersion" "GRPC" }}
+  {{- with mergeOverwrite $grpcDefaults (deepCopy .Values.gatewayApi.targetGroupConfiguration.defaultConfiguration) }}
+  defaultConfiguration:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

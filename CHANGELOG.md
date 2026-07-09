@@ -5,13 +5,18 @@
 ## New
 
 - Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the
-`graphdb.auth.security.enabled` property, which prevents users from disabling security via the
-Workbench or REST API.
+  `graphdb.auth.security.enabled` property, which prevents users from disabling security via the
+  Workbench or REST API.
 - Added encryption at rest configuration
 - Added `publishNotReadyAddresses` to `service`, `headlessService`, `proxy.service` and `proxy.headlessService`.
   Headless services default to `true` to allow cluster nodes to communicate before readiness probes pass,
   enabling proper startup sequencing during rolling upgrades.
 
+## Version 12.4.1
+
+### New
+
+- Updated to GraphDB [11.4.1](https://graphdb.ontotext.com/documentation/11.3/release-notes.html#graphdb-11-4-1)
 
 ## Version 12.4.0
 

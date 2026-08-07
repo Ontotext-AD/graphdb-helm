@@ -12,6 +12,12 @@
   Headless services default to `true` to allow cluster nodes to communicate before readiness probes pass,
   enabling proper startup sequencing during rolling upgrades.
 
+## Version 12.4.3
+
+### New
+
+- Updated to GraphDB [11.4.3](https://graphdb.ontotext.com/documentation/11.3/release-notes.html#graphdb-11-4-3)
+
 ## Version 12.4.2
 
 ### New

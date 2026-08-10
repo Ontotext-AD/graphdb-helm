@@ -227,8 +227,28 @@ spec:
       {{- with .Values.proxy.tolerations }}
       tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.proxy.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- if or .Values.proxy.topologySpreadConstraints .Values.proxy.topologySpreadConstraintsPreset.enabled }}
+      topologySpreadConstraints:
+        {{- if .Values.proxy.topologySpreadConstraints }}
+          {{- tpl (toYaml .Values.proxy.topologySpreadConstraints) $ | nindent 8 }}
+        {{- else }}
+        - labelSelector:
+            matchLabels:
+              {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
+          matchLabelKeys:
+            - pod-template-hash
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
+          whenUnsatisfiable: {{ .Values.proxy.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+        - labelSelector:
+            matchLabels:
+              {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
+          matchLabelKeys:
+            - pod-template-hash
+          topologyKey: kubernetes.io/hostname
+          maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
+          whenUnsatisfiable: {{ .Values.proxy.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+        {{- end }}
       {{- end }}
       {{- with .Values.proxy.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}

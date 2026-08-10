@@ -264,8 +264,28 @@ spec:
       {{- with .Values.tolerations }}
       tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- if or .Values.topologySpreadConstraints .Values.topologySpreadConstraintsPreset.enabled }}
+      topologySpreadConstraints:
+        {{- if .Values.topologySpreadConstraints }}
+          {{- tpl (toYaml .Values.topologySpreadConstraints) $ | nindent 8 }}
+        {{- else }}
+        - labelSelector:
+            matchLabels:
+              {{- include "graphdb.selectorLabels" . | nindent 14 }}
+          matchLabelKeys:
+            - pod-template-hash
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: {{ .Values.topologySpreadConstraintsPreset.maxSkew }}
+          whenUnsatisfiable: {{ .Values.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+        - labelSelector:
+            matchLabels:
+              {{- include "graphdb.selectorLabels" . | nindent 14 }}
+          matchLabelKeys:
+            - pod-template-hash
+          topologyKey: kubernetes.io/hostname
+          maxSkew: {{ .Values.topologySpreadConstraintsPreset.maxSkew }}
+          whenUnsatisfiable: {{ .Values.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+        {{- end }}
       {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}

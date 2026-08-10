@@ -1023,6 +1023,18 @@ tolerations: []
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
 topologySpreadConstraints: []
 
+# Default topology spread constraints preset ensuring GraphDB pods are spread across availability zones and nodes.
+# When enabled and topologySpreadConstraints is empty, two constraints are generated:
+# - Spread across availability zones (topology.kubernetes.io/zone)
+# - Spread across nodes (kubernetes.io/hostname)
+# Useful for cloud deployments on AWS/Azure/GCP with multiple availability zones.
+# Note: topologySpreadConstraints takes precedence over this preset when set.
+# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+topologySpreadConstraintsPreset:
+  enabled: false
+  maxSkew: 1
+  whenUnsatisfiable: ScheduleAnyway
+
 ##########################
 # Resource Configuration #
 ##########################
@@ -1640,6 +1652,18 @@ proxy:
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
   topologySpreadConstraints: []
+
+  # Default topology spread constraints preset ensuring GraphDB proxy pods are spread across availability zones and nodes.
+  # When enabled and topologySpreadConstraints is empty, two constraints are generated:
+  # - Spread across availability zones (topology.kubernetes.io/zone)
+  # - Spread across nodes (kubernetes.io/hostname)
+  # Useful for cloud deployments on AWS/Azure/GCP with multiple availability zones.
+  # Note: topologySpreadConstraints takes precedence over this preset when set.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+  topologySpreadConstraintsPreset:
+    enabled: false
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
 
   ##########################
   # Resource Configuration #

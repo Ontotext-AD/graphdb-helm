@@ -1,5 +1,13 @@
 # GraphDB Helm chart release notes
 
+## Version 12.6.0
+
+## New
+
+- Added `security.oauth2` value for running operations using SSO when basic auth is disabled. It fetches a token
+  from a provided oauth2 endpoint. This resolves hanging backup and cluster operations in environments with
+  strict security requirements.
+
 ## Version 12.5.0
 
 ## New

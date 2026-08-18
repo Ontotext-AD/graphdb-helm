@@ -411,6 +411,19 @@ security:
   # Use this only if you want the users Secret to be your source of truth.
   overrideUsers: false
 
+  # Machine-to-machine integration for SSO-only systems. Currently, works with OIDC.
+  # This allows automated jobs, such as backups, to be executed in systems where basic auth is disabled.
+  m2m:
+    enabled: false
+    # Provide a secret containing the tenant, scope, login url and client secret.
+    existingSecret: ""
+    clientIdKey: ""
+    clientSecretKey: ""
+    # Specific SSO login URL - e.g. `login.microsoftonline.com` or `signin.aws.amazon.com`
+    loginUrlKey: ""
+    scopeKey: ""
+
+
 ##################################
 # GraphDB Cluster Configurations #
 ##################################
@@ -861,6 +874,10 @@ backup:
     existingPVC: ""
     # Defines the volume path within the backup pod when mounting the existing PVC for local backups.
     mountPath: /opt/graphdb/backups/
+
+  restore:
+    enabled: false
+    filename: ""
 
   # Defines the number of successful backup jobs to keep.
   #

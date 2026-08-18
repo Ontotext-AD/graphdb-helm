@@ -875,10 +875,6 @@ backup:
     # Defines the volume path within the backup pod when mounting the existing PVC for local backups.
     mountPath: /opt/graphdb/backups/
 
-  restore:
-    enabled: false
-    filename: ""
-
   # Defines the number of successful backup jobs to keep.
   #
   # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#jobs-history-limits

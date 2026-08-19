@@ -410,6 +410,9 @@ spec:
           {{- with .Values.proxy.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.proxy.lifecycle }}
+          lifecycle: {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if .Values.proxy.startupProbe }}
           startupProbe: {{- include "graphdb-proxy.probes.startup" . | nindent 12 }}
           {{- end }}

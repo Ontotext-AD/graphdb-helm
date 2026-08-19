@@ -516,6 +516,9 @@ spec:
           {{- with .Values.securityContext }}
           securityContext: {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.lifecycle }}
+          lifecycle: {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if .Values.startupProbe }}
           startupProbe: {{- include "graphdb.probes.startup" . | nindent 12 }}
           {{- end }}

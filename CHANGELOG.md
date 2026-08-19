@@ -11,6 +11,9 @@
 - Added `publishNotReadyAddresses` to `service`, `headlessService`, `proxy.service` and `proxy.headlessService`.
   Headless services default to `true` to allow cluster nodes to communicate before readiness probes pass,
   enabling proper startup sequencing during rolling upgrades.
+- Added `lifecycle` and `proxy.lifecycle` values to configure container lifecycle hooks (`postStart`, `preStop`)
+  for the GraphDB and GraphDB proxy containers. A typical use case is a `preStop` sleep on the proxy to drain
+  in-flight connections before pod shutdown during rolling updates.
 
 ## Version 12.4.3
 

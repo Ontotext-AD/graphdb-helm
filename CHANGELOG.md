@@ -4,6 +4,7 @@
 
 ## New
 
+- Updated to GraphDB [11.5.0](https://graphdb.ontotext.com/documentation/11.5/release-notes.html#graphdb-11-5-0)
 - Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the
   `graphdb.auth.security.enabled` property, which prevents users from disabling security via the
   Workbench or REST API.
@@ -19,19 +20,19 @@
 
 ### New
 
-- Updated to GraphDB [11.4.3](https://graphdb.ontotext.com/documentation/11.3/release-notes.html#graphdb-11-4-3)
+- Updated to GraphDB [11.4.3](https://graphdb.ontotext.com/documentation/11.4/release-notes.html#graphdb-11-4-3)
 
 ## Version 12.4.2
 
 ### New
 
-- Updated to GraphDB [11.4.2](https://graphdb.ontotext.com/documentation/11.3/release-notes.html#graphdb-11-4-2)
+- Updated to GraphDB [11.4.2](https://graphdb.ontotext.com/documentation/11.4/release-notes.html#graphdb-11-4-2)
 
 ## Version 12.4.1
 
 ### New
 
-- Updated to GraphDB [11.4.1](https://graphdb.ontotext.com/documentation/11.3/release-notes.html#graphdb-11-4-1)
+- Updated to GraphDB [11.4.1](https://graphdb.ontotext.com/documentation/11.4/release-notes.html#graphdb-11-4-1)
 
 ## Version 12.4.0
 

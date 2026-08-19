@@ -901,6 +901,15 @@ revisionHistoryLimit: 10
 # Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination
 terminationGracePeriodSeconds: 120
 
+# Configures the GraphDB container lifecycle hooks (postStart, preStop).
+# When using a preStop sleep for connection draining, ensure the sleep duration is less than terminationGracePeriodSeconds.
+# Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+lifecycle: {}
+# lifecycle:
+#   preStop:
+#     exec:
+#       command: ["/bin/sh", "-c", "sleep 115"]
+
 # Toggles the auto mounting of API credentials token into the Pods.
 # Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
 # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#opt-out-of-api-credential-automounting
@@ -1523,6 +1532,15 @@ proxy:
   # Grace period in seconds before terminating the proxy Pods.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination
   terminationGracePeriodSeconds: 30
+
+  # Configures the GraphDB proxy container lifecycle hooks (postStart, preStop).
+  # When using a preStop sleep for connection draining, ensure the sleep duration is less than terminationGracePeriodSeconds.
+  # Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+  lifecycle: {}
+  # lifecycle:
+  #   preStop:
+  #     exec:
+  #       command: ["/bin/sh", "-c", "sleep 25"]
 
   # Overrides the default Kubernetes scheduler.
   # See https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/#specify-schedulers-for-pods

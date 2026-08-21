@@ -71,11 +71,20 @@ function createCluster {
 
   waitAllNodes "$node_count"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   echo "Creating cluster"
   response=$(mktemp)
   curl -k -o "$response" -isSL -m "${timeout}" -X POST \
        -d @"$configLocation" \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: */*' \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config"
@@ -98,8 +107,17 @@ function waitService {
   local attempt_counter=0
   local max_attempts=100
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   echo "Waiting for ${address}"
-  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: ${authorization}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]];then
       echo "Max attempts reached"
       exit 1
@@ -129,6 +147,15 @@ function createRepositoryFromFile {
 
   waitAllNodes "$node_count"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   echo "Creating repositories"
   for filename in ${repositoriesConfigsLocation}/*.ttl; do
     repositoryName=$(grep "rep:repositoryID" "${filename}" | sed -ne 's/rep:repositoryID "//p' | sed -ne 's/" ;//p' | sed -ne 's/^[[:space:]]*//p')
@@ -137,7 +164,7 @@ function createRepositoryFromFile {
     response=$(
       curl -k -X POST --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
            -F config=@"${filename}" \
-           -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+           -H "Authorization: ${authorization}" \
            -H 'Content-Type: multipart/form-data' \
            "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
     )
@@ -182,7 +209,7 @@ function cloudBackup {
   local backup_options=
   backup_options=$(interpolate < "$1")
 
-  access_token=gdb_get_m2m_token
+  access_token=$(gdb_get_m2m_token)
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -224,11 +251,20 @@ function createIndicesFromFiles() {
 
   waitAllNodes "$node_count"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   for filename in "${indicesConfigsLocation}"/*; do
     repository="$(basename "$filename")"
     response=$(
       curl --connect-timeout 60 --retry 3 --retry-all-errors --retry-delay 10 \
-        -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+        --header "Authorization: ${authorization}" \
         -H 'Accept: application/json' \
         -H 'Content-Type: application/sparql-update' \
         --data-binary @"${filename}" \
@@ -261,7 +297,7 @@ function localBackup() {
   local backup_path
   backup_path="${2%/}/$BACKUP_NAME"
 
-  access_token=gdb_get_m2m_token
+  access_token=$(gdb_get_m2m_token)
   local authorization=
 
   log "Creating local backup ${backup_path}"

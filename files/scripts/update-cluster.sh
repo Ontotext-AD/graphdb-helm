@@ -4,6 +4,58 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+function gdb_get_m2m_token() {
+  local client_id="${M2M_CLIENT_ID}"
+  local client_secret="${M2M_CLIENT_SECRET}"
+  local login_url="${M2M_LOGIN_URL}"
+  local scope="${M2M_SCOPE}"
+
+  if [[ -z "${client_id}" || "${client_id}" == "null" ]]; then
+    log "M2M: missing M2M_CLIENT_ID; falling back to basic auth"
+    echo 1
+  fi
+
+  if [[ -z "${client_secret}" || "${client_secret}" == "null" ]]; then
+    log "M2M: missing M2M_CLIENT_SECRET; falling back to basic auth"
+    echo 1
+  fi
+
+  if [[ -z "${scope}" || "${scope}" == "null" ]]; then
+    log "M2M: missing scope (M2M_SCOPE or AppConfig key m2m-app-scope); falling back to basic auth"
+    echo 1
+  fi
+
+  if [[ -z "${login_url}" || "${login_url}" == "null" ]]; then
+    log "M2M: missing login url; falling back to basic auth"
+    echo 1
+  fi
+
+  local token_response
+  token_response="$(curl -sS -X POST "${login_url}" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    --data-urlencode "client_id=${client_id}" \
+    --data-urlencode "client_secret=${client_secret}" \
+    --data-urlencode "scope=${scope}" \
+    --data-urlencode "grant_type=client_credentials" 2>/dev/null || true)"
+
+  local token
+  token="$(echo "${token_response}" | jq -r '.access_token // empty' 2>/dev/null || true)"
+
+  if [[ -z "${token}" ]]; then
+    local err desc
+    err="$(echo "${token_response}" | jq -r '.error // empty' 2>/dev/null || true)"
+    desc="$(echo "${token_response}" | jq -r '.error_description // empty' 2>/dev/null || true)"
+    if [[ -n "${err}" || -n "${desc}" ]]; then
+      log "M2M: token request failed (${err:-unknown}): ${desc:-no description}"
+    else
+      log "M2M: token request failed (no access_token in response)"
+    fi
+    echo 1
+  fi
+
+  printf '%s' "${token}"
+}
+
 function patchCluster {
   local configLocation=$1
   local timeout=$2
@@ -11,10 +63,19 @@ function patchCluster {
 
   waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   echo "Patching cluster"
   response=$(mktemp)
   curl -k -o "$response" -isSL -m "$timeout" -X PATCH \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        -d @"$configLocation" \
@@ -40,6 +101,15 @@ function removeNodes {
   local dns_suffix
   dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
   local response
+
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
 
   echo "Cluster reported: $currentNodes current nodes"
   echo "Cluster is expected to have: $expectedNodes nodes"
@@ -72,7 +142,7 @@ function removeNodes {
   curl -k -o "$response" -isSL -m 15 -X DELETE \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        -d "${nodes}" \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
@@ -95,6 +165,15 @@ function addNodes {
   local dns_suffix
   dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
   local response
+
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
 
   echo "Cluster reported: $currentNodes current nodes"
   echo "Cluster is expected to have: $expectedNodes nodes"
@@ -120,7 +199,7 @@ function addNodes {
   curl -k -o "$response" -isSL -m "${timeout}" -X POST \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        -d "${nodes}" \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
@@ -143,10 +222,19 @@ function addNodes {
 function deleteCluster {
   waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   local response
   response=$(mktemp)
   curl -k -o "$response" -isSL -m 15 -X DELETE \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Accept: */*' \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config?force=false"
 
@@ -167,11 +255,20 @@ function getNodeCountInCurrentCluster {
 
   waitService "${node_address}/rest/repositories"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   local response
   response=$(mktemp)
   curl -k -o "$response" -isSL -m 15 -X GET \
        --header 'Content-Type: application/json' \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Accept: */*' \
        "${node_address}/rest/cluster/config"
   grep -o "${GRAPHDB_SERVICE_NAME}" "$response" | grep -c ""
@@ -183,7 +280,16 @@ function waitService {
   local attempt_counter=0
   local max_attempts=100
 
-  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: ${authorization}" \ --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]]; then
       echo "Max attempts reached"
       exit 1

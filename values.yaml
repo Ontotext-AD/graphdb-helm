@@ -413,15 +413,15 @@ security:
 
   # Machine-to-machine integration for SSO-only systems. Currently, works with OIDC.
   # This allows automated jobs, such as backups, to be executed in systems where basic auth is disabled.
-  m2m:
+  sso:
     enabled: false
     # Provide a secret containing the tenant, scope, login url and client secret.
     existingSecret: ""
     clientIdKey: ""
     clientSecretKey: ""
     # Specific SSO login URL - e.g. `login.microsoftonline.com` or `signin.aws.amazon.com`
-    loginUrlKey: ""
-    scopeKey: ""
+    tokenUrlKey: ""
+    scopesKey: ""
 
 
 ##################################

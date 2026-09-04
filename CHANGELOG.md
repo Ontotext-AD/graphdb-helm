@@ -1,6 +1,6 @@
 # GraphDB Helm chart release notes
 
-## Version 12.5.1
+## Version 12.6.0
 
 ## New
 

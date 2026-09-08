@@ -119,7 +119,7 @@ spec:
                     secretKeyRef:
                       name: {{ (tpl .Values.security.sso.existingSecret .) }}
                       key: {{ .Values.security.sso.scopesKey }}
-                {{-end}}
+                {{- end }}
                 {{- with .Values.backup.extraEnv }}
                   {{- tpl (toYaml .) $ | nindent 16 }}
                 {{- end }}

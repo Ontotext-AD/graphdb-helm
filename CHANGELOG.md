@@ -8,6 +8,14 @@
   from a provided oauth2 endpoint. This resolves hanging backup and cluster operations in environments with
   strict security requirements.
 
+### Updated
+
+- Removed the deprecated `default.min.distinct.threshold` property from `configuration.defaultJavaArguments` (since
+  GraphDB 11.0)
+- Removed unnecessary Java arguments from `configuration.defaultJavaArguments`
+  - `-XX:+UseContainerSupport` is enabled by default
+  - `-XX:-UseCompressedOops` is disabled automatically for large heap sizes
+
 ## Version 12.5.0
 
 ## New

@@ -4,6 +4,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+source ./utils.sh
+
 function patchCluster {
   local configLocation=$1
   local timeout=$2
@@ -11,10 +13,19 @@ function patchCluster {
 
   waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   echo "Patching cluster"
   response=$(mktemp)
   curl -k -o "$response" -isSL -m "$timeout" -X PATCH \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
        -d @"$configLocation" \
@@ -40,6 +51,15 @@ function removeNodes {
   local dns_suffix
   dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
   local response
+
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
 
   echo "Cluster reported: $currentNodes current nodes"
   echo "Cluster is expected to have: $expectedNodes nodes"
@@ -72,7 +92,7 @@ function removeNodes {
   curl -k -o "$response" -isSL -m 15 -X DELETE \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        -d "${nodes}" \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
@@ -95,6 +115,15 @@ function addNodes {
   local dns_suffix
   dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
   local response
+
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
 
   echo "Cluster reported: $currentNodes current nodes"
   echo "Cluster is expected to have: $expectedNodes nodes"
@@ -120,7 +149,7 @@ function addNodes {
   curl -k -o "$response" -isSL -m "${timeout}" -X POST \
        --header 'Content-Type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        -d "${nodes}" \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/rest/cluster/config/node"
 
@@ -143,10 +172,19 @@ function addNodes {
 function deleteCluster {
   waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   local response
   response=$(mktemp)
   curl -k -o "$response" -isSL -m 15 -X DELETE \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Accept: */*' \
        "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/cluster/config?force=false"
 
@@ -167,11 +205,20 @@ function getNodeCountInCurrentCluster {
 
   waitService "${node_address}/rest/repositories"
 
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
   local response
   response=$(mktemp)
   curl -k -o "$response" -isSL -m 15 -X GET \
        --header 'Content-Type: application/json' \
-       --header "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" \
+       --header "Authorization: ${authorization}" \
        --header 'Accept: */*' \
        "${node_address}/rest/cluster/config"
   grep -o "${GRAPHDB_SERVICE_NAME}" "$response" | grep -c ""
@@ -183,7 +230,16 @@ function waitService {
   local attempt_counter=0
   local max_attempts=100
 
-  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: Basic ${GRAPHDB_AUTH_TOKEN}" --silent --fail "${address}"; do
+  access_token=$(gdb_get_m2m_token)
+  local authorization=
+
+  if [[ $access_token == 1 ]]; then
+    authorization="Basic ${GRAPHDB_AUTH_TOKEN}"
+  else
+    authorization="Bearer ${access_token}"
+  fi;
+
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: ${authorization}" \ --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]]; then
       echo "Max attempts reached"
       exit 1

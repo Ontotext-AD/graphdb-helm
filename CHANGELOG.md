@@ -1,5 +1,15 @@
 # GraphDB Helm chart release notes
 
+## Version 12.6.0
+
+### Updated
+
+- Removed the deprecated `default.min.distinct.threshold` property from `configuration.defaultJavaArguments` (since
+  GraphDB 11.0)
+- Removed unnecessary Java arguments from `configuration.defaultJavaArguments`
+  - `-XX:+UseContainerSupport` is enabled by default
+  - `-XX:-UseCompressedOops` is disabled automatically for large heap sizes
+
 ## Version 12.5.0
 
 ## New

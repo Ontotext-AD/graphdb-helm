@@ -78,6 +78,28 @@ spec:
                 secretKeyRef:
                   name: {{ (tpl .Values.security.provisioner.existingSecret .) | default (include "graphdb.fullname.secret.provisioning-user" .) }}
                   key: {{ .Values.security.provisioner.tokenKey }}
+            {{- if .Values.security.oauth2.enabled }}
+            - name: OAUTH2_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.oauth2.existingSecret . }}
+                  key: {{ .Values.security.oauth2.clientIdKey }}
+            - name: OAUTH2_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.oauth2.existingSecret . }}
+                  key: {{ .Values.security.oauth2.clientSecretKey }}
+            - name: OAUTH2_LOGIN_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.oauth2.existingSecret . }}
+                  key: {{ .Values.security.oauth2.tokenUrlKey }}
+            - name: OAUTH2_SCOPE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.oauth2.existingSecret . }}
+                  key: {{ .Values.security.oauth2.scopesKey }}
+            {{- end }}
           {{- with .Values.jobs.securityContext }}
           securityContext: {{ toYaml . | nindent 12 }}
           {{- end }}

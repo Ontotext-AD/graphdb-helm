@@ -49,7 +49,8 @@ Renders the gRPC address of each GraphDB node that is part of the cluster as a J
   {{- $cluster_domain := .Values.global.clusterDomain -}}
   {{- $service_rpc_port := .Values.headlessService.ports.rpc -}}
   {{- $nodes := list -}}
-  {{- range $i, $node_index := until (int .Values.replicas) -}}
+  {{- range $i, $replica := until (int .Values.replicas) -}}
+    {{- $node_index := add $replica .Values.ordinalStart -}}
     {{- $nodes = append $nodes (printf "%s-%s.%s.%s.svc.%s:%s" $pod_name (toString $node_index) $service_name $namespace $cluster_domain (toString $service_rpc_port)) -}}
   {{- end -}}
   {{- toPrettyJson $nodes -}}
@@ -65,9 +66,10 @@ Renders the HTTP address of each GraphDB node that is part of the cluster, joine
   {{- $cluster_domain := .Values.global.clusterDomain -}}
   {{- $service_http_port := .Values.headlessService.ports.http -}}
   {{- $protocol := include "graphdb.tomcat.protocol" . }}
-  {{- range $i, $node_index := until (int .Values.replicas) -}}
+  {{- range $i, $replica := until (int .Values.replicas) -}}
+    {{- $node_index := add $replica .Values.ordinalStart -}}
     {{ $protocol }}://{{ $pod_name }}-{{ $node_index }}.{{ $service_name }}.{{ $namespace }}.svc.{{ $cluster_domain }}:{{ $service_http_port }}
-    {{- if gt (sub (int $.Values.replicas) 1) $node_index -}}
+    {{- if gt (sub (int $.Values.replicas) 1) $replica -}}
       {{- ", " -}}
     {{- end -}}
   {{- end -}}

@@ -18,6 +18,10 @@ spec:
   {{- if and .Values.persistence.volumeClaimRetentionPolicy (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) }}
   persistentVolumeClaimRetentionPolicy: {{ .Values.persistence.volumeClaimRetentionPolicy | toYaml | nindent 4 }}
   {{- end }}
+  {{- if semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version }}
+  ordinals:
+    start: {{ .Values.ordinalStart }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "graphdb.selectorLabels" . | nindent 6 }}

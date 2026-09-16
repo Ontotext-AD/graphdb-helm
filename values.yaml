@@ -909,6 +909,10 @@ podManagementPolicy: Parallel
 # Changes the maximum amount of revisions that are kept.
 revisionHistoryLimit: 10
 
+# Controls the starting ordinal index of the StatefulSet pods.
+# Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#ordinal-index
+ordinalStart: 0
+
 # Grace period in seconds before terminating the Pods.
 # Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination
 terminationGracePeriodSeconds: 120
@@ -1552,6 +1556,10 @@ proxy:
 
   # Changes the maximum amount of revisions that are kept.
   revisionHistoryLimit: 10
+
+  # Controls the starting ordinal index of the StatefulSet pods.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#ordinal-index
+  ordinalStart: 0
 
   # Grace period in seconds before terminating the proxy Pods.
   # Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination

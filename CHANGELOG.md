@@ -12,6 +12,8 @@
   (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
   AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
   when set.
+- Added `ordinalStart` and `proxy.ordinalStart` for configuring the starting ordinal of the StatefulSet pods. Updated
+  all affected scripts and configurations to take this into account.
 
 ### Updated
 

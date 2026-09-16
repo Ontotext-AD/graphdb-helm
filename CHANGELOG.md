@@ -35,6 +35,8 @@
 - Added `ingress.servicePort` that can override the automatically assigned backend service port of the default http path
   rule
 - Added `ingress.extraPaths` for adding additional http path rules to the default host rule
+- Added `service.trafficDistribution` and `proxy.service.trafficDistribution` for overriding the traffic distribution
+  policy for the Service endpoints.
 
 ### Updated
 

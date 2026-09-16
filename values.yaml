@@ -16,7 +16,7 @@ global:
 
   # Inserts additional pull secret references together along with any from .Values.image.pullSecrets
   # Can be used to override it globally when using umbrella charts.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets
   #
   # Example:
@@ -98,7 +98,7 @@ image:
   pullPolicy: IfNotPresent
 
   # Secrets for pulling GraphDB's Docker image from secured registries.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets
   #
   # Example:
@@ -639,10 +639,10 @@ ingress:
     # This could be an existing Secret or one that is not yet created.
     secretName: ""
   # List of additional hostnames to append to the Ingress resource.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraHosts: []
   # List of additional TLS records to append to the Ingress resource.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraTLS: []
 
 ##########################
@@ -744,7 +744,8 @@ persistence:
     # Specification for a PVC to be created by the StatefulSet.
     # Tune according to your needs.
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes:
+        - ReadWriteOnce
       resources:
         requests:
           storage: 5Gi
@@ -885,11 +886,11 @@ backup:
   failedJobsHistoryLimit: 3
 
   # Additional environment variables to be set for the backup container.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnvFrom: []
 
   # Additional environment variables to be set for the backup container.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnv: []
 
 ##############################
@@ -916,11 +917,13 @@ terminationGracePeriodSeconds: 120
 # Configures the GraphDB container lifecycle hooks (postStart, preStop).
 # When using a preStop sleep for connection draining, ensure the sleep duration is less than terminationGracePeriodSeconds.
 # Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
-lifecycle: {}
+#
+# Example:
 # lifecycle:
 #   preStop:
 #     exec:
 #       command: ["/bin/sh", "-c", "sleep 115"]
+lifecycle: {}
 
 # Toggles the auto mounting of API credentials token into the Pods.
 # Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
@@ -992,7 +995,8 @@ securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
-    drop: [ "ALL" ]
+    drop:
+      - ALL
   seccompProfile:
     type: RuntimeDefault
 
@@ -1002,7 +1006,8 @@ initContainerSecurityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
-    drop: [ "ALL" ]
+    drop:
+      - ALL
   seccompProfile:
     type: RuntimeDefault
 
@@ -1034,12 +1039,12 @@ podAntiAffinity:
   topology: kubernetes.io/hostname
 
 # List of taint tolerations.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 tolerations: []
 
 # Configurations for spreading Pods across different failure domains.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
 topologySpreadConstraints: []
@@ -1117,34 +1122,34 @@ livenessProbe:
 #########################################
 
 # Additional environment variables to be set for the GraphDB containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraEnvFrom: []
 
 # Additional environment variables to be set for the GraphDB containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraEnv: []
 
 # Additional volumes to be set for the GraphDB Pod.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraVolumes: []
 
 # Additional volume mounts to be set for the GraphDB containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraVolumeMounts: []
 
 # Additional volume claim templates to be set in GraphDB's StatefulSet.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraVolumeClaimTemplates: []
 
 # Additional init containers to be inserted after the provisioning init containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraInitContainers: []
 
 # Additional GraphDB container ports to expose.
 extraContainerPorts: {}
 
 # Additional containers to insert into the GraphDB Pod, e.g. sidecar containers
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraContainers: []
 
 ########################################
@@ -1207,7 +1212,8 @@ import:
       # Values are processed as Helm templates.
       annotations: {}
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: 10Gi
@@ -1285,12 +1291,12 @@ jobs:
   affinity: {}
 
   # List of taint tolerations.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
 
   # Configurations for spreading Pods across different failure domains.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
   topologySpreadConstraints: []
@@ -1312,7 +1318,8 @@ jobs:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
-      drop: [ "ALL" ]
+      drop:
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -1510,7 +1517,8 @@ proxy:
       # Specification for a PVC to be created by the StatefulSet.
       # Tune according to your needs.
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: 500Mi
@@ -1560,11 +1568,13 @@ proxy:
   # Configures the GraphDB proxy container lifecycle hooks (postStart, preStop).
   # When using a preStop sleep for connection draining, ensure the sleep duration is less than terminationGracePeriodSeconds.
   # Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
-  lifecycle: {}
+  #
+  # Example:
   # lifecycle:
   #   preStop:
   #     exec:
   #       command: ["/bin/sh", "-c", "sleep 25"]
+  lifecycle: {}
 
   # Overrides the default Kubernetes scheduler.
   # See https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/#specify-schedulers-for-pods
@@ -1631,7 +1641,8 @@ proxy:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
-      drop: [ "ALL" ]
+      drop:
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -1641,7 +1652,8 @@ proxy:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
-      drop: [ "ALL" ]
+      drop:
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -1673,12 +1685,12 @@ proxy:
     topology: kubernetes.io/hostname
 
   # List of taint tolerations.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
 
   # Configurations for spreading Pods across different failure domains.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
   topologySpreadConstraints: []
@@ -1756,34 +1768,34 @@ proxy:
   #########################################
 
   # Additional environment variables to be set for the GraphDB proxy containers.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnvFrom: []
 
   # Additional environment variables to be set for the GraphDB proxy containers.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnv: []
 
   # Additional volumes to be set for the GraphDB proxy Pod.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraVolumes: []
 
   # Additional volume mounts to be set for the GraphDB proxy containers.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraVolumeMounts: []
 
   # Additional volume claim templates to be set in GraphDB proxy's StatefulSet.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraVolumeClaimTemplates: []
 
   # Additional init containers to be inserted after the provisioning init containers for the GraphDB proxy.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraInitContainers: []
 
   # Additional GraphDB proxy container ports to expose.
   extraContainerPorts: {}
 
   # Additional containers to insert into the GraphDB proxy Pod, e.g. sidecar containers
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraContainers: []
 
   ########################################
@@ -1816,6 +1828,6 @@ proxy:
 #################################
 
 # Additional objects to insert along with the release.
-# Values are processed as Helm templates with tpl function.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 # Ref: https://helm.sh/docs/howto/charts_tips_and_tricks/#using-the-tpl-function
 extraObjects: []

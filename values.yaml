@@ -1037,6 +1037,8 @@ podAntiAffinity:
   enabled: true
   preset: soft
   topology: kubernetes.io/hostname
+  # Enabling this will avoid scheduling GraphDB pods on nodes where any GraphDB proxy pods are scheduled.
+  avoidProxies: false
 
 # List of taint tolerations.
 # Values are processed as Helm templates, supporting both YAML objects and string list items.
@@ -1672,7 +1674,7 @@ proxy:
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
 
-  # Default podAntiAffinity rule ensuring that GraphDB pods are scheduled on different Kubernetes nodes.
+  # Default podAntiAffinity rule ensuring that GraphDB proxy pods are scheduled on different Kubernetes nodes.
   # Note that this would take effect when GraphDB is deployed in a cluster.
   #
   # Possible values for .Values.podAntiAffinity.preset are:
@@ -1683,6 +1685,8 @@ proxy:
     enabled: true
     preset: soft
     topology: kubernetes.io/hostname
+    # Enabling this will avoid scheduling GraphDB proxy pods on nodes where any GraphDB cluster pods are scheduled.
+    avoidCluster: false
 
   # List of taint tolerations.
   # Values are processed as Helm templates, supporting both YAML objects and string list items.

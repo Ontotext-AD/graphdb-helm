@@ -28,6 +28,8 @@
   - `extraContainers` and `proxy.extraContainers`
   - `jobs.tolerations` and `jobs.tolerations`
   - `jobs.topologySpreadConstraints` and `jobs.topologySpreadConstraints`
+- Added `podAntiAffinity.avoidProxies` and `proxy.podAntiAffinity.avoidCluster` that render additional pod anti-affinity
+  rules that will try to keep GraphDB cluster pods and GraphDB proxy pods on different topologies.
 
 ### Updated
 

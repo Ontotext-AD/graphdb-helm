@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source ./utils.sh
+source /tmp/utils/utils.sh
 
 function patchCluster {
   local configLocation=$1

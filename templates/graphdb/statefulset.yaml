@@ -48,7 +48,7 @@ spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- with .Values.extraVolumeClaimTemplates }}
-      {{- tpl (toYaml .) $ | nindent 4 }}
+      {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
   template:
@@ -230,7 +230,7 @@ spec:
               {{- end }}
         {{- end }}
         {{- with .Values.extraVolumes }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
@@ -262,12 +262,13 @@ spec:
         {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
-      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
+      tolerations:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
       {{- if or .Values.topologySpreadConstraints .Values.topologySpreadConstraintsPreset.enabled }}
       topologySpreadConstraints:
         {{- if .Values.topologySpreadConstraints }}
-          {{- tpl (toYaml .Values.topologySpreadConstraints) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" .Values.topologySpreadConstraints "root" $ ) | nindent 8 }}
         {{- else }}
         - labelSelector:
             matchLabels:
@@ -452,7 +453,7 @@ spec:
               fi
               echo 'Done'
         {{- with .Values.extraInitContainers }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -479,7 +480,7 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb.fullname.configmap.environment" . }}
             {{- with .Values.extraEnvFrom }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- if or (eq .Values.configuration.encryption.type "pkcs12") (.Values.extraEnv) }}
           env:
@@ -491,7 +492,7 @@ spec:
                   key: {{ required "configuration.encryption.keystorePasswordSecretKey is required" .Values.configuration.encryption.keystorePasswordSecretKey }}
             {{- end }}
             {{- with .Values.extraEnv }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- end }}
           volumeMounts:
@@ -524,7 +525,7 @@ spec:
               mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -545,5 +546,5 @@ spec:
           livenessProbe: {{- include "graphdb.probes.liveness" . | nindent 12 }}
           {{- end }}
         {{- with .Values.extraContainers }}
-          {{ tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}

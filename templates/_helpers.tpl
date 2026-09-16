@@ -1,9 +1,28 @@
 {{/*
+Helper function that can render list items defined as pure YAML or as a string template
+*/}}
+{{- define "graphdb.tpl.list" -}}
+  {{- $items := .items | default (list) -}}
+  {{- $root := .root -}}
+  {{- $rendered := list -}}
+  {{- range $item := $items -}}
+    {{- if typeIs "string" $item -}}
+      {{- with (tpl $item $root | trim) -}}
+        {{- $rendered = append $rendered (. | fromYaml) -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $rendered = append $rendered (tpl ($item | toYaml) $root | fromYaml) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $rendered | toYaml -}}
+{{- end -}}
+
+{{/*
 Combined image pull secrets
 */}}
 {{- define "graphdb.combinedImagePullSecrets" -}}
   {{- $secrets := concat .Values.global.imagePullSecrets .Values.image.pullSecrets }}
-  {{- tpl (toYaml $secrets) . -}}
+  {{- include "graphdb.tpl.list" (dict "items" $secrets "root" $ ) -}}
 {{- end -}}
 
 {{/*

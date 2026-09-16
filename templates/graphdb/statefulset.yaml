@@ -237,7 +237,7 @@ spec:
       {{- end }}
       {{- if or .Values.affinity .Values.podAntiAffinity.enabled }}
       affinity:
-        {{- if .Values.affinity  }}
+        {{- if .Values.affinity }}
           {{- tpl (toYaml .Values.affinity) $ | nindent 8 }}
         {{- end }}
         {{- if and .Values.podAntiAffinity.enabled (not .Values.affinity.podAntiAffinity) }}
@@ -250,14 +250,28 @@ spec:
                 labelSelector:
                   matchLabels:
                     {{- include "graphdb.selectorLabels" . | nindent 20 }}
+            {{- if .Values.podAntiAffinity.avoidProxies }}
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinity.topology }}
+                labelSelector:
+                  matchLabels:
+                    {{- include "graphdb-proxy.selectorLabels" . | nindent 20 }}
+            {{- end }}
           {{- else if eq .Values.podAntiAffinity.preset "hard" }}
           requiredDuringSchedulingIgnoredDuringExecution:
             - topologyKey: {{ .Values.podAntiAffinity.topology }}
               labelSelector:
                 matchLabels:
                   {{- include "graphdb.selectorLabels" . | nindent 18 }}
+            {{- if .Values.podAntiAffinity.avoidProxies }}
+            - topologyKey: {{ .Values.podAntiAffinity.topology }}
+              labelSelector:
+                matchLabels:
+                  {{- include "graphdb-proxy.selectorLabels" . | nindent 18 }}
+            {{- end }}
           {{- else }}
-            {{- fail (printf "Unknown podAntiAffinity preset '%s'" .Values.podAntiAffinity.preset) }}
+            {{- fail (printf "Unknown podAntiAffinity preset: %s" .Values.podAntiAffinity.preset) }}
           {{- end }}
         {{- end }}
       {{- end }}

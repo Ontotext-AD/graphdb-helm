@@ -12,6 +12,8 @@
   (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
   AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
   when set.
+- Added `podAntiAffinity.avoidProxies` and `proxy.podAntiAffinity.avoidCluster` that render additional pod anti-affinity
+  rules that will try to keep GraphDB cluster pods and GraphDB proxy pods on different topologies.
 
 ### Updated
 

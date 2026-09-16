@@ -12,6 +12,9 @@
   (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
   AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
   when set.
+- Added `ingress.servicePort` that can override the automatically assigned backend service port of the default http path
+  rule
+- Added `ingress.extraPaths` for adding additional http path rules to the default host rule
 
 ### Updated
 

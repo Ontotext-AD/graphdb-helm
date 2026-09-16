@@ -628,6 +628,9 @@ ingress:
   # Sets the ingress path type.
   # If you need to use ImplementationSpecific, make sure to set any annotations needed by the controller implementation.
   pathType: Prefix
+  # If set, overrides the automatically assigned backend service port.
+  # Use when you want to route the traffic to a different port than the default or to a side-car container.
+  servicePort: ""
   # Configures SSL termination on Ingress level.
   # Ref: https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
   tls:
@@ -638,6 +641,9 @@ ingress:
     # If TLS is enabled, it's required to be provided, depending on the deployment.
     # This could be an existing Secret or one that is not yet created.
     secretName: ""
+  # List of additional path rules to include with the default rule.
+  # Values are processed as Helm templates.
+  extraPaths: []
   # List of additional hostnames to append to the Ingress resource.
   # Values are processed as Helm templates.
   extraHosts: []

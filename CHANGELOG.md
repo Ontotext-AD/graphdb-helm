@@ -32,6 +32,9 @@
   rules that will try to keep GraphDB cluster pods and GraphDB proxy pods on different topologies.
 - Added `security.admin.initialPasswordHash` replacing the now deprecated `security.admin.initialPassword`
 - Added `security.provisioner.initialPasswordHash` replacing the now deprecated `security.provisioner.passwordHash`
+- Added `ingress.servicePort` that can override the automatically assigned backend service port of the default http path
+  rule
+- Added `ingress.extraPaths` for adding additional http path rules to the default host rule
 
 ### Updated
 

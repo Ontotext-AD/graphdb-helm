@@ -40,12 +40,15 @@ spec:
                 {{- if gt (int .Values.replicas) 1 }}
                 name: {{ include "graphdb-proxy.fullname" . }}
                 port:
-                  number: {{ .Values.proxy.service.ports.http }}
+                  number: {{ coalesce .Values.ingress.servicePort .Values.proxy.service.ports.http }}
                 {{- else }}
                 name: {{ include "graphdb.fullname" . }}
                 port:
-                  number: {{ .Values.headlessService.ports.http }}
+                  number: {{ coalesce .Values.ingress.servicePort .Values.headlessService.ports.http }}
                 {{- end }}
+          {{- with .Values.ingress.extraPaths }}
+            {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 10 }}
+          {{- end }}
     {{- with .Values.ingress.extraHosts }}
       {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
     {{- end }}

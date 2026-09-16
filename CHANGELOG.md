@@ -30,6 +30,8 @@
   - `jobs.topologySpreadConstraints` and `jobs.topologySpreadConstraints`
 - Added `podAntiAffinity.avoidProxies` and `proxy.podAntiAffinity.avoidCluster` that render additional pod anti-affinity
   rules that will try to keep GraphDB cluster pods and GraphDB proxy pods on different topologies.
+- Added `security.admin.initialPasswordHash` replacing the now deprecated `security.admin.initialPassword`
+- Added `security.provisioner.initialPasswordHash` replacing the now deprecated `security.provisioner.passwordHash`
 
 ### Updated
 
@@ -38,6 +40,7 @@
 - Removed unnecessary Java arguments from `configuration.defaultJavaArguments`
   - `-XX:+UseContainerSupport` is enabled by default
   - `-XX:-UseCompressedOops` is disabled automatically for large heap sizes
+- Ensured consistent rendering of bcrypt hashes in user.js by automatically appending `{bcrypt}` if missing
 
 ## Version 12.5.0
 

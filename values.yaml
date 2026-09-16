@@ -355,23 +355,35 @@ security:
   # Administrator user with ROLE_ADMIN authority.
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   admin:
-    # Define an initial password for the administrator user.
-    # If the password is not specified, it will use the default one for GraphDB which is "root"
-    # Important: This value must be a bcrypt encrypted hash, not a plaintext string. The format is "{bcrypt}<the-encrypted-hash>"
+    # Define an initial password hash for the administrator user.
+    #
+    # DEPRECATED: Use security.admin.initialPasswordHash instead.
     initialPassword: ""
+    # Define an initial password for the administrator user.
+    # If the password is not specified, it will use the default one for GraphDB, which is "root"
+    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
+    # The format is "{bcrypt}<the-encrypted-hash>" or just "<the-encrypted-hash>"
+    initialPasswordHash: ""
 
   # Provisioning user with ROLE_ADMIN authority
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning jobs can work properly.
   provisioner:
+    # Define an initial password for the provisioner user as a bcrypt hash.
+    #
+    # DEPRECATED: Use security.provisioner.initialPasswordHash instead.
+    passwordHash: ""
+    # Define an initial password for the provisioner user as a bcrypt hash.
+    # If the password is not specified, it will use the default one specified in the provisioner.password.
+    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
+    # The format is "{bcrypt}<the-encrypted-hash>" or just "<the-encrypted-hash>"
+    # Important: During the initial provisioning, this must match the password provided in provisioner.password,
+    # otherwise the automation scripts will fail.
+    initialPasswordHash: ""
     # The following user will be created in the default initial users.js and used in the cluster provisioning.
     # Note: The user is created regardless of if the existingSecret is provided or not.
     username: provisioner
     password: iHaveSuperpowers
-    # Define an initial password for the provisioner user as a bcrypt hash.
-    # If the password is not specified, it will use the default one specified in the provisioner.password.
-    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
-    passwordHash: ""
     # Reference to Secret with a basic authentication token of an existing user to use for provisioning tasks instead of the default user in the initial
     # user.js that is created using the plaintext username and password configurations from above.
     # Note that the user must already exist in GraphDB for this to work properly.

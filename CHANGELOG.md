@@ -12,6 +12,8 @@
   (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
   AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
   when set.
+- Added `service.trafficDistribution` and `proxy.service.trafficDistribution` for overriding the traffic distribution
+  policy for the Service endpoints.
 
 ### Updated
 

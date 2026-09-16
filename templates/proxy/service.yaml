@@ -33,6 +33,9 @@ spec:
   {{- if .Values.proxy.service.externalIPs }}
   externalIPs: {{ .Values.proxy.service.externalIPs | toYaml | nindent 4 }}
   {{- end }}
+  {{- if .Values.proxy.service.trafficDistribution }}
+  trafficDistribution: {{ .Values.proxy.service.trafficDistribution }}
+  {{- end }}
   ports:
     - name: http
       port: {{ .Values.proxy.service.ports.http }}

@@ -19,6 +19,10 @@ spec:
   {{- if and .Values.proxy.persistence.volumeClaimRetentionPolicy (semverCompare ">=1.27-0" .Capabilities.KubeVersion.Version) }}
   persistentVolumeClaimRetentionPolicy: {{ .Values.proxy.persistence.volumeClaimRetentionPolicy | toYaml | nindent 4 }}
   {{- end }}
+  {{- if semverCompare ">=1.31-0" .Capabilities.KubeVersion.Version }}
+  ordinals:
+    start: {{ .Values.proxy.ordinalStart }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "graphdb-proxy.selectorLabels" . | nindent 6 }}

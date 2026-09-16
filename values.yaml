@@ -711,6 +711,10 @@ service:
   extraPorts: []
   # Indicates that DNS records are created for not-ready Pods.
   publishNotReadyAddresses: false
+  # Overrides the traffic distribution policy for the Service endpoints.
+  # Unless specified, Kubernetes will distribute traffic evenly.
+  # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution
+  trafficDistribution: ""
 
 # Configurations for GraphDB headless Service.
 # This Service is deployed regardless of the amount of .Values.replicas, so it exists for both single node and for cluster mode.
@@ -1485,6 +1489,10 @@ proxy:
     extraPorts: []
     # Indicates that DNS records are created for not-ready Pods.
     publishNotReadyAddresses: false
+    # Overrides the traffic distribution policy for the Service endpoints.
+    # Unless specified, Kubernetes will distribute traffic evenly.
+    # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution
+    trafficDistribution: ""
 
   # GraphDB cluster proxy headless Service configurations.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/

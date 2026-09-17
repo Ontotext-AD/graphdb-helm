@@ -4,33 +4,41 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-function gdb_get_oauth2_token() {
-  local client_id="${OAUTH2_CLIENT_ID}"
-  local client_secret="${OAUTH2_CLIENT_SECRET}"
-  local login_url="${OAUTH2_LOGIN_URL}"
-  local scope="${OAUTH2_SCOPE}"
+function log {
+    local message="$1"
+    local timestamp
+    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo "[$timestamp] $message"
+}
 
+function gdb_get_oauth2_token() {
+  local client_id="${OAUTH2_CLIENT_ID:-null}"
+  local client_secret="${OAUTH2_CLIENT_SECRET:-null}"
+  local login_url="${OAUTH2_LOGIN_URL:-null}"
+  local scope="${OAUTH2_SCOPE:-null}"
+
+  echo "Testing"
   if [[ -z "${client_id}" || "${client_id}" == "null" ]]; then
     log "OAuth2: missing OAUTH2_CLIENT_ID; falling back to basic auth"
-    echo 1
+    access_token=1
     return
   fi
 
   if [[ -z "${client_secret}" || "${client_secret}" == "null" ]]; then
     log "OAuth2: missing OAUTH2_CLIENT_SECRET; falling back to basic auth"
-    echo 1
+    access_token=1
     return
   fi
 
   if [[ -z "${scope}" || "${scope}" == "null" ]]; then
     log "OAuth2: missing scope (OAUTH2_SCOPE or AppConfig key oauth2-app-scope); falling back to basic auth"
-    echo 1
+    access_token=1
     return
   fi
 
   if [[ -z "${login_url}" || "${login_url}" == "null" ]]; then
     log "OAuth2: missing login url; falling back to basic auth"
-    echo 1
+    access_token=1
     return
   fi
 
@@ -43,20 +51,20 @@ function gdb_get_oauth2_token() {
     --data-urlencode "grant_type=client_credentials" 2>/dev/null || true)"
 
   local token
-  token="$(echo "${token_response}" | jq -r '.access_token // empty' 2>/dev/null || true)"
+  token="$(echo "${token_response}" | grep -Eo 'access_token":"[^"]*' | grep -Eo '[^:"]+[^"].$' | grep -Eo '.*[^"]' || true)"
 
   if [[ -z "${token}" ]]; then
     local err desc
-    err="$(echo "${token_response}" | jq -r '.error // empty' 2>/dev/null || true)"
-    desc="$(echo "${token_response}" | jq -r '.error_description // empty' 2>/dev/null || true)"
+    err="$(echo "${token_response}" | grep -Eo 'error":"[^"]*' | grep -Eo '[^:"]+[^"].$' | grep -Eo '.*[^"]' || true)"
+    desc="$(echo "${token_response}" | grep -Eo 'error_description":"[^"]*' | grep -Eo '[^:"]+[^"].$' | grep -Eo '.*[^"]' || true)"
     if [[ -n "${err}" || -n "${desc}" ]]; then
       log "OAuth2: token request failed (${err:-unknown}): ${desc:-no description}"
     else
       log "OAuth2: token request failed (no access_token in response)"
     fi
-    echo 1
+    access_token=1
     return
   fi
 
-  printf '%s' "${token}"
+  access_token="${token}"
 }

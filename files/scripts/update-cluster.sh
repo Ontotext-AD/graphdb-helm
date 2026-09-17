@@ -13,7 +13,8 @@ function patchCluster {
 
   waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_PROXY_SERVICE_NAME}:${GRAPHDB_PROXY_SERVICE_PORT}/proxy/ready"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -52,7 +53,8 @@ function removeNodes {
   dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
   local response
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -116,7 +118,8 @@ function addNodes {
   dns_suffix=$(awk '/search/{print $2}' /etc/resolv.conf)
   local response
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -172,7 +175,8 @@ function addNodes {
 function deleteCluster {
   waitService "${GRAPHDB_PROTOCOL}://${GRAPHDB_POD_NAME}-0.${GRAPHDB_SERVICE_NAME}:${GRAPHDB_SERVICE_PORT}/rest/repositories"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -205,7 +209,8 @@ function getNodeCountInCurrentCluster {
 
   waitService "${node_address}/rest/repositories"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -230,7 +235,8 @@ function waitService {
   local attempt_counter=0
   local max_attempts=100
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then

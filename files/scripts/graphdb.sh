@@ -6,13 +6,6 @@ set -o pipefail
 
 source /tmp/utils/utils.sh
 
-function log {
-    local message="$1"
-    local timestamp
-    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo "[$timestamp] $message"
-}
-
 function createCluster {
   local node_count=$1
   local configLocation=$2
@@ -21,7 +14,8 @@ function createCluster {
 
   waitAllNodes "$node_count"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -57,7 +51,10 @@ function waitService {
   local attempt_counter=0
   local max_attempts=100
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
+
+  log ${access_token}
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -97,7 +94,8 @@ function createRepositoryFromFile {
 
   waitAllNodes "$node_count"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -159,7 +157,8 @@ function cloudBackup {
   local backup_options=
   backup_options=$(interpolate < "$1")
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -201,7 +200,8 @@ function createIndicesFromFiles() {
 
   waitAllNodes "$node_count"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   if [[ $access_token == 1 ]]; then
@@ -247,7 +247,8 @@ function localBackup() {
   local backup_path
   backup_path="${2%/}/$BACKUP_NAME"
 
-  access_token=$(gdb_get_oauth2_token)
+  # Assigns value to access_token
+  gdb_get_oauth2_token
   local authorization=
 
   log "Creating local backup ${backup_path}"

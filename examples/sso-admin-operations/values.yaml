@@ -1,0 +1,47 @@
+fullnameOverride: graphdb
+
+# Cluster requires license, you have to provision it before deploying this chart
+license:
+  existingSecret: graphdb-license
+
+replicas: 1
+
+configuration:
+  externalUrl: https://graphdb.apps-crc.testing
+  properties:
+    graphdb.auth.security.enabled: "true"
+    graphdb.auth.methods: "openid"
+    graphdb.auth.openid.issuer: "https://login.microsoftonline.com/<TENANT_ID>/v2.0"
+    graphdb.auth.openid.client_id: "<GDB_CLIENT_ID>"
+    graphdb.auth.openid.username_claim: "email"
+    graphdb.auth.openid.auth_flow: "code"
+    graphdb.auth.openid.token_type: "access"
+    graphdb.auth.database: "oauth"
+    graphdb.auth.oauth.roles_claim: "roles"
+    graphdb.auth.oauth.roles_prefix: "GDB_"
+    graphdb.auth.oauth.default_roles: "ROLE_USER"
+
+ingress:
+  enabled: false
+
+security:
+  enabled: true
+  admin:
+    initialPassword: "{bcrypt}$2a$12$VDd8PrAndaJfoMJFlHFot.osSxZWQjMQZKgrEJgVZKFj6WFPvkbnS" # admin123
+  provisioner:
+    username: graphdb-provisioner
+    password: provisionerpass123
+  oauth2:
+    enabled: true
+    existingSecret: "gdb-sso"
+    clientIdKey: "clientId"
+    clientSecretKey: "clientSecret"
+    tokenUrlKey: "tokenUrl"
+    scopesKey: "scopesKey"
+
+repositories:
+  # Optional configmap containing repository configuration .ttl file(s).
+  # GraphDB will automatically create repositories with the provided repositories configuration files.
+  # Each key in the existing configmap will be treated as the config.ttl of a repository.
+  existingConfigmap: "repos"
+

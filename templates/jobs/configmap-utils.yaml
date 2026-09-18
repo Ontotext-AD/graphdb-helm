@@ -21,3 +21,5 @@ data:
     {{- tpl (.Files.Get "files/scripts/graphdb.sh" | trim) . | nindent 4 }}
   update-cluster.sh: |-
     {{- tpl (.Files.Get "files/scripts/update-cluster.sh" | trim) . | nindent 4 }}
+  utils.sh: |-
+    {{- tpl (.Files.Get "files/scripts/utils.sh" | trim) . | nindent 4 }}

@@ -54,7 +54,6 @@ function waitService {
   # Assigns value to access_token
   gdb_get_oauth2_token
 
-  log ${access_token}
   local authorization=
 
   if [[ $access_token == 1 ]]; then

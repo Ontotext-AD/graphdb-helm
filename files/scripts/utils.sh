@@ -17,7 +17,6 @@ function gdb_get_oauth2_token() {
   local login_url="${OAUTH2_LOGIN_URL:-null}"
   local scope="${OAUTH2_SCOPE:-null}"
 
-  echo "Testing"
   if [[ -z "${client_id}" || "${client_id}" == "null" ]]; then
     log "OAuth2: missing OAUTH2_CLIENT_ID; falling back to basic auth"
     access_token=1
@@ -30,12 +29,6 @@ function gdb_get_oauth2_token() {
     return
   fi
 
-  if [[ -z "${scope}" || "${scope}" == "null" ]]; then
-    log "OAuth2: missing scope (OAUTH2_SCOPE or AppConfig key oauth2-app-scope); falling back to basic auth"
-    access_token=1
-    return
-  fi
-
   if [[ -z "${login_url}" || "${login_url}" == "null" ]]; then
     log "OAuth2: missing login url; falling back to basic auth"
     access_token=1
@@ -43,12 +36,22 @@ function gdb_get_oauth2_token() {
   fi
 
   local token_response
-  token_response="$(curl -sS -L -X POST "${login_url}" \
-    -H "Content-Type: application/x-www-form-urlencoded" \
-    --data-urlencode "client_id=${client_id}" \
-    --data-urlencode "client_secret=${client_secret}" \
-    --data-urlencode "scope=${scope}" \
-    --data-urlencode "grant_type=client_credentials" 2>/dev/null || true)"
+
+  if [[ -z "${scope}" || "${scope}" == "null" ]]; then
+    token_response="$(curl -sS -L -X POST "${login_url}" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      --data-urlencode "client_id=${client_id}" \
+      --data-urlencode "client_secret=${client_secret}" \
+      --data-urlencode "grant_type=client_credentials" 2>/dev/null || true)"
+  else
+    token_response="$(curl -sS -L -X POST "${login_url}" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      --data-urlencode "client_id=${client_id}" \
+      --data-urlencode "client_secret=${client_secret}" \
+      --data-urlencode "scope=${scope}" \
+      --data-urlencode "grant_type=client_credentials" 2>/dev/null || true)"
+  fi
+
 
   local token
   token="$(echo "${token_response}" | grep -Eo 'access_token":"[^"]*' | grep -Eo '[^:"]+[^"].$' | grep -Eo '.*[^"]' || true)"
@@ -56,7 +59,7 @@ function gdb_get_oauth2_token() {
   if [[ -z "${token}" ]]; then
     local err desc
     err="$(echo "${token_response}" | grep -Eo 'error":"[^"]*' | grep -Eo '[^:"]+[^"].$' | grep -Eo '.*[^"]' || true)"
-    desc="$(echo "${token_response}" | grep -Eo 'error_description":"[^"]*' | grep -Eo '[^:"]+[^"].$' | grep -Eo '.*[^"]' || true)"
+    desc="$(echo "${token_response}" | grep -Eo 'error_description":"[^"]*' | grep -Eo '[^"]+[^"]$' || true)"
     if [[ -n "${err}" || -n "${desc}" ]]; then
       log "OAuth2: token request failed (${err:-unknown}): ${desc:-no description}"
     else

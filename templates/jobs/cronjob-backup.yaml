@@ -114,11 +114,13 @@ spec:
                     secretKeyRef:
                       name: {{ tpl .Values.security.oauth2.existingSecret . }}
                       key: {{ .Values.security.oauth2.tokenUrlKey }}
+                {{- if .Values.security.oauth2.scopesKey }}
                 - name: OAUTH2_SCOPE
                   valueFrom:
                     secretKeyRef:
                       name: {{ tpl .Values.security.oauth2.existingSecret . }}
                       key: {{ .Values.security.oauth2.scopesKey }}
+                {{- end }}
                 {{- end }}
                 {{- with .Values.backup.extraEnv }}
                   {{- tpl (toYaml .) $ | nindent 16 }}

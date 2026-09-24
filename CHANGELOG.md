@@ -12,6 +12,22 @@
   (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
   AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
   when set.
+- Added support for rendering list items declared as strings. This allows you to use templates with conditional
+  expressions and other function calls directly in the list items. Affected configuration properties:
+  - `global.imagePullSecrets` and `image.pullSecrets`
+  - `ingress.extraHosts` and `ingress.extraTLS`
+  - `backup.extraEnvFrom` and `backup.extraEnv`
+  - `tolerations` and `proxy.tolerations`
+  - `topologySpreadConstraints` and `proxy.topologySpreadConstraints`
+  - `extraEnvFrom` and `proxy.extraEnvFrom`
+  - `extraEnv` and `proxy.extraEnv`
+  - `extraVolumes` and `proxy.extraVolumes`
+  - `extraVolumeMounts` and `proxy.extraVolumeMounts`
+  - `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
+  - `extraInitContainers` and `proxy.extraInitContainers`
+  - `extraContainers` and `proxy.extraContainers`
+  - `jobs.tolerations` and `jobs.tolerations`
+  - `jobs.topologySpreadConstraints` and `jobs.topologySpreadConstraints`
 
 ### Updated
 

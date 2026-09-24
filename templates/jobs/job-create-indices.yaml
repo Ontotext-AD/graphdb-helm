@@ -39,10 +39,12 @@ spec:
       affinity: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.jobs.tolerations }}
-      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
+      tolerations:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
       {{- with .Values.jobs.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      topologySpreadConstraints:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
       {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
       imagePullSecrets:

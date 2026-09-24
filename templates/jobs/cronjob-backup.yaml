@@ -77,7 +77,7 @@ spec:
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               {{- with .Values.backup.extraEnvFrom }}
               envFrom:
-                {{- tpl (toYaml .) $ | nindent 16 }}
+                {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 16 }}
               {{- end }}
               env:
                 {{- if gt (int .Values.replicas) 1 }}
@@ -121,7 +121,7 @@ spec:
                       key: {{ .Values.security.oauth2.scopesKey }}
                 {{- end }}
                 {{- with .Values.backup.extraEnv }}
-                  {{- tpl (toYaml .) $ | nindent 16 }}
+                  {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 16 }}
                 {{- end }}
               {{- with .Values.jobs.securityContext }}
               securityContext: {{ toYaml . | nindent 16 }}

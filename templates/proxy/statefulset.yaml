@@ -247,18 +247,24 @@ spec:
         {{- if .Values.proxy.topologySpreadConstraints }}
           {{- include "graphdb.tpl.list" (dict "items" .Values.proxy.topologySpreadConstraints "root" $ ) | nindent 8 }}
         {{- else }}
-        - labelSelector:
-            matchLabels:
-              {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
+        - maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
+          {{- if .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          minDomains: {{ .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          {{- end }}
           topologyKey: topology.kubernetes.io/zone
-          maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
           whenUnsatisfiable: {{ .Values.proxy.topologySpreadConstraintsPreset.whenUnsatisfiable }}
-        - labelSelector:
+          labelSelector:
             matchLabels:
               {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
+        - maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
+          {{- if .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          minDomains: {{ .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          {{- end }}
           topologyKey: kubernetes.io/hostname
-          maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
           whenUnsatisfiable: {{ .Values.proxy.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
         {{- end }}
       {{- end }}
       {{- with .Values.proxy.podSecurityContext }}

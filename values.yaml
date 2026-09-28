@@ -282,7 +282,6 @@ configuration:
     # The path where the keystore/truststore will be mounted inside the container.
     mountPath: /etc/graphdb/tls/tomcat/
 
-
   # Encryption at rest configuration
   #
   # GraphDB implements encryption at rest by using a master key, either written to file on disk, or stored in a custom provided keystore.
@@ -355,9 +354,9 @@ security:
   # Administrator user with ROLE_ADMIN authority.
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   admin:
-    # Define an initial password hash for the administrator user.
-    #
     # DEPRECATED: Use security.admin.initialPasswordHash instead.
+    #
+    # Define an initial password hash for the administrator user.
     initialPassword: ""
     # Define an initial password for the administrator user.
     # If the password is not specified, it will use the default one for GraphDB, which is "root"
@@ -369,9 +368,9 @@ security:
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning jobs can work properly.
   provisioner:
-    # Define an initial password for the provisioner user as a bcrypt hash.
-    #
     # DEPRECATED: Use security.provisioner.initialPasswordHash instead.
+    #
+    # Define an initial password for the provisioner user as a bcrypt hash.
     passwordHash: ""
     # Define an initial password for the provisioner user as a bcrypt hash.
     # If the password is not specified, it will use the default one specified in the provisioner.password.
@@ -1215,13 +1214,51 @@ serviceAccount:
   annotations: {}
 
 #################################
+# GraphDB Plugin Configurations #
+#################################
+
+# Settings for providing additional plugins to GraphDB.
+plugins:
+  # The location in the container where a volume will be mounted with the additional plugins.
+  mountPath: /opt/graphdb/home/extra-plugins
+
+  # Existing PeristentVolumeClaim to use for an additional plugins volume.
+  # Note that this PVC should support ReadOnlyMany or ReadWriteMany access mode if you have multiple GraphDB instances
+  # spread across multiple nodes.
+  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  existingVolumeClaim:
+    # The name of the existing PeristentVolumeClaim to use.
+    claimName: ""
+    # Name of the plugins' volume declaration.
+    volumeName: plugins-volume
+
+#################################
 # GraphDB Import Configurations #
 #################################
 
 # Settings for importing data into GraphDB
+# See https://graphdb.ontotext.com/documentation/11.5/loading-data-using-the-workbench.html#importing-server-files
 import:
-  # Attach additional PV which will be used as an import directory
-  # See https://graphdb.ontotext.com/documentation/11.5/loading-data-using-the-workbench.html#importing-server-files
+  # The location in the container where the import volume will be mounted.
+  mountPath: /opt/graphdb/home/graphdb-import
+
+  # Existing PeristentVolumeClaim to use for the import volume.
+  # Note that this PVC should support ReadOnlyMany or ReadWriteMany access mode if you have multiple GraphDB instances
+  # spread across multiple nodes.
+  # Note: Configuring this disables the import.volumeMount PVC templates.
+  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  existingVolumeClaim:
+    # The name of the existing PeristentVolumeClaim to use.
+    claimName: ""
+    # Name of the import volume declaration.
+    volumeName: plugins-volume
+
+  # DEPRECATED: Use .Values.import.existingVolumeClaim instead.
+  #
+  # Attach additional PVs per pod as StatefulSet's PVC templates, which will be used as the import directory.
+  # This is useful mainly when you have a single GraphDB pod and you can copy the data into the PV.
+  # For multiple GraphDB pods (i.e., a cluster), it's better to use a PV with an access mode of
+  # ReadOnlyMany or ReadWriteMany that can be attached to all GraphDB pods.
   volumeMount:
     # Toggles the attachment of the additional PV via StatefulSet's PVC templates.
     enabled: false

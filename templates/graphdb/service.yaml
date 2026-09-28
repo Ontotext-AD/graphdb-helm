@@ -33,6 +33,9 @@ spec:
   {{- if .Values.service.externalIPs }}
   externalIPs: {{ .Values.service.externalIPs | toYaml | nindent 4 }}
   {{- end }}
+  {{- if .Values.service.trafficDistribution }}
+  trafficDistribution: {{ .Values.service.trafficDistribution }}
+  {{- end }}
   ports:
     - name: http
       port: {{ .Values.service.ports.http }}

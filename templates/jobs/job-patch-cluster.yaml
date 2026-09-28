@@ -39,10 +39,12 @@ spec:
       affinity: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- with .Values.jobs.tolerations }}
-      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
+      tolerations:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
       {{- with .Values.jobs.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      topologySpreadConstraints:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
       {{- if or .Values.global.imagePullSecrets .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -82,6 +84,30 @@ spec:
                 secretKeyRef:
                   name: {{ (tpl .Values.security.provisioner.existingSecret .) | default (include "graphdb.fullname.secret.provisioning-user" .) }}
                   key: {{ .Values.security.provisioner.tokenKey }}
+            {{- if .Values.security.jobs.oauth2.enabled }}
+            - name: OAUTH2_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.jobs.oauth2.existingSecret . }}
+                  key: {{ .Values.security.jobs.oauth2.clientIdKey }}
+            - name: OAUTH2_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.jobs.oauth2.existingSecret . }}
+                  key: {{ .Values.security.jobs.oauth2.clientSecretKey }}
+            - name: OAUTH2_TOKEN_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.jobs.oauth2.existingSecret . }}
+                  key: {{ .Values.security.jobs.oauth2.tokenEndpointKey }}
+            {{- if .Values.security.jobs.oauth2.scopeKey }}
+            - name: OAUTH2_SCOPE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl .Values.security.jobs.oauth2.existingSecret . }}
+                  key: {{ .Values.security.jobs.oauth2.scopeKey }}
+            {{- end }}
+            {{- end }}
           {{- with .Values.jobs.securityContext }}
           securityContext: {{ toYaml . | nindent 12 }}
           {{- end }}

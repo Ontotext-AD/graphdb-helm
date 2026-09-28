@@ -1,9 +1,28 @@
 {{/*
+Helper function that can render list items defined as pure YAML or as a string template
+*/}}
+{{- define "graphdb.tpl.list" -}}
+  {{- $items := .items | default (list) -}}
+  {{- $root := .root -}}
+  {{- $rendered := list -}}
+  {{- range $item := $items -}}
+    {{- if typeIs "string" $item -}}
+      {{- with (tpl $item $root | trim) -}}
+        {{- $rendered = append $rendered (. | fromYaml) -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $rendered = append $rendered (tpl ($item | toYaml) $root | fromYaml) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $rendered | toYaml -}}
+{{- end -}}
+
+{{/*
 Combined image pull secrets
 */}}
 {{- define "graphdb.combinedImagePullSecrets" -}}
   {{- $secrets := concat .Values.global.imagePullSecrets .Values.image.pullSecrets }}
-  {{- tpl (toYaml $secrets) . -}}
+  {{- include "graphdb.tpl.list" (dict "items" $secrets "root" $ ) -}}
 {{- end -}}
 
 {{/*
@@ -102,18 +121,42 @@ Checks for potential issues and prints warning messages.
 Converts custom users YAML to a pretty JSON for insertion in users.js
 */}}
 {{- define "grahdb.security.extra-users.json" -}}
-{{- if .Values.security.initialUsers.users -}}
-  {{- range $user, $data := .Values.security.initialUsers.users -}}
-    {{- $user | quote }}: {{ $data | mustToPrettyJson }},
+  {{- if .Values.security.initialUsers.users -}}
+    {{- range $user, $data := .Values.security.initialUsers.users -}}
+      {{- printf "%s: %s" ($user | quote) ($data | mustToPrettyJson) -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
+
+{{- define "graphdb.security.appendBcryptPrefix" -}}
+  {{- if not (hasPrefix "{bcrypt}" .) -}}
+    {{- printf "{bcrypt}%s" . -}}
+  {{- else -}}
+    {{- print . -}}
+  {{- end }}
 {{- end -}}
 
 {{/*
-Calculate provisoner's bcrypt-hashed password
+Calculate the administrator's bcrypt-hashed password
+*/}}
+{{- define "graphdb.security.admin.passwordHash" -}}
+  {{/* Fallback to the old property initialPassword */}}
+  {{- with (coalesce .Values.security.admin.initialPassword .Values.security.admin.initialPasswordHash) -}}
+    {{- print (include "graphdb.security.appendBcryptPrefix" .) -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Calculate the provisoner's bcrypt-hashed password
 */}}
 {{- define "graphdb.security.provisioner.passwordHash" -}}
-  {{- printf "%s" ( htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username)) -}}
+  {{- $passwordHash := coalesce .Values.security.provisioner.passwordHash .Values.security.provisioner.initialPasswordHash -}}
+  {{- if $passwordHash -}}
+    {{- print (include "graphdb.security.appendBcryptPrefix" $passwordHash) -}}
+  {{- else -}}
+    {{- $brypt := htpasswd .Values.security.provisioner.username .Values.security.provisioner.password | trimPrefix (printf "%s:" .Values.security.provisioner.username) -}}
+    {{- print (include "graphdb.security.appendBcryptPrefix" $brypt) -}}
+  {{- end }}
 {{- end -}}
 
 {{/*

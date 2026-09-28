@@ -1,5 +1,57 @@
 # GraphDB Helm chart release notes
 
+## Version 12.6.0
+
+## New
+
+- Added `security.jobs.oauth2` value for configuring authentication for the automation Jobs when basic auth is disabled.
+  It fetches a token from a provided OAuth 2.0 endpoint via the Client Credentials grant. This resolves hanging backup
+  and cluster operations in environments with strict security requirements.
+- Added `topologySpreadConstraintsPreset` for GraphDB and proxy StatefulSets. When enabled, automatically
+  configures two topology spread constraints that spread pods across availability zones
+  (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on
+  AWS/Azure/GCP with multiple availability zones. Explicit `topologySpreadConstraints` takes precedence
+  when set.
+- Added support for rendering list items declared as strings. This allows you to use templates with conditional
+  expressions and other function calls directly in the list items. Affected configuration properties:
+  - `global.imagePullSecrets` and `image.pullSecrets`
+  - `ingress.extraHosts` and `ingress.extraTLS`
+  - `backup.extraEnvFrom` and `backup.extraEnv`
+  - `tolerations` and `proxy.tolerations`
+  - `topologySpreadConstraints` and `proxy.topologySpreadConstraints`
+  - `extraEnvFrom` and `proxy.extraEnvFrom`
+  - `extraEnv` and `proxy.extraEnv`
+  - `extraVolumes` and `proxy.extraVolumes`
+  - `extraVolumeMounts` and `proxy.extraVolumeMounts`
+  - `extraVolumeClaimTemplates` and `proxy.extraVolumeClaimTemplates`
+  - `extraInitContainers` and `proxy.extraInitContainers`
+  - `extraContainers` and `proxy.extraContainers`
+  - `jobs.tolerations` and `jobs.tolerations`
+  - `jobs.topologySpreadConstraints` and `jobs.topologySpreadConstraints`
+- Added `podAntiAffinity.avoidProxies` and `proxy.podAntiAffinity.avoidCluster` that render additional pod anti-affinity
+  rules that will try to keep GraphDB cluster pods and GraphDB proxy pods on different topologies.
+- Added `security.admin.initialPasswordHash` replacing the now deprecated `security.admin.initialPassword`
+- Added `security.provisioner.initialPasswordHash` replacing the now deprecated `security.provisioner.passwordHash`
+- Added `ingress.servicePort` that can override the automatically assigned backend service port of the default http path
+  rule
+- Added `ingress.extraPaths` for adding additional http path rules to the default host rule
+- Added `service.trafficDistribution` and `proxy.service.trafficDistribution` for overriding the traffic distribution
+  policy for the Service endpoints.
+- Added `import.mountPath` to customize the location where the import volume is mounted
+- Added `import.existingVolumeClaim` to use an existing volume claim for the import volume
+- Added `plugins.mountPath` to customize the location where additional plugins are mounted
+- Added `plugins.existingVolumeClaim` configurations for loading additional plugins from an existing persistence volume
+
+### Updated
+
+- Removed the deprecated `default.min.distinct.threshold` property from `configuration.defaultJavaArguments` (since
+  GraphDB 11.0)
+- Removed unnecessary Java arguments from `configuration.defaultJavaArguments`
+  - `-XX:+UseContainerSupport` is enabled by default
+  - `-XX:-UseCompressedOops` is disabled automatically for large heap sizes
+- Ensured consistent rendering of bcrypt hashes in user.js by automatically appending `{bcrypt}` if missing
+- Deprecated `import.volumeMount` in favor of `import.existingVolumeClaim`
+
 ## Version 12.5.1
 
 ### New

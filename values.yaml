@@ -16,7 +16,7 @@ global:
 
   # Inserts additional pull secret references together along with any from .Values.image.pullSecrets
   # Can be used to override it globally when using umbrella charts.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets
   #
   # Example:
@@ -98,7 +98,7 @@ image:
   pullPolicy: IfNotPresent
 
   # Secrets for pulling GraphDB's Docker image from secured registries.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/configuration/secret/#using-imagepullsecrets
   #
   # Example:
@@ -202,10 +202,10 @@ configuration:
   # Takes precedence over any configurations provided in graphdb.properties
   # The value is processed as a Helm template.
   # Ref: https://graphdb.ontotext.com/documentation/11.5/directories-and-config-properties.html#configuration
-  defaultJavaArguments: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -XX:-UseCompressedOops -Ddefault.min.distinct.threshold=100m
+  defaultJavaArguments: -XX:MaxRAMPercentage=70
 
   # Java arguments to append after .Values.configuration.defaultJavaArguments
-  # Use this one in order to avoid overriding the default values.
+  # Use this one to avoid overriding the default values.
   # The value is processed as a Helm template.
   javaArguments: ""
 
@@ -282,7 +282,6 @@ configuration:
     # The path where the keystore/truststore will be mounted inside the container.
     mountPath: /etc/graphdb/tls/tomcat/
 
-
   # Encryption at rest configuration
   #
   # GraphDB implements encryption at rest by using a master key, either written to file on disk, or stored in a custom provided keystore.
@@ -355,23 +354,35 @@ security:
   # Administrator user with ROLE_ADMIN authority.
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   admin:
-    # Define an initial password for the administrator user.
-    # If the password is not specified, it will use the default one for GraphDB which is "root"
-    # Important: This value must be a bcrypt encrypted hash, not a plaintext string. The format is "{bcrypt}<the-encrypted-hash>"
+    # DEPRECATED: Use security.admin.initialPasswordHash instead.
+    #
+    # Define an initial password hash for the administrator user.
     initialPassword: ""
+    # Define an initial password for the administrator user.
+    # If the password is not specified, it will use the default one for GraphDB, which is "root"
+    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
+    # The format is "{bcrypt}<the-encrypted-hash>" or just "<the-encrypted-hash>"
+    initialPasswordHash: ""
 
   # Provisioning user with ROLE_ADMIN authority
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning jobs can work properly.
   provisioner:
+    # DEPRECATED: Use security.provisioner.initialPasswordHash instead.
+    #
+    # Define an initial password for the provisioner user as a bcrypt hash.
+    passwordHash: ""
+    # Define an initial password for the provisioner user as a bcrypt hash.
+    # If the password is not specified, it will use the default one specified in the provisioner.password.
+    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
+    # The format is "{bcrypt}<the-encrypted-hash>" or just "<the-encrypted-hash>"
+    # Important: During the initial provisioning, this must match the password provided in provisioner.password,
+    # otherwise the automation scripts will fail.
+    initialPasswordHash: ""
     # The following user will be created in the default initial users.js and used in the cluster provisioning.
     # Note: The user is created regardless of if the existingSecret is provided or not.
     username: provisioner
     password: iHaveSuperpowers
-    # Define an initial password for the provisioner user as a bcrypt hash.
-    # If the password is not specified, it will use the default one specified in the provisioner.password.
-    # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
-    passwordHash: ""
     # Reference to Secret with a basic authentication token of an existing user to use for provisioning tasks instead of the default user in the initial
     # user.js that is created using the plaintext username and password configurations from above.
     # Note that the user must already exist in GraphDB for this to work properly.
@@ -410,6 +421,26 @@ security:
   # This means any users that were created through the REST API or the Workbench will be lost.
   # Use this only if you want the users Secret to be your source of truth.
   overrideUsers: false
+
+  # Security configurations for the various automation Jobs that run as part of the GraphDB chart release.
+  jobs:
+    # Configures OAuth 2.0 client credentials authentication for obtaining access tokens from an OIDC-compatible provider.
+    # This allows automated jobs, such as backups and cluster management, to be executed in systems where basic auth is disabled.
+    oauth2:
+      # Toggles oauth2 authentication across the Helm chart automation.
+      enabled: false
+      # Existing Kubernetes Secret containing the necessary secret values for initiating a client credentials grant with
+      # the OIDC provider.
+      existingSecret: ""
+      # Key in the existing Secret for the OAuth2 token endpoint URL for the OIDC provider.
+      tokenEndpointKey: ""
+      # Key in the existing Secret for the client ID for the client credentials grant.
+      clientIdKey: ""
+      # Key in the existing Secret for the client secret for the client credentials grant.
+      clientSecretKey: ""
+      # Key in the existing Secret for the scopes to request in the client credentials grant.
+      # This is an optional parameter. If not provided, no scopes will be provided in the request.
+      scopeKey: ""
 
 ##################################
 # GraphDB Cluster Configurations #
@@ -616,6 +647,9 @@ ingress:
   # Sets the ingress path type.
   # If you need to use ImplementationSpecific, make sure to set any annotations needed by the controller implementation.
   pathType: Prefix
+  # If set, overrides the automatically assigned backend service port.
+  # Use when you want to route the traffic to a different port than the default or to a side-car container.
+  servicePort: ""
   # Configures SSL termination on Ingress level.
   # Ref: https://kubernetes.github.io/ingress-nginx/examples/tls-termination/
   tls:
@@ -626,11 +660,14 @@ ingress:
     # If TLS is enabled, it's required to be provided, depending on the deployment.
     # This could be an existing Secret or one that is not yet created.
     secretName: ""
+  # List of additional path rules to include with the default rule.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
+  extraPaths: []
   # List of additional hostnames to append to the Ingress resource.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraHosts: []
   # List of additional TLS records to append to the Ingress resource.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraTLS: []
 
 ##########################
@@ -681,6 +718,10 @@ service:
   extraPorts: []
   # Indicates that DNS records are created for not-ready Pods.
   publishNotReadyAddresses: false
+  # Overrides the traffic distribution policy for the Service endpoints.
+  # Unless specified, Kubernetes will distribute traffic evenly.
+  # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution
+  trafficDistribution: ""
 
 # Configurations for GraphDB headless Service.
 # This Service is deployed regardless of the amount of .Values.replicas, so it exists for both single node and for cluster mode.
@@ -732,7 +773,8 @@ persistence:
     # Specification for a PVC to be created by the StatefulSet.
     # Tune according to your needs.
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes:
+        - ReadWriteOnce
       resources:
         requests:
           storage: 5Gi
@@ -873,11 +915,11 @@ backup:
   failedJobsHistoryLimit: 3
 
   # Additional environment variables to be set for the backup container.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnvFrom: []
 
   # Additional environment variables to be set for the backup container.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnv: []
 
 ##############################
@@ -904,11 +946,13 @@ terminationGracePeriodSeconds: 120
 # Configures the GraphDB container lifecycle hooks (postStart, preStop).
 # When using a preStop sleep for connection draining, ensure the sleep duration is less than terminationGracePeriodSeconds.
 # Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
-lifecycle: {}
+#
+# Example:
 # lifecycle:
 #   preStop:
 #     exec:
 #       command: ["/bin/sh", "-c", "sleep 115"]
+lifecycle: {}
 
 # Toggles the auto mounting of API credentials token into the Pods.
 # Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
@@ -980,7 +1024,8 @@ securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
-    drop: [ "ALL" ]
+    drop:
+      - ALL
   seccompProfile:
     type: RuntimeDefault
 
@@ -990,7 +1035,8 @@ initContainerSecurityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
-    drop: [ "ALL" ]
+    drop:
+      - ALL
   seccompProfile:
     type: RuntimeDefault
 
@@ -1020,17 +1066,32 @@ podAntiAffinity:
   enabled: true
   preset: soft
   topology: kubernetes.io/hostname
+  # Enabling this will avoid scheduling GraphDB pods on nodes where any GraphDB proxy pods are scheduled.
+  avoidProxies: false
 
 # List of taint tolerations.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 tolerations: []
 
 # Configurations for spreading Pods across different failure domains.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
 topologySpreadConstraints: []
+
+# Default topology spread constraints preset ensuring GraphDB pods are spread across availability zones and nodes.
+# When enabled and topologySpreadConstraints is empty, two constraints are generated:
+# - Spread across availability zones (topology.kubernetes.io/zone)
+# - Spread across nodes (kubernetes.io/hostname)
+# Useful for cloud deployments on AWS/Azure/GCP with multiple availability zones.
+# Note: topologySpreadConstraints takes precedence over this preset when set.
+# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+topologySpreadConstraintsPreset:
+  enabled: false
+  maxSkew: 1
+  minDomains:
+  whenUnsatisfiable: ScheduleAnyway
 
 ##########################
 # Resource Configuration #
@@ -1093,34 +1154,34 @@ livenessProbe:
 #########################################
 
 # Additional environment variables to be set for the GraphDB containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraEnvFrom: []
 
 # Additional environment variables to be set for the GraphDB containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraEnv: []
 
 # Additional volumes to be set for the GraphDB Pod.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraVolumes: []
 
 # Additional volume mounts to be set for the GraphDB containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraVolumeMounts: []
 
 # Additional volume claim templates to be set in GraphDB's StatefulSet.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraVolumeClaimTemplates: []
 
 # Additional init containers to be inserted after the provisioning init containers.
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraInitContainers: []
 
 # Additional GraphDB container ports to expose.
 extraContainerPorts: {}
 
 # Additional containers to insert into the GraphDB Pod, e.g. sidecar containers
-# Values are processed as Helm templates.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 extraContainers: []
 
 ########################################
@@ -1161,13 +1222,51 @@ serviceAccount:
   annotations: {}
 
 #################################
+# GraphDB Plugin Configurations #
+#################################
+
+# Settings for providing additional plugins to GraphDB.
+plugins:
+  # The location in the container where a volume will be mounted with the additional plugins.
+  mountPath: /opt/graphdb/home/extra-plugins
+
+  # Existing PeristentVolumeClaim to use for an additional plugins volume.
+  # Note that this PVC should support ReadOnlyMany or ReadWriteMany access mode if you have multiple GraphDB instances
+  # spread across multiple nodes.
+  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  existingVolumeClaim:
+    # The name of the existing PeristentVolumeClaim to use.
+    claimName: ""
+    # Name of the plugins' volume declaration.
+    volumeName: plugins-volume
+
+#################################
 # GraphDB Import Configurations #
 #################################
 
 # Settings for importing data into GraphDB
+# See https://graphdb.ontotext.com/documentation/11.5/loading-data-using-the-workbench.html#importing-server-files
 import:
-  # Attach additional PV which will be used as an import directory
-  # See https://graphdb.ontotext.com/documentation/11.5/loading-data-using-the-workbench.html#importing-server-files
+  # The location in the container where the import volume will be mounted.
+  mountPath: /opt/graphdb/home/graphdb-import
+
+  # Existing PeristentVolumeClaim to use for the import volume.
+  # Note that this PVC should support ReadOnlyMany or ReadWriteMany access mode if you have multiple GraphDB instances
+  # spread across multiple nodes.
+  # Note: Configuring this disables the import.volumeMount PVC templates.
+  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  existingVolumeClaim:
+    # The name of the existing PeristentVolumeClaim to use.
+    claimName: ""
+    # Name of the import volume declaration.
+    volumeName: plugins-volume
+
+  # DEPRECATED: Use .Values.import.existingVolumeClaim instead.
+  #
+  # Attach additional PVs per pod as StatefulSet's PVC templates, which will be used as the import directory.
+  # This is useful mainly when you have a single GraphDB pod and you can copy the data into the PV.
+  # For multiple GraphDB pods (i.e., a cluster), it's better to use a PV with an access mode of
+  # ReadOnlyMany or ReadWriteMany that can be attached to all GraphDB pods.
   volumeMount:
     # Toggles the attachment of the additional PV via StatefulSet's PVC templates.
     enabled: false
@@ -1183,7 +1282,8 @@ import:
       # Values are processed as Helm templates.
       annotations: {}
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: 10Gi
@@ -1261,12 +1361,12 @@ jobs:
   affinity: {}
 
   # List of taint tolerations.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
 
   # Configurations for spreading Pods across different failure domains.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
   topologySpreadConstraints: []
@@ -1288,7 +1388,8 @@ jobs:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
-      drop: [ "ALL" ]
+      drop:
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -1434,6 +1535,10 @@ proxy:
     extraPorts: []
     # Indicates that DNS records are created for not-ready Pods.
     publishNotReadyAddresses: false
+    # Overrides the traffic distribution policy for the Service endpoints.
+    # Unless specified, Kubernetes will distribute traffic evenly.
+    # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution
+    trafficDistribution: ""
 
   # GraphDB cluster proxy headless Service configurations.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/service/
@@ -1486,7 +1591,8 @@ proxy:
       # Specification for a PVC to be created by the StatefulSet.
       # Tune according to your needs.
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: 500Mi
@@ -1536,11 +1642,13 @@ proxy:
   # Configures the GraphDB proxy container lifecycle hooks (postStart, preStop).
   # When using a preStop sleep for connection draining, ensure the sleep duration is less than terminationGracePeriodSeconds.
   # Ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
-  lifecycle: {}
+  #
+  # Example:
   # lifecycle:
   #   preStop:
   #     exec:
   #       command: ["/bin/sh", "-c", "sleep 25"]
+  lifecycle: {}
 
   # Overrides the default Kubernetes scheduler.
   # See https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/#specify-schedulers-for-pods
@@ -1607,7 +1715,8 @@ proxy:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
-      drop: [ "ALL" ]
+      drop:
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -1617,7 +1726,8 @@ proxy:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
-      drop: [ "ALL" ]
+      drop:
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -1636,7 +1746,7 @@ proxy:
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
 
-  # Default podAntiAffinity rule ensuring that GraphDB pods are scheduled on different Kubernetes nodes.
+  # Default podAntiAffinity rule ensuring that GraphDB proxy pods are scheduled on different Kubernetes nodes.
   # Note that this would take effect when GraphDB is deployed in a cluster.
   #
   # Possible values for .Values.podAntiAffinity.preset are:
@@ -1647,17 +1757,32 @@ proxy:
     enabled: true
     preset: soft
     topology: kubernetes.io/hostname
+    # Enabling this will avoid scheduling GraphDB proxy pods on nodes where any GraphDB cluster pods are scheduled.
+    avoidCluster: false
 
   # List of taint tolerations.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
 
   # Configurations for spreading Pods across different failure domains.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#pod-topology-spread-constraints
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
   topologySpreadConstraints: []
+
+  # Default topology spread constraints preset ensuring GraphDB proxy pods are spread across availability zones and nodes.
+  # When enabled and topologySpreadConstraints is empty, two constraints are generated:
+  # - Spread across availability zones (topology.kubernetes.io/zone)
+  # - Spread across nodes (kubernetes.io/hostname)
+  # Useful for cloud deployments on AWS/Azure/GCP with multiple availability zones.
+  # Note: topologySpreadConstraints takes precedence over this preset when set.
+  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+  topologySpreadConstraintsPreset:
+    enabled: false
+    maxSkew: 1
+    minDomains:
+    whenUnsatisfiable: ScheduleAnyway
 
   ##########################
   # Resource Configuration #
@@ -1720,34 +1845,34 @@ proxy:
   #########################################
 
   # Additional environment variables to be set for the GraphDB proxy containers.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnvFrom: []
 
   # Additional environment variables to be set for the GraphDB proxy containers.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraEnv: []
 
   # Additional volumes to be set for the GraphDB proxy Pod.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraVolumes: []
 
   # Additional volume mounts to be set for the GraphDB proxy containers.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraVolumeMounts: []
 
   # Additional volume claim templates to be set in GraphDB proxy's StatefulSet.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraVolumeClaimTemplates: []
 
   # Additional init containers to be inserted after the provisioning init containers for the GraphDB proxy.
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraInitContainers: []
 
   # Additional GraphDB proxy container ports to expose.
   extraContainerPorts: {}
 
   # Additional containers to insert into the GraphDB proxy Pod, e.g. sidecar containers
-  # Values are processed as Helm templates.
+  # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraContainers: []
 
   ########################################
@@ -1780,6 +1905,6 @@ proxy:
 #################################
 
 # Additional objects to insert along with the release.
-# Values are processed as Helm templates with tpl function.
+# Values are processed as Helm templates, supporting both YAML objects and string list items.
 # Ref: https://helm.sh/docs/howto/charts_tips_and_tricks/#using-the-tpl-function
 extraObjects: []

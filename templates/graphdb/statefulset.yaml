@@ -48,7 +48,7 @@ spec:
         {{- toYaml .Values.import.volumeMount.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- with .Values.extraVolumeClaimTemplates }}
-      {{- tpl (toYaml .) $ | nindent 4 }}
+      {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
   template:
@@ -229,15 +229,25 @@ spec:
                       path: crl/{{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
               {{- end }}
         {{- end }}
+        {{- if .Values.plugins.existingVolumeClaim.claimName }}
+        - name: {{ .Values.plugins.existingVolumeClaim.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.plugins.existingVolumeClaim.claimName }}
+        {{- end }}
+        {{- if .Values.import.existingVolumeClaim.claimName }}
+        - name: {{ .Values.import.existingVolumeClaim.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.import.existingVolumeClaim.claimName }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- if or .Values.affinity .Values.podAntiAffinity.enabled }}
       affinity:
-        {{- if .Values.affinity  }}
+        {{- if .Values.affinity }}
           {{- tpl (toYaml .Values.affinity) $ | nindent 8 }}
         {{- end }}
         {{- if and .Values.podAntiAffinity.enabled (not .Values.affinity.podAntiAffinity) }}
@@ -250,22 +260,59 @@ spec:
                 labelSelector:
                   matchLabels:
                     {{- include "graphdb.selectorLabels" . | nindent 20 }}
+            {{- if .Values.podAntiAffinity.avoidProxies }}
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinity.topology }}
+                labelSelector:
+                  matchLabels:
+                    {{- include "graphdb-proxy.selectorLabels" . | nindent 20 }}
+            {{- end }}
           {{- else if eq .Values.podAntiAffinity.preset "hard" }}
           requiredDuringSchedulingIgnoredDuringExecution:
             - topologyKey: {{ .Values.podAntiAffinity.topology }}
               labelSelector:
                 matchLabels:
                   {{- include "graphdb.selectorLabels" . | nindent 18 }}
+            {{- if .Values.podAntiAffinity.avoidProxies }}
+            - topologyKey: {{ .Values.podAntiAffinity.topology }}
+              labelSelector:
+                matchLabels:
+                  {{- include "graphdb-proxy.selectorLabels" . | nindent 18 }}
+            {{- end }}
           {{- else }}
-            {{- fail (printf "Unknown podAntiAffinity preset '%s'" .Values.podAntiAffinity.preset) }}
+            {{- fail (printf "Unknown podAntiAffinity preset: %s" .Values.podAntiAffinity.preset) }}
           {{- end }}
         {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
-      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
+      tolerations:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
-      {{- with .Values.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- if or .Values.topologySpreadConstraints .Values.topologySpreadConstraintsPreset.enabled }}
+      topologySpreadConstraints:
+        {{- if .Values.topologySpreadConstraints }}
+          {{- include "graphdb.tpl.list" (dict "items" .Values.topologySpreadConstraints "root" $ ) | nindent 8 }}
+        {{- else }}
+        - maxSkew: {{ .Values.topologySpreadConstraintsPreset.maxSkew }}
+          {{- if .Values.topologySpreadConstraintsPreset.minDomains }}
+          minDomains: {{ .Values.topologySpreadConstraintsPreset.minDomains }}
+          {{- end }}
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: {{ .Values.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "graphdb.selectorLabels" . | nindent 14 }}
+        - maxSkew: {{ .Values.topologySpreadConstraintsPreset.maxSkew }}
+          {{- if .Values.topologySpreadConstraintsPreset.minDomains }}
+          minDomains: {{ .Values.topologySpreadConstraintsPreset.minDomains }}
+          {{- end }}
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: {{ .Values.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "graphdb.selectorLabels" . | nindent 14 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
@@ -436,7 +483,7 @@ spec:
               fi
               echo 'Done'
         {{- with .Values.extraInitContainers }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -463,7 +510,7 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb.fullname.configmap.environment" . }}
             {{- with .Values.extraEnvFrom }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- if or (eq .Values.configuration.encryption.type "pkcs12") (.Values.extraEnv) }}
           env:
@@ -475,7 +522,7 @@ spec:
                   key: {{ required "configuration.encryption.keystorePasswordSecretKey is required" .Values.configuration.encryption.keystorePasswordSecretKey }}
             {{- end }}
             {{- with .Values.extraEnv }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- end }}
           volumeMounts:
@@ -495,9 +542,17 @@ spec:
               mountPath: /opt/graphdb/home/conf/logback.xml
               subPath: {{ .Values.configuration.logback.configmapKey }}
             {{- end }}
-            {{- if .Values.import.volumeMount.enabled }}
+            {{- if and .Values.import.volumeMount.enabled (not .Values.import.existingVolumeClaim.claimName) }}
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
-              mountPath: /opt/graphdb/home/graphdb-import
+              mountPath: {{ .Values.import.mountPath }}
+            {{- end }}
+            {{- if .Values.plugins.existingVolumeClaim.claimName }}
+            - name: {{ .Values.plugins.existingVolumeClaim.volumeName }}
+              mountPath: {{ .Values.plugins.mountPath }}
+            {{- end }}
+            {{- if .Values.import.existingVolumeClaim.claimName }}
+            - name: {{ .Values.import.existingVolumeClaim.volumeName }}
+              mountPath: {{ .Values.import.mountPath }}
             {{- end }}
             {{- if or .Values.configuration.tls.keystore.existingSecret .Values.configuration.tls.truststore.existingSecret .Values.configuration.tls.certificateRevocationList.existingSecret }}
             - name: graphdb-tomcat-tls
@@ -508,7 +563,7 @@ spec:
               mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- end }}
             {{- with .Values.extraVolumeMounts }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -529,5 +584,5 @@ spec:
           livenessProbe: {{- include "graphdb.probes.liveness" . | nindent 12 }}
           {{- end }}
         {{- with .Values.extraContainers }}
-          {{ tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}

@@ -37,7 +37,7 @@ spec:
         {{- toYaml .Values.proxy.persistence.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
     {{- with .Values.proxy.extraVolumeClaimTemplates }}
-      {{- tpl (toYaml .) $ | nindent 4 }}
+      {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
     {{- end }}
   {{- end }}
   template:
@@ -193,14 +193,14 @@ spec:
               {{- end }}
         {{- end }}
         {{- with .Values.proxy.extraVolumes }}
-          {{- tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
       {{- with .Values.proxy.nodeSelector }}
       nodeSelector: {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       {{- if or .Values.proxy.affinity .Values.proxy.podAntiAffinity.enabled }}
       affinity:
-        {{- if .Values.proxy.affinity  }}
+        {{- if .Values.proxy.affinity }}
           {{- tpl (toYaml .Values.proxy.affinity) $ | nindent 8 }}
         {{- end }}
         {{- if and .Values.proxy.podAntiAffinity.enabled (not .Values.proxy.affinity.podAntiAffinity) }}
@@ -213,22 +213,59 @@ spec:
                 labelSelector:
                   matchLabels:
                     {{- include "graphdb-proxy.selectorLabels" . | nindent 20 }}
+            {{- if .Values.proxy.podAntiAffinity.avoidCluster }}
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: {{ .Values.proxy.podAntiAffinity.topology }}
+                labelSelector:
+                  matchLabels:
+                    {{- include "graphdb.selectorLabels" . | nindent 20 }}
+            {{- end }}
           {{- else if eq .Values.proxy.podAntiAffinity.preset "hard" }}
           requiredDuringSchedulingIgnoredDuringExecution:
             - topologyKey: {{ .Values.proxy.podAntiAffinity.topology }}
               labelSelector:
                 matchLabels:
                   {{- include "graphdb-proxy.selectorLabels" . | nindent 18 }}
+            {{- if .Values.proxy.podAntiAffinity.avoidCluster }}
+            - topologyKey: {{ .Values.proxy.podAntiAffinity.topology }}
+              labelSelector:
+                matchLabels:
+                  {{- include "graphdb.selectorLabels" . | nindent 18 }}
+            {{- end }}
           {{- else }}
-            {{- fail (printf "Unknown podAntiAffinity preset '%s'" .Values.proxy.podAntiAffinity.preset) }}
+            {{- fail (printf "Unknown podAntiAffinity preset: %s" .Values.proxy.podAntiAffinity.preset) }}
           {{- end }}
         {{- end }}
       {{- end }}
       {{- with .Values.proxy.tolerations }}
-      tolerations: {{- tpl (toYaml .) $ | nindent 8 }}
+      tolerations:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
-      {{- with .Values.proxy.topologySpreadConstraints }}
-      topologySpreadConstraints: {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- if or .Values.proxy.topologySpreadConstraints .Values.proxy.topologySpreadConstraintsPreset.enabled }}
+      topologySpreadConstraints:
+        {{- if .Values.proxy.topologySpreadConstraints }}
+          {{- include "graphdb.tpl.list" (dict "items" .Values.proxy.topologySpreadConstraints "root" $ ) | nindent 8 }}
+        {{- else }}
+        - maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
+          {{- if .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          minDomains: {{ .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          {{- end }}
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: {{ .Values.proxy.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
+        - maxSkew: {{ .Values.proxy.topologySpreadConstraintsPreset.maxSkew }}
+          {{- if .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          minDomains: {{ .Values.proxy.topologySpreadConstraintsPreset.minDomains }}
+          {{- end }}
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: {{ .Values.proxy.topologySpreadConstraintsPreset.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "graphdb-proxy.selectorLabels" . | nindent 14 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.proxy.podSecurityContext }}
       securityContext: {{- toYaml . | nindent 8 }}
@@ -353,7 +390,7 @@ spec:
 
               echo 'Done'
         {{- with .Values.proxy.extraInitContainers }}
-          {{- toYaml . | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
       containers:
         - name: {{ include "graphdb-proxy.chartName" . }}
@@ -372,10 +409,11 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb-proxy.fullname.configmap.environment" . }}
             {{- with .Values.proxy.extraEnvFrom }}
-              {{- tpl (toYaml .) $ | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- with .Values.proxy.extraEnv }}
-          env: {{- tpl (toYaml .) $ | nindent 12 }}
+          env:
+            {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
           {{- end }}
           ports:
             - name: http
@@ -402,7 +440,7 @@ spec:
               mountPath: {{ .Values.cluster.tls.mountPath }}
             {{- end }}
             {{- with .Values.proxy.extraVolumeMounts }}
-              {{- toYaml . | nindent 12 }}
+              {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 12 }}
             {{- end }}
           {{- with .Values.proxy.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -423,6 +461,6 @@ spec:
           livenessProbe: {{- include "graphdb-proxy.probes.liveness" . | nindent 12 }}
           {{- end }}
         {{- with .Values.proxy.extraContainers }}
-          {{ tpl (toYaml .) $ | nindent 8 }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
 {{- end }}

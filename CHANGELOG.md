@@ -37,6 +37,10 @@
 - Added `ingress.extraPaths` for adding additional http path rules to the default host rule
 - Added `service.trafficDistribution` and `proxy.service.trafficDistribution` for overriding the traffic distribution
   policy for the Service endpoints.
+- Added `import.mountPath` to customize the location where the import volume is mounted
+- Added `import.existingVolumeClaim` to use an existing volume claim for the import volume
+- Added `plugins.mountPath` to customize the location where additional plugins are mounted
+- Added `plugins.existingVolumeClaim` configurations for loading additional plugins from an existing persistence volume
 
 ### Updated
 
@@ -46,6 +50,7 @@
   - `-XX:+UseContainerSupport` is enabled by default
   - `-XX:-UseCompressedOops` is disabled automatically for large heap sizes
 - Ensured consistent rendering of bcrypt hashes in user.js by automatically appending `{bcrypt}` if missing
+- Deprecated `import.volumeMount` in favor of `import.existingVolumeClaim`
 
 ## Version 12.5.1
 

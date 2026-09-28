@@ -14,7 +14,7 @@ function log {
 function gdb_get_oauth2_token() {
   local client_id="${OAUTH2_CLIENT_ID:-null}"
   local client_secret="${OAUTH2_CLIENT_SECRET:-null}"
-  local login_url="${OAUTH2_LOGIN_URL:-null}"
+  local token_endpoint_url="${OAUTH2_TOKEN_ENDPOINT:-null}"
   local scope="${OAUTH2_SCOPE:-null}"
 
   if [[ -z "${client_id}" || "${client_id}" == "null" ]]; then
@@ -29,7 +29,7 @@ function gdb_get_oauth2_token() {
     return
   fi
 
-  if [[ -z "${login_url}" || "${login_url}" == "null" ]]; then
+  if [[ -z "${token_endpoint_url}" || "${token_endpoint_url}" == "null" ]]; then
     log "OAuth2: missing login url; falling back to basic auth"
     access_token=1
     return
@@ -38,13 +38,13 @@ function gdb_get_oauth2_token() {
   local token_response
 
   if [[ -z "${scope}" || "${scope}" == "null" ]]; then
-    token_response="$(curl -sS -L -X POST "${login_url}" \
+    token_response="$(curl -sS -L -X POST "${token_endpoint_url}" \
       -H "Content-Type: application/x-www-form-urlencoded" \
       --data-urlencode "client_id=${client_id}" \
       --data-urlencode "client_secret=${client_secret}" \
       --data-urlencode "grant_type=client_credentials" 2>/dev/null || true)"
   else
-    token_response="$(curl -sS -L -X POST "${login_url}" \
+    token_response="$(curl -sS -L -X POST "${token_endpoint_url}" \
       -H "Content-Type: application/x-www-form-urlencoded" \
       --data-urlencode "client_id=${client_id}" \
       --data-urlencode "client_secret=${client_secret}" \

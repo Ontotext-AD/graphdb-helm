@@ -1,4 +1,4 @@
-Performing administrative operations with SSO
+Performing administrative operations with OAuth 2.0 SSO
 ===
 
 This guide provides instructions for performing administrative operations in a system with basic auth disabled and SSO
@@ -30,10 +30,10 @@ You should store the following values:
 These values should be used to populate a secret:
 ```bash
 kubectl create secret generic gdb-sso \
- --from-literal=clientId=<M2M_CLIENT_ID> \
+ --from-literal=client=<M2M_CLIENT_ID> \
  --from-literal=clientSecret=<M2M_CLIENT_SECRET> \
- --from-literal=tokenUrl=https://login.microsoftonline.com/<TENANT_ID>/oauth2/v2.0/token \
- --from-literal=scopesKey=api://<GDB_CLIENT_ID>/.default
+ --from-literal=tokenEndpoint=https://login.microsoftonline.com/<TENANT_ID>/oauth2/v2.0/token \
+ --from-literal=scope=api://<GDB_CLIENT_ID>/.default
 ```
 Now you should be able to set up the Automation (m2m) app registration and also the GDB app registration.
 
@@ -58,8 +58,8 @@ configuration:
     graphdb.auth.oauth.default_roles: "ROLE_USER"
 ```
 
-Assuming GraphDB has been set up as above and you have the secret configured, you can now configure the automated
-scripts to connect to GraphDB.
+Assuming GraphDB has been set up as above and you have the secret configured, you can now configure the
+scripts in the automation Jobs to connect to GraphDB.
 
 ```yaml
 security:
@@ -69,13 +69,14 @@ security:
   provisioner:
     username: graphdb-provisioner
     password: provisionerpass123
-  oauth2:
-    enabled: true
-    existingSecret: "gdb-sso"
-    clientIdKey: "clientId"
-    clientSecretKey: "clientSecret"
-    tokenUrlKey: "tokenUrl"
-    scopesKey: "scopesKey"
+  jobs:
+    oauth2:
+      enabled: true
+      existingSecret: "gdb-sso"
+      clientIdKey: "client"
+      clientSecretKey: "clientSecret"
+      tokenUrlKey: "tokenEndpoint"
+      scopeKey: "scope"
 ```
 
 ## Testing

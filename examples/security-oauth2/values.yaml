@@ -31,13 +31,14 @@ security:
   provisioner:
     username: graphdb-provisioner
     password: provisionerpass123
-  oauth2:
-    enabled: true
-    existingSecret: "gdb-sso"
-    clientIdKey: "clientId"
-    clientSecretKey: "clientSecret"
-    tokenUrlKey: "tokenUrl"
-    scopesKey: "scopesKey"
+  jobs:
+    oauth2:
+      enabled: true
+      existingSecret: "gdb-sso"
+      clientIdKey: "client"
+      clientSecretKey: "clientSecret"
+      tokenEndpointKey: "tokenEndpoint"
+      scopeKey: "scope"
 
 repositories:
   # Optional configmap containing repository configuration .ttl file(s).

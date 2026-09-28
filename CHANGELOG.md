@@ -4,9 +4,9 @@
 
 ## New
 
-- Added `security.oauth2` value for running operations using SSO when basic auth is disabled. It fetches a token
-  from a provided oauth2 endpoint. This resolves hanging backup and cluster operations in environments with
-  strict security requirements.
+- Added `security.jobs.oauth2` value for configuring authentication for the automation Jobs when basic auth is disabled.
+  It fetches a token from a provided OAuth 2.0 endpoint via the Client Credentials grant. This resolves hanging backup
+  and cluster operations in environments with strict security requirements.
 - Added `topologySpreadConstraintsPreset` for GraphDB and proxy StatefulSets. When enabled, automatically
   configures two topology spread constraints that spread pods across availability zones
   (`topology.kubernetes.io/zone`) and nodes (`kubernetes.io/hostname`). Simplifies cloud deployments on

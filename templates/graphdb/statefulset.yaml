@@ -229,6 +229,16 @@ spec:
                       path: crl/{{ .Values.cluster.tls.certificateRevocationList.certificateRevocationListKey }}
               {{- end }}
         {{- end }}
+        {{- if .Values.plugins.existingVolumeClaim.claimName }}
+        - name: {{ .Values.plugins.existingVolumeClaim.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.plugins.existingVolumeClaim.claimName }}
+        {{- end }}
+        {{- if .Values.import.existingVolumeClaim.claimName }}
+        - name: {{ .Values.import.existingVolumeClaim.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.import.existingVolumeClaim.claimName }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
           {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
         {{- end }}
@@ -526,9 +536,17 @@ spec:
               mountPath: /opt/graphdb/home/conf/logback.xml
               subPath: {{ .Values.configuration.logback.configmapKey }}
             {{- end }}
-            {{- if .Values.import.volumeMount.enabled }}
+            {{- if and .Values.import.volumeMount.enabled (not .Values.import.existingVolumeClaim.claimName) }}
             - name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
-              mountPath: /opt/graphdb/home/graphdb-import
+              mountPath: {{ .Values.import.mountPath }}
+            {{- end }}
+            {{- if .Values.plugins.existingVolumeClaim.claimName }}
+            - name: {{ .Values.plugins.existingVolumeClaim.volumeName }}
+              mountPath: {{ .Values.plugins.mountPath }}
+            {{- end }}
+            {{- if .Values.import.existingVolumeClaim.claimName }}
+            - name: {{ .Values.import.existingVolumeClaim.volumeName }}
+              mountPath: {{ .Values.import.mountPath }}
             {{- end }}
             {{- if or .Values.configuration.tls.keystore.existingSecret .Values.configuration.tls.truststore.existingSecret .Values.configuration.tls.certificateRevocationList.existingSecret }}
             - name: graphdb-tomcat-tls

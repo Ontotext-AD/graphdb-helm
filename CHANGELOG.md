@@ -1,8 +1,14 @@
 # GraphDB Helm chart release notes
 
+## Version 12.6.1
+
+### Fixed
+
+- Added missing comma when rendering extra initial users from `security.initialUsers`
+
 ## Version 12.6.0
 
-## New
+### New
 
 - Added `security.jobs.oauth2` value for configuring authentication for the automation Jobs when basic auth is disabled.
   It fetches a token from a provided OAuth 2.0 endpoint via the Client Credentials grant. This resolves hanging backup
@@ -60,7 +66,7 @@
 
 ## Version 12.5.0
 
-## New
+### New
 
 - Updated to GraphDB [11.5.0](https://graphdb.ontotext.com/documentation/11.5/release-notes.html#graphdb-11-5-0)
 - Added example for enforcing GraphDB security (`examples/security-enforce`) demonstrating the

@@ -123,7 +123,7 @@ Converts custom users YAML to a pretty JSON for insertion in users.js
 {{- define "grahdb.security.extra-users.json" -}}
   {{- if .Values.security.initialUsers.users -}}
     {{- range $user, $data := .Values.security.initialUsers.users -}}
-      {{- printf "%s: %s" ($user | quote) ($data | mustToPrettyJson) -}}
+      {{- printf "%s: %s" ($user | quote) ($data | mustToPrettyJson) -}},
     {{- end -}}
   {{- end -}}
 {{- end -}}

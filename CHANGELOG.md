@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 12.6.2
+
+### Fixed
+
+- Changed `import.existingVolumeClaim.volumeName` to default to the correct volume name
+
 ## Version 12.6.1
 
 ### Fixed

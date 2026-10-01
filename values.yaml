@@ -1259,7 +1259,7 @@ import:
     # The name of the existing PeristentVolumeClaim to use.
     claimName: ""
     # Name of the import volume declaration.
-    volumeName: plugins-volume
+    volumeName: import-volume
 
   # DEPRECATED: Use .Values.import.existingVolumeClaim instead.
   #

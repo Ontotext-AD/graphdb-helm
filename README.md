@@ -1,8 +1,8 @@
 # Helm Chart for GraphDB
 
 [![CI](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml/badge.svg)](https://github.com/Ontotext-AD/graphdb-helm/actions/workflows/ci.yml)
-![Version: 12.6.2](https://img.shields.io/badge/Version-12.6.2-informational?style=flat-square)
-![AppVersion: 11.5.1](https://img.shields.io/badge/AppVersion-11.5.1-informational?style=flat-square)
+![Version: 12.6.3](https://img.shields.io/badge/Version-12.6.3-informational?style=flat-square)
+![AppVersion: 11.5.2](https://img.shields.io/badge/AppVersion-11.5.2-informational?style=flat-square)
 
 <!--
 TODO: Add ArtifactHub badge when ready

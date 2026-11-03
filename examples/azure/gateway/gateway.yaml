@@ -1,0 +1,32 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway-azure-alb
+  namespace: default
+  annotations:
+    # Reference to the ApplicationLoadBalancer resource managing this Gateway.
+    # Required for both the AKS-managed add-on and a self-managed (BYO) ALB Controller installation.
+    alb.networking.azure.io/alb-name: graphdb-alb
+    alb.networking.azure.io/alb-namespace: azure-alb-system
+spec:
+  # "azure-alb-external" if using the AKS-managed ALB Controller add-on (recommended, requires this
+  # exact name - the controller rejects any other GatewayClass name). If you installed the ALB
+  # Controller yourself via Helm (BYO), use whatever name you chose for your own GatewayClass instead.
+  gatewayClassName: azure-alb-external
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: graphdb-tls
+      allowedRoutes:
+        namespaces:
+          from: All

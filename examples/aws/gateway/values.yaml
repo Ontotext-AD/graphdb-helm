@@ -15,25 +15,10 @@ configuration:
 ingress:
   enabled: false
 
-gatewayApi:
-  enabled: true
-  gateway:
-    className: alb
-    # ALB's Gateway API implementation does NOT read alb.ingress.kubernetes.io/* annotations (those only
-    # apply to the Ingress resource). Scheme/subnets/IP address type are set via a LoadBalancerConfiguration
-    # CRD referenced here. Apply loadbalancerconfiguration.yaml from this folder before installing, or omit
-    # parametersRef to get the AWS LBC default (an internal-only ALB).
-    infrastructure:
-      parametersRef:
-        group: gateway.k8s.aws
-        kind: LoadBalancerConfiguration
-        name: graphdb-lb-config
+gateway:
   httpRoute:
     enabled: true
-
-  # Required for ALB: without it, target-type defaults to "instance", which needs a NodePort/LoadBalancer
-  # Service and fails against this chart's ClusterIP Service.
-  targetGroupConfiguration:
-    enabled: true
-    defaultConfiguration:
-      targetType: ip
+    parentRefs:
+      - name: gateway-aws-lb
+        namespace: default
+        sectionName: http

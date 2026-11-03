@@ -4,10 +4,9 @@
 
 ### New
 
-- Added Kubernetes Gateway API support as an alternative to Ingress. Controlled via
-  the new `gatewayApi.*` values block. Supports HTTP, HTTPS with TLS termination, TLS passthrough,
-  context path URL rewriting, and gRPC cluster communication. Added cloud-specific examples for
-  NGINX Gateway Fabric, AWS, and Azure.
+- Added Kubernetes Gateway API support as an alternative to Ingress. Controlled via the new `gateway` values block.
+  Supports HTTP, HTTPS with TLS termination, TLS passthrough, context path URL rewriting and backend TLS. Added
+  cloud-specific examples for NGINX Gateway Fabric, AWS, and Azure.
 
 ## Version 12.6.3
 

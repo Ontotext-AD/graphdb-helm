@@ -28,11 +28,11 @@ az aks update --name <cluster-name> --resource-group <resource-group> \
   --enable-gateway-api --enable-application-load-balancer
 ```
 
-With this option, `gatewayApi.gateway.className` must be exactly `azure-alb-external` - the controller
+With this option, the Gateway's `spec.gatewayClassName` must be exactly `azure-alb-external` - the controller
 rejects any other GatewayClass name.
 
 **Option B: Self-managed (BYO) ALB Controller** - install the controller yourself via Helm, which lets
-you choose your own GatewayClass name for `gatewayApi.gateway.className`:
+you choose your own `spec.gatewayClassName` name for Gateway:
 
 ```bash
 az aks install-cli
@@ -50,13 +50,7 @@ helm install alb-controller oci://mcr.microsoft.com/application-lb/charts/alb-co
   `alb-name`), pointing at that subnet.
 - Gateway API CRDs, v1.2.0+ (earlier versions lack the `spec.infrastructure` field some examples use):
 
-```bash
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml
-```
-
 ## Examples
 
 * [values.yaml](values.yaml) — Deploy and expose GraphDB over HTTP using Application Gateway for Containers.
 * [values_https.yaml](values_https.yaml) — Deploy and expose GraphDB over HTTPS with TLS termination.
-* [values_cluster.yaml](values_cluster.yaml) — Deploy a GraphDB cluster and expose its gRPC inter-node
-  port externally via a GRPCRoute.

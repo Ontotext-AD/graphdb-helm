@@ -14,9 +14,10 @@ configuration:
 ingress:
   enabled: false
 
-gatewayApi:
-  enabled: true
-  gateway:
-    className: nginx
+gateway:
   httpRoute:
     enabled: true
+    parentRefs:
+      - name: nginx-gateway
+        namespace: nginx-gateway
+        sectionName: http

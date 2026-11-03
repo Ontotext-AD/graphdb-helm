@@ -1,0 +1,14 @@
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: graphdb
+  namespace: default
+spec:
+  targetReference:
+    kind: Service
+    name: graphdb
+  # Required for ALB: without it, target-type defaults to "instance", which needs a NodePort/LoadBalancer
+  # Service and fails against this chart's ClusterIP Service.
+  defaultConfiguration:
+    targetType: ip
+    protocol: HTTP

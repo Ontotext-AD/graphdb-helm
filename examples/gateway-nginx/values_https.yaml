@@ -14,17 +14,11 @@ configuration:
 ingress:
   enabled: false
 
-gatewayApi:
-  enabled: true
-  gateway:
-    className: nginx
-    listeners:
-      http:
-        enabled: false
-      https:
-        enabled: true
-        tls:
-          certificateRefs:
-            - name: graphdb-tls
+gateway:
   httpRoute:
     enabled: true
+    parentRefs:
+      - name: nginx-gateway
+        namespace: nginx-gateway
+        # Notice the different section here
+        sectionName: https

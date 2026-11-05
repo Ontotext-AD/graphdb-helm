@@ -1,5 +1,13 @@
 # GraphDB Helm chart release notes
 
+## Version 12.7.0
+
+### New
+
+- Added Kubernetes Gateway API support as an alternative to Ingress. Controlled via the new `gateway` values block.
+  Supports HTTP, HTTPS with TLS termination, TLS passthrough, context path URL rewriting and backend TLS. Added
+  cloud-specific examples for NGINX Gateway Fabric, AWS, and Azure.
+
 ## Version 12.6.3
 
 ### New

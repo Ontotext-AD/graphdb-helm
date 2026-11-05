@@ -1,0 +1,24 @@
+#
+# This example shows how to deploy and expose GraphDB with the AWS Load Balancer Controller Gateway API support (HTTP).
+# See https://kubernetes-sigs.github.io/aws-load-balancer-controller/
+#
+# Prerequisites:
+#   AWS Load Balancer Controller v2.7+ installed with Gateway API support enabled.
+#   Ref: https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/deploy/installation/
+#
+
+configuration:
+  # Change this to your Route53 domain name or use nip.io after deployment by mapping
+  # the public IP of the AWS Load Balancer.
+  externalUrl: http://ip.address.nip.io/
+
+ingress:
+  enabled: false
+
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: gateway-aws-lb
+        namespace: default
+        sectionName: http

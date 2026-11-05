@@ -1,0 +1,24 @@
+#
+# This example shows how to deploy and expose GraphDB with HTTPS using the NGINX Gateway Fabric.
+# See https://docs.nginx.com/nginx-gateway-fabric/
+#
+# Prerequisites:
+#   Install NGINX Gateway Fabric: https://docs.nginx.com/nginx-gateway-fabric/installation/
+#   Create a TLS Secret with the certificate and private key:
+#     kubectl create secret tls graphdb-tls --cert=path/to/cert.pem --key=path/to/key.pem
+#
+
+configuration:
+  externalUrl: https://graphdb.example.com/
+
+ingress:
+  enabled: false
+
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: nginx-gateway
+        namespace: nginx-gateway
+        # Notice the different section here
+        sectionName: https

@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 12.7.0
+
+### New
+
+- Added examples for configuring GraphDB with a self-signed TLS certificate
+  from [cert-manager](http://cert-manager.io/), see [examples/cert-manager](examples/cert-manager)
+
 ## Version 12.6.3
 
 ### New

@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: graphdb-keystore-password
+type: Opaque
+stringData:
+  # Change me
+  password: foobar123
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cert-manager-self-signed
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert-manager-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: cert-manager-root-ca
+  secretName: cert-manager-root-ca
+  duration: 87600h # 10 years
+  renewBefore: 8760h  # 1 year
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: cert-manager-self-signed
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cert-manager-ca
+spec:
+  ca:
+    secretName: cert-manager-root-ca
+---
+# Wildcard TLS certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+ name: graphdb-tls
+spec:
+  commonName: graphdb
+  secretName: graphdb-tls
+  duration: 2160h # 90 days
+  renewBefore: 720h # 30 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  issuerRef:
+    name: kind-local-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - graphdb.127.0.0.1.nip.io
+    - graphdb-0.graphdb-headless.default.svc.cluster.local
+    - graphdb-1.graphdb-headless.default.svc.cluster.local
+    - graphdb-2.graphdb-headless.default.svc.cluster.local
+    - graphdb-proxy-0.graphdb-proxy-headless.default.svc.cluster.local
+    - graphdb-proxy-1.graphdb-proxy-headless.default.svc.cluster.local
+    - graphdb-proxy-2.graphdb-proxy-headless.default.svc.cluster.local
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  keystores:
+    pkcs12:
+      create: true
+      profile: Modern2023
+      passwordSecretRef:
+        name: graphdb-keystore-password
+        key: password

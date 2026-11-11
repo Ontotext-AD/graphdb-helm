@@ -31,7 +31,7 @@ data:
     graphdb.connector.ssl.certificateKeyAlias={{ .Values.configuration.tls.keystore.keyAlias }}
     graphdb.connector.ssl.certificateKeystoreProvider={{ .Values.configuration.tls.keystore.keystoreProvider }}
     graphdb.connector.ssl.certificateKeystoreType={{ .Values.configuration.tls.keystore.keystoreType }}
-    graphdb.connector.ssl.certificateKeyPassword@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
+    graphdb.connector.ssl.certificateKeystorePassword@file={{ .Values.configuration.tls.mountPath | trimSuffix "/" }}/keystore/{{ .Values.configuration.tls.keystore.keystorePasswordKey }}
     {{- end }}
     {{- if .Values.configuration.tls.truststore.existingSecret }}
     # Tomcat truststore configurations

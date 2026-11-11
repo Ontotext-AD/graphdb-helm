@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 12.7.0
+
+### Fixed
+
+- Configmaps now correctly set the `graphdb.connector.ssl.certificateKeystorePassword` instead of refering to the wrong
+  property (`certificateKeyPassword`)
+
 ## Version 12.6.3
 
 ### New

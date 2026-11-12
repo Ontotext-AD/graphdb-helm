@@ -10,6 +10,7 @@
 
 # Helm
 values_overrides.yaml
+values.overrides.yaml
 template_output.yaml
 *.tgz
 

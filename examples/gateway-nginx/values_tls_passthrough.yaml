@@ -1,0 +1,31 @@
+#
+# This example shows how to deploy GraphDB with TLS passthrough using the NGINX Gateway Fabric.
+# The Gateway forwards the raw TLS connection to GraphDB unterminated (by SNI); GraphDB terminates
+# TLS itself using its own keystore (.Values.configuration.tls.keystore).
+# See https://docs.nginx.com/nginx-gateway-fabric/
+#
+# Prerequisites:
+#   A Secret containing GraphDB's own TLS keystore, referenced below via configuration.tls.keystore.
+#
+
+configuration:
+  externalUrl: https://graphdb.127.0.0.1.nip.io/
+  tls:
+    keystore:
+      existingSecret: graphdb-tls
+      keystoreKey: keystore.p12
+      keystorePasswordSecret: graphdb-keystore-password
+      keystorePasswordKey: password
+      keystoreType: PKCS12
+      keyAlias: 1
+
+ingress:
+  enabled: false
+
+gateway:
+  tlsRoute:
+    enabled: true
+    parentRefs:
+      - name: nginx-gateway
+        namespace: nginx-gateway
+        sectionName: tls-passthrough

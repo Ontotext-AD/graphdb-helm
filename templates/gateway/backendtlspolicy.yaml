@@ -1,0 +1,39 @@
+{{- if .Values.gateway.backendTLSPolicy.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gateway.backendTLSPolicy.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gateway.backendTLSPolicy.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  targetRefs:
+    {{- if gt (int .Values.replicas) 1 }}
+    - group: ""
+      kind: Service
+      name: {{ include "graphdb-proxy.fullname" . }}
+    {{- else }}
+    - group: ""
+      kind: Service
+      name: {{ include "graphdb.fullname" . }}
+    {{- end }}
+    {{- with .Values.gateway.backendTLSPolicy.extraTargetRefs }}
+      {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
+    {{- end }}
+  validation:
+    hostname: {{ .Values.gateway.backendTLSPolicy.validation.hostname }}
+    {{- with .Values.gateway.backendTLSPolicy.validation.caCertificateRefs }}
+    caCertificateRefs:
+      {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 6 }}
+    {{- end }}
+    {{- if not .Values.gateway.backendTLSPolicy.validation.caCertificateRefs }}
+    wellKnownCACertificates: {{ .Values.gateway.backendTLSPolicy.validation.wellKnownCACertificates }}
+    {{- end }}
+{{- end }}

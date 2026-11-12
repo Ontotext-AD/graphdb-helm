@@ -11,6 +11,7 @@
   from [cert-manager](http://cert-manager.io/), see [examples/cert-manager](examples/cert-manager)
 - Added `proxy.serviceAccount` for creating a ServiceAccount for the GraphDB proxies, enabled by default
 - Added `proxy.automountServiceAccountToken`, disabled by default
+- Added `hostAliases`, `proxy.hostAliases` and `jobs.hostAliases` for adding entries to the pods' hosts files
 
 ### Fixed
 

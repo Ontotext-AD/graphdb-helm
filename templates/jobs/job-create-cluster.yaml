@@ -29,6 +29,10 @@ spec:
       {{- if .Values.jobs.dnsPolicy }}
       dnsPolicy: {{ .Values.jobs.dnsPolicy }}
       {{- end }}
+      {{- with .Values.jobs.hostAliases }}
+      hostAliases:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
+      {{- end }}
       {{- if .Values.jobs.priorityClassName }}
       priorityClassName: {{ .Values.jobs.priorityClassName }}
       {{- end }}

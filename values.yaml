@@ -1129,6 +1129,10 @@ dnsConfig: {}
 # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
 dnsPolicy: ""
 
+# Additional hostnames to insert in the Pod's hosts.
+# Ref: https://v1-33.docs.kubernetes.io/docs/tasks/network/customize-hosts-file-for-pods/
+hostAliases: []
+
 # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
 priorityClassName: ""
@@ -1503,6 +1507,10 @@ jobs:
   # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
   dnsPolicy: ""
 
+  # Additional hostnames to insert in the Pod's hosts.
+  # Ref: https://v1-33.docs.kubernetes.io/docs/tasks/network/customize-hosts-file-for-pods/
+  hostAliases: []
+
   # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
   priorityClassName: ""
@@ -1824,6 +1832,10 @@ proxy:
   # Defines the proxy Pod's policy for DNS resolution.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
   dnsPolicy: ""
+
+  # Additional hostnames to insert in the Pod's hosts.
+  # Ref: https://v1-33.docs.kubernetes.io/docs/tasks/network/customize-hosts-file-for-pods/
+  hostAliases: []
 
   # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/

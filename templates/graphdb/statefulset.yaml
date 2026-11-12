@@ -78,6 +78,10 @@ spec:
       {{- if .Values.dnsPolicy }}
       dnsPolicy: {{ .Values.dnsPolicy }}
       {{- end }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
+      {{- end }}
       {{- if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}

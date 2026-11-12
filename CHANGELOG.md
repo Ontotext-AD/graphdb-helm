@@ -1,5 +1,23 @@
 # GraphDB Helm chart release notes
 
+## Version 12.7.0
+
+### New
+
+- Added Kubernetes Gateway API support as an alternative to Ingress. Controlled via the new `gateway` values block.
+  Supports HTTP, HTTPS with TLS termination, TLS passthrough, context path URL rewriting and backend TLS. Added
+  cloud-specific examples for NGINX Gateway Fabric, AWS, and Azure.
+- Added examples for configuring GraphDB with a self-signed TLS certificate
+  from [cert-manager](http://cert-manager.io/), see [examples/cert-manager](examples/cert-manager)
+- Added `proxy.serviceAccount` for creating a ServiceAccount for the GraphDB proxies, enabled by default
+- Added `proxy.automountServiceAccountToken`, disabled by default
+- Added `hostAliases`, `proxy.hostAliases` and `jobs.hostAliases` for adding entries to the pods' hosts files
+
+### Fixed
+
+- Configmaps now correctly set the `graphdb.connector.ssl.certificateKeystorePassword` instead of refering to the wrong
+  property (`certificateKeyPassword`)
+
 ## Version 12.6.3
 
 ### New

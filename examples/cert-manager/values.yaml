@@ -1,0 +1,12 @@
+configuration:
+  externalUrl: https://graphdb.127.0.0.1.nip.io/
+  properties:
+    graphdb.auth.methods: basic,gdb
+  tls:
+    keystore:
+      existingSecret: graphdb-tls
+      keystoreKey: keystore.p12
+      keystorePasswordSecret: graphdb-keystore-password
+      keystorePasswordKey: password
+      keystoreType: PKCS12
+      keyAlias: 1

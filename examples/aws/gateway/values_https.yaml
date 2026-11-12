@@ -1,0 +1,24 @@
+#
+# This example shows how to deploy and expose GraphDB with the AWS Load Balancer Controller Gateway API support (HTTPS).
+# TLS is terminated at the Gateway using an AWS ACM certificate. AWS ALB's Gateway API implementation
+# does NOT support Kubernetes-Secret-based certificates (spec.listeners[].tls.certificateRefs is ignored) —
+# the certificate must be configured as an ACM ARN via loadbalancerconfiguration_https.yaml.
+# See https://kubernetes-sigs.github.io/aws-load-balancer-controller/
+#
+
+configuration:
+  # Change this to your Route53 domain name or use nip.io after deployment by mapping
+  # the public IP of the AWS Load Balancer.
+  externalUrl: https://your-domain.example.com/
+
+ingress:
+  enabled: false
+
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: gateway-aws-lb
+        namespace: default
+        # Notice the different section here
+        sectionName: https

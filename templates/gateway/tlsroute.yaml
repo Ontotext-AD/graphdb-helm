@@ -1,0 +1,49 @@
+{{- if .Values.gateway.tlsRoute.enabled }}
+{{- $external_url := urlParse (include "graphdb.external-url" .) -}}
+{{- $hostname := coalesce .Values.gateway.tlsRoute.hostname $external_url.host -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: TLSRoute
+metadata:
+  name: {{ include "graphdb.fullname" . }}
+  namespace: {{ include "graphdb.namespace" . }}
+  labels:
+    {{- include "graphdb.labels" . | nindent 4 }}
+    {{- with .Values.gateway.tlsRoute.labels }}
+      {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (deepCopy .Values.annotations) .Values.gateway.tlsRoute.annotations) }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.gateway.tlsRoute.parentRefs }}
+  parentRefs:
+    {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
+  {{- end }}
+  hostnames:
+    - {{ $hostname }}
+    {{- range .Values.gateway.tlsRoute.extraHostnames }}
+    - {{ tpl . $ }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        {{- if gt (int .Values.replicas) 1 }}
+        - group: ""
+          kind: Service
+          name: {{ include "graphdb-proxy.fullname" . }}
+          port: {{ coalesce .Values.gateway.tlsRoute.backend.servicePort .Values.proxy.service.ports.http }}
+          weight: {{ .Values.gateway.tlsRoute.backend.weight }}
+        {{- else }}
+        - group: ""
+          kind: Service
+          name: {{ include "graphdb.fullname" . }}
+          port: {{ coalesce .Values.gateway.tlsRoute.backend.servicePort .Values.service.ports.http }}
+          weight: {{ .Values.gateway.tlsRoute.backend.weight }}
+        {{- end }}
+        {{- with .Values.gateway.tlsRoute.backend.extraBackends }}
+          {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
+        {{- end }}
+    {{- with .Values.gateway.tlsRoute.extraRules }}
+      {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 4 }}
+    {{- end }}
+{{- end }}

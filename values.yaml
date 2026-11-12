@@ -670,6 +670,164 @@ ingress:
   # Values are processed as Helm templates, supporting both YAML objects and string list items.
   extraTLS: []
 
+# Gateway API configurations.
+# Gateway API is the successor to Ingress, providing more expressive, role-oriented and extensible traffic routing.
+# Requires Gateway API and CRDs to be installed: https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api
+# Ref: https://gateway-api.sigs.k8s.io/
+gateway:
+  # Configurations for a default HTTPRoute resource from the Gateway API.
+  # Routes HTTP/HTTPS traffic to the GraphDB backend Service.
+  # Ref: https://gateway-api.sigs.k8s.io/reference/api-types/httproute/
+  httpRoute:
+    # Toggles the creation of the default HTTPRoute resource.
+    # Disabled by default.
+    enabled: false
+    # Additional labels for the HTTPRoute resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the HTTPRoute resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # Specifies references to parent objects to which the route will attach and be exposed.
+    # These parents are usually existing Gateway resources in the Kubernetes cluster.
+    # This is a required configuration in order for the HTTPRoute to work.
+    # Values are processed as Helm templates, supporting both YAML objects and string list items.
+    parentRefs: []
+    # If set, overrides the host derived from .Values.configuration.externalUrl.
+    hostname: ""
+    # Match condition configurations for the default HTTPRoute.
+    matches:
+      # If set, overrides the context path derived from .Values.configuration.externalUrl.
+      # When using a non-root path (e.g. /graphdb), a URLRewrite filter is automatically added to strip the prefix.
+      path: ""
+      # Type of the default matcher.
+      type: PathPrefix
+      # List of additional route matchers to include in the default rule.
+      # Values are processed as Helm templates, supporting both YAML objects and string list items
+      extraMatchers: []
+    # Filter configurations for the default HTTPRoute.
+    # The chart will deploy a default ReplacePrefixMatch filter rule that makes sure requests behind a context path are
+    # properly propagated to GraphDB. This is because GraphDB listens only on the root path.
+    filters:
+      # Default ReplacePrefixMatch that is enabled when GraphDB is deployed on a non-root context path, i.e., /graphdb.
+      replacePrefix:
+        # Toggles the default ReplacePrefixMatch configuration.
+        enabled: true
+      # List of additional route filters to include in the default rule.
+      # Values are processed as Helm templates, supporting both YAML objects and string list items
+      extraFilters: []
+    # Timeout configurations for the default HTTPRoute.
+    # Ref: https://gateway-api.sigs.k8s.io/geps/gep-2257/
+    timeouts:
+      # Duration timeout (1s, 1m, 1h, etc.) in which the Gateway API should send responses to the client's HTTP requests.
+      request: ""
+      # Duration timeout (1s, 1m, 1h, etc.) in which the Gateway API waits for a response from the upstream Service(s).
+      backendRequest: ""
+    # Default backend reference configurations.
+    # Depending on the deployment, the default configuration targets either GraphDB (no cluster) or the GraphDB proxies
+    # (cluster mode). You can customize this with httpRoute.backend.servicePort
+    backend:
+      # Traffic splitting ratio on the default backend reference.
+      # Adjust when you have multiple backend references.
+      weight: 100
+      # If set, overrides the automatically assigned backend service port.
+      # Use when you want to route the traffic to a different port than the default or to a side-car container.
+      servicePort: ""
+      # List of additional backend references to include in the default rule.
+      # Values are processed as Helm templates, supporting both YAML objects and string list items
+      extraBackends: []
+    # List of additional hostnames to include in the HTTPRoute.
+    # Values are processed as Helm templates.
+    extraHostnames: []
+    # Additional rules to append to the HTTPRoute.
+    # Values are processed as Helm templates, supporting both YAML objects and string list items.
+    extraRules: []
+    # Configurations for an additional HTTPRoute that will redirect plain HTTP connections to secure HTTPS.
+    # In order for this to work, you have to configure the httpRoute.httpsRedirect.parentRefs to point to an HTTP section.
+    # This can be in the same parent Gateway.
+    # This shares configurations with the default HTTPRoute.
+    # Disabled by default as this should be handled globally and not per HTTPRoute.
+    httpsRedirect:
+      # Toggles the creation of the default HTTPRoute redirect resource.
+      # Disabled by default.
+      enabled: false
+      # Specifies references to parent objects to which the route will attach and be exposed.
+      # These parents are usually existing Gateway resources in the Kubernetes cluster.
+      # This is a required configuration in order for the HTTPRoute to work.
+      # Values are processed as Helm templates, supporting both YAML objects and string list items.
+      parentRefs: []
+      # Redirect configurations
+      redirect:
+        code: 301
+        port: 443
+
+  # Configurations for a default TLSRoute resource from the Gateway API.
+  # Routes TLS traffic (by SNI) to the GraphDB backend Service without termination (passthrough mode).
+  # If you need advanced matching or filtering, you should use HTTPRoute instead of TLSRoute.
+  # Ref: https://gateway-api.sigs.k8s.io/reference/api-types/tlsroute/
+  tlsRoute:
+    # Toggles the creation of the default TLSRoute resource.
+    # Disabled by default.
+    enabled: false
+    # Additional labels for the TLSRoute resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the TLSRoute resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # Specifies references to parent objects to which the route will attach and be exposed.
+    # These parents are usually existing Gateway resources in the Kubernetes cluster.
+    # This is a required configuration in order for the TLSRoute to work.
+    # Values are processed as Helm templates, supporting both YAML objects and string list items.
+    parentRefs: []
+    # If set, overrides the host derived from .Values.configuration.externalUrl.
+    hostname: ""
+    # Default backend reference configurations.
+    # Depending on the deployment, the default configuration targets either GraphDB (no cluster) or the GraphDB proxies
+    # (cluster mode). You can customize this with tlsRoute.backend.servicePort
+    backend:
+      # Traffic splitting ratio on the default backend reference.
+      # Adjust when you have multiple backend references.
+      weight: 100
+      # If set, overrides the automatically assigned backend service port.
+      # Use when you want to route the traffic to a different port than the default or to a side-car container.
+      servicePort: ""
+      # List of additional backend references to include in the default rule.
+      # Values are processed as Helm templates, supporting both YAML objects and string list items
+      extraBackends: []
+    # List of additional hostnames to include in the TLSRoute.
+    # Values are processed as Helm templates.
+    extraHostnames: []
+    # Additional rules to append to the TLSRoute.
+    # Values are processed as Helm templates, supporting both YAML objects and string list items.
+    extraRules: []
+
+  # Configurations for a default BackendTLSPolicy resource from the Gateway API.
+  # Re-encrypts plain HTTP traffic back to a secure HTTPS between the Gateway and the GraphDB Service.
+  # Ref: https://gateway-api.sigs.k8s.io/reference/api-types/policy/backendtlspolicy/
+  backendTLSPolicy:
+    # Toggles the creation of the default BackendTLSPolicy resource.
+    # Disabled by default.
+    enabled: false
+    # Additional labels for the BackendTLSPolicy resource.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations for the BackendTLSPolicy resource.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # List of additional target references to include in the BackendTLSPolicy.
+    # Values are processed as Helm templates, supporting both YAML objects and string list items.
+    extraTargetRefs: []
+    # TLS validation configurations
+    validation:
+      # The TLS SNI hostname to use for validation
+      hostname: ""
+      # List of CA certificates references from ConfigMap/Secret objects.
+      # Takes precedence over wellKnownCACertificates
+      caCertificateRefs: []
+      # If no CAs are configured, the policy will fall back to the wellKnownCACertificates.
+      wellKnownCACertificates: System
+
 ##########################
 # Service Configurations #
 ##########################
@@ -970,6 +1128,10 @@ dnsConfig: {}
 # Defines the Pod's policy for DNS resolution.
 # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
 dnsPolicy: ""
+
+# Additional hostnames to insert in the Pod's hosts.
+# Ref: https://v1-33.docs.kubernetes.io/docs/tasks/network/customize-hosts-file-for-pods/
+hostAliases: []
 
 # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
 # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
@@ -1345,6 +1507,10 @@ jobs:
   # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
   dnsPolicy: ""
 
+  # Additional hostnames to insert in the Pod's hosts.
+  # Ref: https://v1-33.docs.kubernetes.io/docs/tasks/network/customize-hosts-file-for-pods/
+  hostAliases: []
+
   # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
   priorityClassName: ""
@@ -1650,6 +1816,11 @@ proxy:
   #       command: ["/bin/sh", "-c", "sleep 25"]
   lifecycle: {}
 
+  # Toggles the auto mounting of API credentials token into the Proxy Pods.
+  # Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#opt-out-of-api-credential-automounting
+  automountServiceAccountToken: false
+
   # Overrides the default Kubernetes scheduler.
   # See https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/#specify-schedulers-for-pods
   schedulerName: ""
@@ -1661,6 +1832,10 @@ proxy:
   # Defines the proxy Pod's policy for DNS resolution.
   # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
   dnsPolicy: ""
+
+  # Additional hostnames to insert in the Pod's hosts.
+  # Ref: https://v1-33.docs.kubernetes.io/docs/tasks/network/customize-hosts-file-for-pods/
+  hostAliases: []
 
   # Name of an existing PriorityClass to assign, defining the importance of the pods compared to other pods in the cluster.
   # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
@@ -1886,6 +2061,28 @@ proxy:
     enabled: true
     minAvailable: 51%
     maxUnavailable: ""
+
+  ##################################
+  # Service Account Configurations #
+  ##################################
+
+  # Configurations for the default ServiceAccount for GraphDB Proxy pods.
+  # Ref: https://kubernetes.io/docs/concepts/security/service-accounts/
+  serviceAccount:
+    # Specifies whether a ServiceAccount should be created for the GraphDB proxy.
+    create: true
+
+    # The name of the ServiceAccount to use.
+    #
+    # There are three cases to be aware of when using this:
+    # - If not set and create is true, a name is generated using the fullname template
+    # - If set and create is true, it will use the provided name when creating the ServiceAccount
+    # - If set but create is false, it will use the provided ServiceAccount.
+    name: ""
+
+    # If .Values.proxy.serviceAccount.create is true, insert additional annotations to the created ServiceAccount.
+    # Values are processed as Helm templates.
+    annotations: {}
 
   ################################################
   # Persistent Volume Permissions Configurations #

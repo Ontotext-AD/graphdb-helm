@@ -1,0 +1,28 @@
+#
+# This example shows how to deploy and expose GraphDB using Azure Application Gateway for Containers with HTTPS.
+# TLS is terminated at the Gateway using a certificate stored in a Kubernetes Secret.
+# See https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/tls-termination
+#
+# Prerequisites:
+#   Azure Application Gateway for Containers provisioned and the ALB Controller installed.
+#   Create a TLS Secret with the certificate and private key:
+#     kubectl create secret tls graphdb-tls --cert=cert.pem --key=key.pem
+#
+#   Alternatively, use cert-manager with Azure Key Vault integration:
+#     https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-nginx-tls
+#
+
+configuration:
+  externalUrl: https://graphdb.example.com/
+
+ingress:
+  enabled: false
+
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: gateway-azure-alb
+        namespace: default
+        # Notice the different section here
+        sectionName: https

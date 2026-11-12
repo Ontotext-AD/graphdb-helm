@@ -56,7 +56,8 @@ spec:
         {{- end }}
     spec:
       terminationGracePeriodSeconds: {{ .Values.proxy.terminationGracePeriodSeconds }}
-      automountServiceAccountToken: false
+      serviceAccountName: {{ include "graphdb-proxy.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.proxy.automountServiceAccountToken }}
       {{- if .Values.proxy.schedulerName }}
       schedulerName: {{ .Values.proxy.schedulerName }}
       {{- end }}
@@ -65,6 +66,10 @@ spec:
       {{- end }}
       {{- if .Values.proxy.dnsPolicy }}
       dnsPolicy: {{ .Values.proxy.dnsPolicy }}
+      {{- end }}
+      {{- with .Values.proxy.hostAliases }}
+      hostAliases:
+        {{- include "graphdb.tpl.list" (dict "items" . "root" $ ) | nindent 8 }}
       {{- end }}
       {{- if .Values.proxy.priorityClassName }}
       priorityClassName: {{ .Values.proxy.priorityClassName }}

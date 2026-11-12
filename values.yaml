@@ -1808,6 +1808,11 @@ proxy:
   #       command: ["/bin/sh", "-c", "sleep 25"]
   lifecycle: {}
 
+  # Toggles the auto mounting of API credentials token into the Proxy Pods.
+  # Enable this if you need to contact either the API server or need web identity credentials for federated authentication in cloud APIs.
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#opt-out-of-api-credential-automounting
+  automountServiceAccountToken: false
+
   # Overrides the default Kubernetes scheduler.
   # See https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/#specify-schedulers-for-pods
   schedulerName: ""
@@ -2044,6 +2049,28 @@ proxy:
     enabled: true
     minAvailable: 51%
     maxUnavailable: ""
+
+  ##################################
+  # Service Account Configurations #
+  ##################################
+
+  # Configurations for the default ServiceAccount for GraphDB Proxy pods.
+  # Ref: https://kubernetes.io/docs/concepts/security/service-accounts/
+  serviceAccount:
+    # Specifies whether a ServiceAccount should be created for the GraphDB proxy.
+    create: true
+
+    # The name of the ServiceAccount to use.
+    #
+    # There are three cases to be aware of when using this:
+    # - If not set and create is true, a name is generated using the fullname template
+    # - If set and create is true, it will use the provided name when creating the ServiceAccount
+    # - If set but create is false, it will use the provided ServiceAccount.
+    name: ""
+
+    # If .Values.serviceAccount.create is true, insert additional annotations to the created ServiceAccount.
+    # Values are processed as Helm templates.
+    annotations: {}
 
   ################################################
   # Persistent Volume Permissions Configurations #

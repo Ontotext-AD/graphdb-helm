@@ -9,6 +9,8 @@
   cloud-specific examples for NGINX Gateway Fabric, AWS, and Azure.
 - Added examples for configuring GraphDB with a self-signed TLS certificate
   from [cert-manager](http://cert-manager.io/), see [examples/cert-manager](examples/cert-manager)
+- Added `proxy.serviceAccount` for creating a ServiceAccount for the GraphDB proxies, enabled by default
+- Added `proxy.automountServiceAccountToken`, disabled by default
 
 ### Fixed
 

@@ -2,14 +2,14 @@
 Creates another chart name for the proxy service to distinguish it from GraphDB.
 */}}
 {{- define "graphdb-proxy.chartName" -}}
-{{- printf "%s-proxy" .Chart.Name -}}
+  {{- printf "%s-proxy" .Chart.Name -}}
 {{- end }}
 
 {{/*
 Expand the name of the proxy service.
 */}}
 {{- define "graphdb-proxy.name" -}}
-{{- default (include "graphdb-proxy.chartName" .) .Values.proxy.nameOverride | trunc 63 | trimSuffix "-" }}
+  {{- default (include "graphdb-proxy.chartName" .) .Values.proxy.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -18,16 +18,16 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "graphdb-proxy.fullname" -}}
-{{- if .Values.proxy.fullnameOverride }}
-{{- .Values.proxy.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default (include "graphdb-proxy.chartName" .) .Values.proxy.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
+  {{- if .Values.proxy.fullnameOverride }}
+    {{- .Values.proxy.fullnameOverride | trunc 63 | trimSuffix "-" }}
+  {{- else }}
+    {{- $name := default (include "graphdb-proxy.chartName" .) .Values.proxy.nameOverride }}
+    {{- if contains $name .Release.Name }}
+      {{- .Release.Name | trunc 63 | trimSuffix "-" }}
+    {{- else }}
+      {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 
 {{/*
@@ -54,6 +54,17 @@ Selector labels for the proxy service.
 {{- define "graphdb-proxy.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "graphdb-proxy.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "graphdb-proxy.serviceAccountName" -}}
+  {{- if .Values.proxy.serviceAccount.create }}
+    {{- default (include "graphdb-proxy.fullname" .) .Values.proxy.serviceAccount.name }}
+  {{- else }}
+    {{- default "default" .Values.proxy.serviceAccount.name }}
+  {{- end }}
 {{- end }}
 
 {{- define "graphdb-proxy.fullname.configmap.environment" -}}

@@ -8,7 +8,7 @@ function log {
     local message="$1"
     local timestamp
     timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo "[$timestamp] $message"
+    echo "[$timestamp] $message" >&2
 }
 
 function gdb_get_oauth2_token() {

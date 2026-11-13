@@ -1,5 +1,12 @@
 # GraphDB Helm chart release notes
 
+## Version 12.7.1
+
+### Fixed
+
+- Fixed cluster scaling jobs misreading the node count, which made the scale-down job send a malformed node removal
+  request on every upgrade and left the Helm release in `pending-upgrade`
+
 ## Version 12.7.0
 
 ### New

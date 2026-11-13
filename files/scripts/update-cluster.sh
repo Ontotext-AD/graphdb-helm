@@ -245,7 +245,7 @@ function waitService {
     authorization="Bearer ${access_token}"
   fi;
 
-  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: ${authorization}" \ --silent --fail "${address}"; do
+  until curl -k --output /dev/null -fsSL -m 5 -H "Authorization: ${authorization}" --silent --fail "${address}"; do
     if [[ ${attempt_counter} -eq ${max_attempts} ]]; then
       echo "Max attempts reached"
       exit 1

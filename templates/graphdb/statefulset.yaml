@@ -35,6 +35,18 @@ spec:
       spec:
         {{- toYaml .Values.persistence.volumeClaimTemplate.spec | nindent 8 }}
     {{- end }}
+    {{- if .Values.logs.enabled }}
+    - metadata:
+        name: {{ .Values.logs.volumeClaimTemplate.name }}
+        {{- with .Values.logs.volumeClaimTemplate.labels }}
+        labels: {{ tpl (toYaml .) $ | nindent 10 }}
+        {{- end }}
+        {{- with .Values.logs.volumeClaimTemplate.annotations }}
+        annotations: {{ tpl (toYaml .) $ | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- toYaml .Values.logs.volumeClaimTemplate.spec | nindent 8 }}
+    {{- end }}
     {{- if .Values.import.volumeMount.enabled }}
     - metadata:
         name: {{ .Values.import.volumeMount.volumeClaimTemplate.name }}
@@ -86,9 +98,15 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}
       volumes:
+        - name: generated-config
+          emptyDir: { }
         {{- if not .Values.persistence.enabled }}
         - name: {{ .Values.persistence.volumeClaimTemplate.name }}
           emptyDir: {{ .Values.persistence.emptyDir | toYaml | nindent 12 }}
+        {{- end }}
+        {{- if not .Values.logs.enabled }}
+        - name: {{ .Values.logs.volumeClaimTemplate.name }}
+          emptyDir: {{ .Values.logs.emptyDir | toYaml | nindent 12 }}
         {{- end }}
         {{- if .Values.tempVolume.enabled }}
         - name: temp-dir
@@ -338,7 +356,7 @@ spec:
               value: {{ coalesce .Values.securityContext.runAsGroup .Values.podSecurityContext.runAsGroup | quote }}
           volumeMounts:
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
-              mountPath: /opt/graphdb/home
+              mountPath: /var/lib/graphdb
           {{- with .Values.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -350,7 +368,7 @@ spec:
             - |
               set -eu
               echo "Changing ownership to ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID}"
-              chown -R ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID} /opt/graphdb/home
+              chown -R ${GRAPHDB_USER_ID}:${GRAPHDB_GROUP_ID} /var/lib/graphdb
         {{- end }}
         # PROVISION SETTINGS AND SECURITY
         - name: {{ .Chart.Name }}-provision-settings
@@ -376,8 +394,10 @@ spec:
             - configMapRef:
                 name: {{ include "graphdb.fullname.configmap.environment" . }}
           volumeMounts:
+            - name: generated-config
+              mountPath: /config
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
-              mountPath: /opt/graphdb/home
+              mountPath: /var/lib/graphdb
             - name: graphdb-properties
               mountPath: /tmp/graphdb/graphdb.properties
               subPath: graphdb.properties
@@ -415,66 +435,66 @@ spec:
           {{- with .Values.initContainerResources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
-          workingDir: /tmp
           command: [ "bash", "-c" ]
           args:
             - |
               set -eu
               set +x
-              mkdir -p /opt/graphdb/home/conf/ /opt/graphdb/home/data/ /opt/graphdb/home/jdbc-driver/
+              mkdir -p /var/lib/graphdb/{data,work,jdbc-driver,imports}
 
               echo 'Configuring graphdb.properties'
-              echo "" > /opt/graphdb/home/conf/graphdb.properties
+              echo "" > /config/graphdb.properties
 
               echo "Configuring GraphDB hostname: $(hostname --fqdn)"
-              cat << EOF >> /opt/graphdb/home/conf/graphdb.properties
+              cat << EOF >> /config/graphdb.properties
               ##### Configurations from initContainer #####"
               graphdb.hostname=$(hostname --fqdn)
               graphdb.rpc.address=$(hostname --fqdn):${GRAPHDB_RPC_PORT}
-              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT}, ${GRAPHDB_PUBLIC_URL}
+              graphdb.vhosts=$(hostname --fqdn):${GRAPHDB_HTTP_PORT},${GRAPHDB_PUBLIC_URL}
               EOF
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              echo "" >> /config/graphdb.properties
 
-              cat /tmp/graphdb/graphdb.properties >> /opt/graphdb/home/conf/graphdb.properties
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              cat /tmp/graphdb/graphdb.properties >> /config/graphdb.properties
+              echo "" >> /config/graphdb.properties
 
-              cat /tmp/graphdb/graphdb-secrets.properties >> /opt/graphdb/home/conf/graphdb.properties
-              echo "" >> /opt/graphdb/home/conf/graphdb.properties
+              cat /tmp/graphdb/graphdb-secrets.properties >> /config/graphdb.properties
+              echo "" >> /config/graphdb.properties
 
               if [[ -n ${GRAPHDB_CLUSTER_SECRET:-""} ]]; then
-                echo "##### Override from existing cluster secret #####" >> /opt/graphdb/home/conf/graphdb.properties
-                (echo "graphdb.auth.token.secret=${GRAPHDB_CLUSTER_SECRET}" >> /opt/graphdb/home/conf/graphdb.properties) >/dev/null 2>&1
-                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+                echo "##### Override from existing cluster secret #####" >> /config/graphdb.properties
+                (echo "graphdb.auth.token.secret=${GRAPHDB_CLUSTER_SECRET}" >> /config/graphdb.properties) >/dev/null 2>&1
+                echo "" >> /config/graphdb.properties
               fi
 
               if [[ -f /tmp/graphdb/graphdb-extra.properties ]]; then
-                echo "##### Overrides from extra properties configmap #####" >> /opt/graphdb/home/conf/graphdb.properties
-                cat /tmp/graphdb/graphdb-extra.properties >> /opt/graphdb/home/conf/graphdb.properties
-                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+                echo "##### Overrides from extra properties configmap #####" >> /config/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra.properties >> /config/graphdb.properties
+                echo "" >> /config/graphdb.properties
               fi
 
               if [[ -f /tmp/graphdb/graphdb-extra-secret.properties ]]; then
-                echo "##### Overrides from extra secret properties #####" >> /opt/graphdb/home/conf/graphdb.properties
-                cat /tmp/graphdb/graphdb-extra-secret.properties >> /opt/graphdb/home/conf/graphdb.properties
-                echo "" >> /opt/graphdb/home/conf/graphdb.properties
+                echo "##### Overrides from extra secret properties #####" >> /config/graphdb.properties
+                cat /tmp/graphdb/graphdb-extra-secret.properties >> /config/graphdb.properties
+                echo "" >> /config/graphdb.properties
               fi
 
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/users.js && -f /tmp/graphdb/users.js ]]; then
+              if [[ ! -f /var/lib/graphdb/work/workbench/settings.js && ! -f /var/lib/graphdb/data/users.js && -f /tmp/graphdb/users.js ]]; then
                 echo "Provisioning users with users.js file..."
-                cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
+                cp /tmp/graphdb/users.js /var/lib/graphdb/data/users.js
               elif [[ -f /tmp/graphdb/users.js && "${OVERRIDE_USERS}" == "true" ]]; then
                 echo "Overriding users with users.js file..."
-                cp /tmp/graphdb/users.js /opt/graphdb/home/data/users.js
+                cp /tmp/graphdb/users.js /var/lib/graphdb/data/users.js
               fi
 
-              if [[ ! -f /opt/graphdb/home/work/workbench/settings.js && ! -f /opt/graphdb/home/data/settings.js && -f /tmp/graphdb/settings.js ]]; then
+              if [[ ! -f /var/lib/graphdb/work/workbench/settings.js && ! -f /var/lib/graphdb/data/settings.js && -f /tmp/graphdb/settings.js ]]; then
                 echo "Provisioning settings with settings.js file..."
-                cp /tmp/graphdb/settings.js /opt/graphdb/home/data/settings.js
+                cp /tmp/graphdb/settings.js /var/lib/graphdb/data/settings.js
               fi
+
               ENC_TYPE=${GRAPHDB_DATA_ENCRYPTION_TYPE:-""}
               if [[ $ENC_TYPE == @(file|pkcs12)  && -f /tmp/master.key ]]; then
                 echo "Configuring up encryption at rest"
-                FILE=${GRAPHDB_DATA_ENCRYPTION_FILE:-"/opt/graphdb/home/data/master.key"}
+                FILE=${GRAPHDB_DATA_ENCRYPTION_FILE:-"/var/lib/graphdb/data/master.key"}
                 if [[ -f ${FILE} ]]; then
                   echo "Master key already exists"
                 else
@@ -493,7 +513,6 @@ spec:
         - name: {{ .Chart.Name }}
           image: {{ include "graphdb.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          workingDir: /tmp
           {{- with .Values.command }}
           command: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -530,8 +549,14 @@ spec:
             {{- end }}
           {{- end }}
           volumeMounts:
+            - name: generated-config
+              mountPath: /usr/share/graphdb/conf/graphdb.properties
+              subPath: graphdb.properties
+              readOnly: true
             - name: {{ .Values.persistence.volumeClaimTemplate.name }}
-              mountPath: /opt/graphdb/home
+              mountPath: /var/lib/graphdb
+            - name: {{ .Values.logs.volumeClaimTemplate.name }}
+              mountPath: /var/log/graphdb
             {{- if .Values.tempVolume.enabled }}
             - name: temp-dir
               mountPath: /tmp
@@ -543,7 +568,7 @@ spec:
             {{- end }}
             {{- if .Values.configuration.logback.existingConfigmap }}
             - name: graphdb-logback-config
-              mountPath: /opt/graphdb/home/conf/logback.xml
+              mountPath: /usr/share/graphdb/conf/logback.xml
               subPath: {{ .Values.configuration.logback.configmapKey }}
             {{- end }}
             {{- if and .Values.import.volumeMount.enabled (not .Values.import.existingVolumeClaim.claimName) }}

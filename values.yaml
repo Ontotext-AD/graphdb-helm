@@ -133,7 +133,7 @@ license:
   # Can be used to place the license outside the persistence directory if needed.
   # Note: We use the license/ sub-folder instead of subPath volume mount so kubelet can replace the mounted license at runtime when the
   # Secret is updated with a new GraphDB license. This avoids having to restart the GraphDB pods.
-  mountPath: /opt/graphdb/home/conf/license/
+  mountPath: /usr/share/graphdb/conf/license/
   # Defines the secret volume as optional or not.
   # Note: Useful if the GraphDB license has not yet been provisioned but will be, for example by an external system or an operator such as
   # External Secret Operator.
@@ -354,10 +354,6 @@ security:
   # Administrator user with ROLE_ADMIN authority.
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   admin:
-    # DEPRECATED: Use security.admin.initialPasswordHash instead.
-    #
-    # Define an initial password hash for the administrator user.
-    initialPassword: ""
     # Define an initial password for the administrator user.
     # If the password is not specified, it will use the default one for GraphDB, which is "root"
     # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
@@ -368,10 +364,6 @@ security:
   # Provisioned as part of the default initial users.js if no custom Secret has been provided, see files/config/users.js
   # If the security is enabled, it's mandatory to have a provisioning user, so the cluster provisioning jobs can work properly.
   provisioner:
-    # DEPRECATED: Use security.provisioner.initialPasswordHash instead.
-    #
-    # Define an initial password for the provisioner user as a bcrypt hash.
-    passwordHash: ""
     # Define an initial password for the provisioner user as a bcrypt hash.
     # If the password is not specified, it will use the default one specified in the provisioner.password.
     # Important: This value must be a bcrypt encrypted hash, not a plaintext string.
@@ -954,6 +946,50 @@ persistence:
     # Default emptyDir limit, override to your needs.
     sizeLimit: 1Gi
 
+logs:
+  # Toggles the persistence of GraphDB logs.
+  # - If enabled, the StatefulSet will use a PVC template and rely on the CSI to dynamically provision Persistent Volumes.
+  # - If disabled, it falls back to an emptyDir volume.
+  enabled: true
+
+  # Configurations for PVC based persistence.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#volume-claim-templates
+  # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  volumeClaimTemplate:
+    # Prefix used when naming the PVCs for the StatefulSet
+    name: "logs"
+    # Additional labels to add to the PVC template.
+    # Values are processed as Helm templates.
+    labels: {}
+    # Additional annotations to add to the PVC template.
+    # Values are processed as Helm templates.
+    annotations: {}
+    # Specification for a PVC to be created by the StatefulSet.
+    # Tune according to your needs.
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+
+  # Overrides the retention policy of the StatefulSet's PVC.
+  # This requires Kubernetes v1.27 or greater.
+  # Ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention
+  #
+  # Example:
+  # volumeClaimRetentionPolicy:
+  #   whenScaled: Retain
+  #   whenDeleted: Delete
+  volumeClaimRetentionPolicy: {}
+
+  # Configurations for an emptyDir volume to be used for data storage by the StatefulSet.
+  # Used when the persistence is disabled with .Values.persistence.enabled
+  # Ref: https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/
+  emptyDir:
+    # Default emptyDir limit, override to your needs.
+    sizeLimit: 1Gi
+
 # Configurations for an emptyDir volume for the /tmp folder in each GraphDB container.
 # Because the default security context in .Values.securityContext configures the root filesystem to be in read-only mode, certain GraphDB features
 # cannot create and write files in /tmp. If you don't use a read-only root filesystem, you can disable this with .Values.tempVolume.enabled
@@ -1060,7 +1096,7 @@ backup:
     # Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
     existingPVC: ""
     # Defines the volume path within the backup pod when mounting the existing PVC for local backups.
-    mountPath: /opt/graphdb/backups/
+    mountPath: /var/lib/graphdb/backups/
 
   # Defines the number of successful backup jobs to keep.
   #
@@ -1390,7 +1426,7 @@ serviceAccount:
 # Settings for providing additional plugins to GraphDB.
 plugins:
   # The location in the container where a volume will be mounted with the additional plugins.
-  mountPath: /opt/graphdb/home/extra-plugins
+  mountPath: /var/lib/graphdb/extra-plugins
 
   # Existing PeristentVolumeClaim to use for an additional plugins volume.
   # Note that this PVC should support ReadOnlyMany or ReadWriteMany access mode if you have multiple GraphDB instances
@@ -1410,7 +1446,7 @@ plugins:
 # See https://graphdb.ontotext.com/documentation/11.5/loading-data-using-the-workbench.html#importing-server-files
 import:
   # The location in the container where the import volume will be mounted.
-  mountPath: /opt/graphdb/home/graphdb-import
+  mountPath: /var/lib/graphdb/imports
 
   # Existing PeristentVolumeClaim to use for the import volume.
   # Note that this PVC should support ReadOnlyMany or ReadWriteMany access mode if you have multiple GraphDB instances

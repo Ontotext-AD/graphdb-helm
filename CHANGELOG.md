@@ -1,5 +1,11 @@
 # GraphDB Helm chart release notes
 
+## Version 12.7.3
+
+#### Updated
+
+- Updated the `defaultJavaArguments` to include `-XX:-UseBASE64Intrinsics` by default for both GraphDB and the Proxy.
+
 ## Version 12.7.2
 
 ### New
